@@ -1,0 +1,7 @@
+<launch>
+
+    <node pkg="road_recognizer" type="road_recognizer" name="road_recognizer" ns="recognition">
+
+    </node>
+
+</launch>

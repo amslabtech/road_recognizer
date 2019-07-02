@@ -18,5 +18,5 @@ void RoadRecognizer::ground_callback(const sensor_msgs::PointCloud2ConstPtr& msg
 
 void RoadRecognizer::process(void)
 {
-
+    ros::spin();
 }
