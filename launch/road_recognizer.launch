@@ -1,7 +1,12 @@
 <launch>
+    <arg name="hz" default="20"/>
+    <arg name="normal_estimation_radius" default="0.3"/>
+    <arg name="leaf_size" default="0.03"/>
 
     <node pkg="road_recognizer" type="road_recognizer" name="road_recognizer" ns="recognition">
-
+        <param name="HZ" value="$(arg hz)"/>
+        <param name="NORMAL_ESTIMATION_RADIUS" value="$(arg normal_estimation_radius)"/>
+        <param name="LEAF_SIZE" value="$(arg leaf_size)"/>
     </node>
 
 </launch>
