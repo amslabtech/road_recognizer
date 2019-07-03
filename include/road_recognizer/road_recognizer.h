@@ -56,6 +56,7 @@ private:
 
     CloudXYZIPtr obstacles_cloud;
     CloudXYZIPtr ground_cloud;
+    CloudXYZINPtr cloud_normals;
     bool obstacles_cloud_updated;
     bool ground_cloud_updated;
 };

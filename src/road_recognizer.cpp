@@ -16,6 +16,7 @@ RoadRecognizer::RoadRecognizer(void)
 
     obstacles_cloud = CloudXYZIPtr(new CloudXYZI);
     ground_cloud = CloudXYZIPtr(new CloudXYZI);
+    cloud_normals = CloudXYZINPtr(new CloudXYZIN);
     obstacles_cloud_updated = false;
     ground_cloud_updated = false;
 
@@ -69,18 +70,20 @@ void RoadRecognizer::process(void)
             ne.setSearchMethod(tree);
 
             CloudXYZINPtr cloud_normals(new CloudXYZIN);
+            cloud_normals->header = ground_cloud->header;
             ne.setRadiusSearch(NORMAL_ESTIMATION_RADIUS);
 
             ne.compute(*cloud_normals);
             std::cout << "after normal estimation cloud size: " << cloud_normals->points.size() << std::endl;
 
-            /*
-            for(const auto& pt : cloud_normals->points){
-                std::cout << "(x,y,z): " << pt.x << ", " << pt.y << ", " << pt.z << std::endl;
-                std::cout << "(nx,ny,nz): " << pt.normal_x << ", " << pt.normal_y << ", " << pt.normal_z << std::endl;
-                std::cout << "(curv): " << pt.curvature << std::endl;
+            // cheat
+            int size = cloud_normals->points.size();
+            for(int i=0;i<size;i++){
+                cloud_normals->points[i].x = ground_cloud->points[i].x;
+                cloud_normals->points[i].y = ground_cloud->points[i].y;
+                cloud_normals->points[i].z = ground_cloud->points[i].z;
+                cloud_normals->points[i].intensity = ground_cloud->points[i].intensity;
             }
-            */
 
             sensor_msgs::PointCloud2 cloud;
             pcl::toROSMsg(*ground_cloud, cloud);
