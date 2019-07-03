@@ -8,6 +8,7 @@ RoadRecognizer::RoadRecognizer(void)
     local_nh.param("LEAF_SIZE", LEAF_SIZE, {0.1});
     local_nh.param("OUTLIER_REMOVAL_K", OUTLIER_REMOVAL_K, {50});
     local_nh.param("OUTLIER_REMOVAL_THRESHOLD", OUTLIER_REMOVAL_THRESHOLD, {1.0});
+    local_nh.param("CURVATURE_THRESHOLD", CURVATURE_THRESHOLD, {0.1});
 
     curvature_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/curvature", 1);
     downsampled_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/downsampled", 1);
@@ -25,6 +26,7 @@ RoadRecognizer::RoadRecognizer(void)
     std::cout << "LEAF_SIZE: " << LEAF_SIZE << std::endl;
     std::cout << "OUTLIER_REMOVAL_K: " << OUTLIER_REMOVAL_K << std::endl;
     std::cout << "OUTLIER_REMOVAL_THRESHOLD: " << OUTLIER_REMOVAL_THRESHOLD << std::endl;
+    std::cout << "CURVATURE_THRESHOLD: " << CURVATURE_THRESHOLD << std::endl;
 }
 
 void RoadRecognizer::obstacles_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
@@ -84,6 +86,15 @@ void RoadRecognizer::process(void)
                 cloud_normals->points[i].z = ground_cloud->points[i].z;
                 cloud_normals->points[i].intensity = ground_cloud->points[i].intensity;
             }
+
+            std::cout << "--- passthrough filter ---" << std::endl;
+            pcl::PassThrough<PointXYZIN> pass;
+            pass.setInputCloud(cloud_normals);
+            pass.setFilterFieldName("curvature");
+            pass.setFilterLimits(0, CURVATURE_THRESHOLD);
+            pass.setFilterLimitsNegative(true);
+            pass.filter(*cloud_normals);
+            std::cout << "after passthrough filter cloud size: " << cloud_normals->points.size() << std::endl;
 
             sensor_msgs::PointCloud2 cloud;
             pcl::toROSMsg(*ground_cloud, cloud);

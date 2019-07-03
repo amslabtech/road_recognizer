@@ -65,9 +65,9 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 0.117361069
+      Max Intensity: 0.296459705
       Min Color: 0; 0; 0
-      Min Intensity: 0
+      Min Intensity: 0.0100416904
       Name: PointCloud2
       Position Transformer: XYZ
       Queue Size: 10
@@ -90,12 +90,12 @@ Visualization Manager:
       Channel Name: intensity
       Class: rviz/PointCloud2
       Color: 255; 255; 255
-      Color Transformer: Intensity
+      Color Transformer: FlatColor
       Decay Time: 0
-      Enabled: false
+      Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 103
+      Max Intensity: 108
       Min Color: 0; 0; 0
       Min Intensity: 0
       Name: PointCloud2
@@ -105,16 +105,16 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.00999999978
       Style: Points
-      Topic: /recognition/road_recognizer/cloud/downsampled
+      Topic: /velodyne_obstacles
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 0; 0; 0
     Default Light: true
-    Fixed Frame: velodyne
+    Fixed Frame: base_link
     Frame Rate: 30
   Name: root
   Tools:
@@ -135,7 +135,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 30.820755
+      Distance: 35.9569473
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
@@ -150,10 +150,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.630397975
+      Pitch: 0.580397725
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.43539843
+      Yaw: 0.425398052
     Saved: ~
 Window Geometry:
   Displays:

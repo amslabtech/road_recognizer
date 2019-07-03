@@ -45,6 +45,7 @@ private:
     double LEAF_SIZE;
     int OUTLIER_REMOVAL_K;
     double OUTLIER_REMOVAL_THRESHOLD;
+    double CURVATURE_THRESHOLD;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;
