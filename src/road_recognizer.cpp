@@ -63,6 +63,7 @@ void RoadRecognizer::process(void)
 
             std::cout << "--- normal estimation ---" << std::endl;
             pcl::NormalEstimationOMP<PointXYZI, PointXYZIN> ne;
+            //pcl::NormalEstimation<PointXYZI, PointXYZIN> ne;
             ne.setInputCloud(ground_cloud);
             pcl::search::KdTree<PointXYZI>::Ptr tree(new pcl::search::KdTree<PointXYZI>());
             ne.setSearchMethod(tree);
@@ -73,11 +74,13 @@ void RoadRecognizer::process(void)
             ne.compute(*cloud_normals);
             std::cout << "after normal estimation cloud size: " << cloud_normals->points.size() << std::endl;
 
+            /*
             for(const auto& pt : cloud_normals->points){
                 std::cout << "(x,y,z): " << pt.x << ", " << pt.y << ", " << pt.z << std::endl;
                 std::cout << "(nx,ny,nz): " << pt.normal_x << ", " << pt.normal_y << ", " << pt.normal_z << std::endl;
                 std::cout << "(curv): " << pt.curvature << std::endl;
             }
+            */
 
             sensor_msgs::PointCloud2 cloud;
             pcl::toROSMsg(*ground_cloud, cloud);
