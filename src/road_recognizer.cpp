@@ -127,6 +127,14 @@ void RoadRecognizer::process(void)
             std::cout << "intensity cloud size: " << intensity_cloud->points.size() << std::endl;
             std::cout << "after passthrough filter cloud size: " << road_cloud->points.size() << std::endl;
 
+            std::cout << "before statistical outlier removal cloud size: " << road_cloud->points.size() << std::endl;
+            pcl::StatisticalOutlierRemoval<PointXYZIN> sor_n;
+            sor_n.setInputCloud(road_cloud);
+            sor_n.setMeanK(OUTLIER_REMOVAL_K);
+            sor_n.setStddevMulThresh(OUTLIER_REMOVAL_THRESHOLD);
+            sor_n.filter(*road_cloud);
+            std::cout << "after statistical outlier removal cloud size: " << road_cloud->points.size() << std::endl;
+
             publish_clouds();
 
             obstacles_cloud_updated = false;

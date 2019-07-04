@@ -49,6 +49,7 @@ public:
     void obstacles_callback(const sensor_msgs::PointCloud2ConstPtr&);
     void ground_callback(const sensor_msgs::PointCloud2ConstPtr&);
     void publish_clouds(void);
+    void downsample(void);
 
 private:
     double HZ;
