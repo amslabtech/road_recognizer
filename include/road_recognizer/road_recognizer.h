@@ -17,12 +17,6 @@
 #include <pcl/filters/passthrough.h>
 #include <pcl/filters/statistical_outlier_removal.h>
 
-// RANSAC
-#include <pcl/ModelCoefficients.h>
-#include <pcl/sample_consensus/method_types.h>
-#include <pcl/sample_consensus/model_types.h>
-#include <pcl/segmentation/sac_segmentation.h>
-
 // OMP
 #include <omp.h>
 
@@ -50,6 +44,9 @@ public:
     void ground_callback(const sensor_msgs::PointCloud2ConstPtr&);
     void publish_clouds(void);
     void downsample(void);
+    void estimate_normal(void);
+    void filter_curvature(void);
+    void filter_intensity(void);
 
 private:
     double HZ;
