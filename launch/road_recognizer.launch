@@ -33,6 +33,12 @@
             <param name="POSITION_DIFFERENCE_THRESHOLD" value="$(arg position_difference_threshold)"/>
             <param name="YAW_DIFFERENCE_THRESHOLD" value="$(arg yaw_difference_threshold)"/>
         </node>
+
+        <node pkg="road_recognizer" type="road_recognizer" name="road_recognizer">
+            <param name="HZ" value="$(arg hz)"/>
+            <param name="LEAF_SIZE" value="$(arg leaf_size)"/>
+        </node>
+
     </group>
 
 </launch>

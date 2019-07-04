@@ -145,6 +145,9 @@ add_library(libroad_cloud_publisher
 add_library(libroad_point_cloud_storer
   src/road_point_cloud_storer.cpp
 )
+add_library(libroad_recognizer
+  src/road_recognizer.cpp
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -152,6 +155,7 @@ add_library(libroad_point_cloud_storer
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(libroad_cloud_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(libroad_point_cloud_storer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(libroad_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
@@ -159,6 +163,7 @@ add_dependencies(libroad_point_cloud_storer ${${PROJECT_NAME}_EXPORTED_TARGETS} 
 # add_executable(${PROJECT_NAME}_node src/road_recognizer_node.cpp)
 add_executable(road_cloud_publisher src/road_cloud_publisher_node.cpp)
 add_executable(road_point_cloud_storer src/road_point_cloud_storer_node.cpp)
+add_executable(road_recognizer src/road_recognizer_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -171,6 +176,7 @@ add_executable(road_point_cloud_storer src/road_point_cloud_storer_node.cpp)
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(road_cloud_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(road_point_cloud_storer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(road_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
@@ -185,6 +191,11 @@ target_link_libraries(road_point_cloud_storer
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
   libroad_point_cloud_storer
+)
+target_link_libraries(road_recognizer
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+  libroad_recognizer
 )
 
 #############
