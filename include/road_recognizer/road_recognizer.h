@@ -48,6 +48,7 @@ public:
     void process(void);
     void obstacles_callback(const sensor_msgs::PointCloud2ConstPtr&);
     void ground_callback(const sensor_msgs::PointCloud2ConstPtr&);
+    void publish_clouds(void);
 
 private:
     double HZ;
@@ -56,18 +57,25 @@ private:
     int OUTLIER_REMOVAL_K;
     double OUTLIER_REMOVAL_THRESHOLD;
     double CURVATURE_THRESHOLD;
+    double INTENSITY_UPPER_THRESHOLD;
+    double INTENSITY_LOWER_THRESHOLD;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;
 
     ros::Publisher curvature_cloud_pub;
     ros::Publisher downsampled_cloud_pub;
+    ros::Publisher intensity_cloud_pub;
+    ros::Publisher road_cloud_pub;
     ros::Subscriber obstacles_sub;
     ros::Subscriber ground_sub;
 
     CloudXYZIPtr obstacles_cloud;
     CloudXYZIPtr ground_cloud;
     CloudXYZINPtr cloud_normals;
+    CloudXYZINPtr curvature_cloud;
+    CloudXYZINPtr intensity_cloud;
+    CloudXYZINPtr road_cloud;
     bool obstacles_cloud_updated;
     bool ground_cloud_updated;
 };

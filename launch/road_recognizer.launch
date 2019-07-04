@@ -4,12 +4,16 @@
     <arg name="leaf_size" default="0.30"/>
     <!--arg name="curvature_threshold" default="0.005"/-->
     <arg name="curvature_threshold" default="0.90"/>
+    <arg name="intensity_upper_threshold" default="255"/>
+    <arg name="intensity_lower_threshold" default="20"/>
 
     <node pkg="road_recognizer" type="road_recognizer" name="road_recognizer" ns="recognition">
         <param name="HZ" value="$(arg hz)"/>
         <param name="NORMAL_ESTIMATION_RADIUS" value="$(arg normal_estimation_radius)"/>
         <param name="LEAF_SIZE" value="$(arg leaf_size)"/>
         <param name="CURVATURE_THRESHOLD" value="$(arg curvature_threshold)"/>
+        <param name="INTENSITY_UPPER_THRESHOLD" value="$(arg intensity_upper_threshold)"/>
+        <param name="INTENSITY_LOWER_THRESHOLD" value="$(arg intensity_lower_threshold)"/>
     </node>
 
 </launch>
