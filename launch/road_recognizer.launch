@@ -2,7 +2,8 @@
     <arg name="hz" default="20"/>
     <arg name="normal_estimation_radius" default="0.60"/>
     <arg name="leaf_size" default="0.30"/>
-    <arg name="curvature_threshold" default="0.005"/>
+    <!--arg name="curvature_threshold" default="0.005"/-->
+    <arg name="curvature_threshold" default="0.90"/>
 
     <node pkg="road_recognizer" type="road_recognizer" name="road_recognizer" ns="recognition">
         <param name="HZ" value="$(arg hz)"/>

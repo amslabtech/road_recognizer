@@ -99,9 +99,11 @@ void RoadRecognizer::process(void)
             std::cout << "--- passthrough filter ---" << std::endl;
             pcl::PassThrough<PointXYZIN> pass;
             pass.setInputCloud(cloud);
-            pass.setFilterFieldName("curvature");
+            //pass.setFilterFieldName("curvature");
+            //pass.setFilterLimits(0, CURVATURE_THRESHOLD);
+            //pass.setFilterLimitsNegative(true);
+            pass.setFilterFieldName("normal_z");
             pass.setFilterLimits(0, CURVATURE_THRESHOLD);
-            pass.setFilterLimitsNegative(true);
             pass.filter(*cloud);
             std::cout << "after passthrough filter cloud size: " << cloud->points.size() << std::endl;
 
