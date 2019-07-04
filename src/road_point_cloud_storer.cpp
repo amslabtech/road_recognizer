@@ -59,6 +59,7 @@ void RoadPointCloudStorer::callback(const sensor_msgs::PointCloud2ConstPtr& msg_
 
         pcl::transformPointCloud(*road_cloud, *road_cloud, affine_transform);
         if(((current_position - last_add_position).norm() > POSITION_DIFFERENCE_THRESHOLD) || (fabs(current_yaw - last_add_yaw) > YAW_DIFFERENCE_THRESHOLD)){
+            // store pointcloud only when robot moves
             *road_cloud += *temp_cloud;
             cloud_size_list.push_back(cloud_size);
             if(cloud_size_list.size() > STORE_NUM){
@@ -74,7 +75,6 @@ void RoadPointCloudStorer::callback(const sensor_msgs::PointCloud2ConstPtr& msg_
             std::cout << s << ", ";
         }
         std::cout << std::endl;
-
     }else{
         *road_cloud = *temp_cloud;
         cloud_size_list.push_back(cloud_size);
@@ -85,7 +85,6 @@ void RoadPointCloudStorer::callback(const sensor_msgs::PointCloud2ConstPtr& msg_
         last_yaw = current_yaw;
         last_add_yaw = current_yaw;
     }
-
     road_cloud->header = temp_cloud->header;
     last_position = current_position;
     last_yaw = current_yaw;

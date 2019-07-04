@@ -25,7 +25,6 @@
 #include <pcl/features/normal_3d.h>
 #include <pcl/features/normal_3d_omp.h>
 #include <pcl/filters/passthrough.h>
-#include <pcl/filters/statistical_outlier_removal.h>
 
 // OMP
 #include <omp.h>
