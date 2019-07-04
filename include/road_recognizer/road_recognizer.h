@@ -11,6 +11,7 @@
 #include <pcl/point_types.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/search/kdtree.h>
+#include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/features/normal_3d_omp.h>
 #include <pcl/filters/passthrough.h>
@@ -22,6 +23,9 @@
 #include <pcl/sample_consensus/model_types.h>
 #include <pcl/segmentation/sac_segmentation.h>
 
+// OMP
+#include <omp.h>
+
 
 class RoadRecognizer
 {
@@ -32,6 +36,12 @@ public:
     typedef pcl::PointXYZI PointXYZI;
     typedef pcl::PointCloud<PointXYZI> CloudXYZI;
     typedef pcl::PointCloud<PointXYZI>::Ptr CloudXYZIPtr;
+    typedef pcl::PointXYZ PointXYZ;
+    typedef pcl::PointCloud<PointXYZ> CloudXYZ;
+    typedef pcl::PointCloud<PointXYZ>::Ptr CloudXYZPtr;
+    typedef pcl::PointNormal PointN;
+    typedef pcl::PointCloud<PointN> CloudN;
+    typedef pcl::PointCloud<PointN>::Ptr CloudNPtr;
 
     RoadRecognizer(void);
 

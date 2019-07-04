@@ -65,42 +65,51 @@ void RoadRecognizer::process(void)
             std::cout << "after statistical outlier removal cloud size: " << ground_cloud->points.size() << std::endl;
 
             std::cout << "--- normal estimation ---" << std::endl;
-            pcl::NormalEstimationOMP<PointXYZI, PointXYZIN> ne;
-            //pcl::NormalEstimation<PointXYZI, PointXYZIN> ne;
-            ne.setInputCloud(ground_cloud);
-            pcl::search::KdTree<PointXYZI>::Ptr tree(new pcl::search::KdTree<PointXYZI>());
+            CloudXYZPtr xyz_cloud(new CloudXYZ);
+            pcl::copyPointCloud(*ground_cloud, *xyz_cloud);
+            pcl::NormalEstimationOMP<PointXYZ, PointN> ne;
+            ne.setInputCloud(xyz_cloud);
+            pcl::search::KdTree<PointXYZ>::Ptr tree(new pcl::search::KdTree<PointXYZ>());
+            //pcl::KdTreeFLANN<PointXYZ>::Ptr tree(new pcl::KdTreeFLANN<PointXYZ>());
             ne.setSearchMethod(tree);
 
-            CloudXYZINPtr cloud_normals(new CloudXYZIN);
-            cloud_normals->header = ground_cloud->header;
+            CloudNPtr cloud_normals(new CloudN);
             ne.setRadiusSearch(NORMAL_ESTIMATION_RADIUS);
 
             ne.compute(*cloud_normals);
             std::cout << "after normal estimation cloud size: " << cloud_normals->points.size() << std::endl;
 
-            // cheat
+            CloudXYZINPtr cloud(new CloudXYZIN);
+            cloud->header = ground_cloud->header;
             int size = cloud_normals->points.size();
+            cloud->points.resize(size);
+
+            #pragma omp parallel for
             for(int i=0;i<size;i++){
-                cloud_normals->points[i].x = ground_cloud->points[i].x;
-                cloud_normals->points[i].y = ground_cloud->points[i].y;
-                cloud_normals->points[i].z = ground_cloud->points[i].z;
-                cloud_normals->points[i].intensity = ground_cloud->points[i].intensity;
+                cloud->points[i].x = ground_cloud->points[i].x;
+                cloud->points[i].y = ground_cloud->points[i].y;
+                cloud->points[i].z = ground_cloud->points[i].z;
+                cloud->points[i].intensity = ground_cloud->points[i].intensity;
+                cloud->points[i].normal_x = cloud_normals->points[i].normal_x;
+                cloud->points[i].normal_y = cloud_normals->points[i].normal_y;
+                cloud->points[i].normal_z = cloud_normals->points[i].normal_z;
+                cloud->points[i].curvature = cloud_normals->points[i].curvature;
             }
 
             std::cout << "--- passthrough filter ---" << std::endl;
             pcl::PassThrough<PointXYZIN> pass;
-            pass.setInputCloud(cloud_normals);
+            pass.setInputCloud(cloud);
             pass.setFilterFieldName("curvature");
             pass.setFilterLimits(0, CURVATURE_THRESHOLD);
             pass.setFilterLimitsNegative(true);
-            pass.filter(*cloud_normals);
-            std::cout << "after passthrough filter cloud size: " << cloud_normals->points.size() << std::endl;
+            pass.filter(*cloud);
+            std::cout << "after passthrough filter cloud size: " << cloud->points.size() << std::endl;
 
-            sensor_msgs::PointCloud2 cloud;
-            pcl::toROSMsg(*ground_cloud, cloud);
-            downsampled_cloud_pub.publish(cloud);
+            sensor_msgs::PointCloud2 cloud1;
+            pcl::toROSMsg(*ground_cloud, cloud1);
+            downsampled_cloud_pub.publish(cloud1);
             sensor_msgs::PointCloud2 cloud2;
-            pcl::toROSMsg(*cloud_normals, cloud2);
+            pcl::toROSMsg(*cloud, cloud2);
             curvature_cloud_pub.publish(cloud2);
 
             obstacles_cloud_updated = false;
