@@ -75,7 +75,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.00999999978
       Style: Points
-      Topic: /recognition/road_recognizer/cloud/curvature
+      Topic: /recognition/road_recognizer/road_cloud_publisher/cloud/curvature
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -147,7 +147,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.00999999978
       Style: Points
-      Topic: /recognition/road_recognizer/cloud/intensity
+      Topic: /recognition/road_recognizer/road_cloud_publisher/cloud/intensity
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -169,7 +169,7 @@ Visualization Manager:
       Max Color: 255; 255; 255
       Max Intensity: 107
       Min Color: 0; 0; 0
-      Min Intensity: 1
+      Min Intensity: 0
       Name: PointCloud2
       Position Transformer: XYZ
       Queue Size: 10
@@ -177,7 +177,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.00999999978
       Style: Points
-      Topic: /recognition/cloud/road
+      Topic: /recognition/road_recognizer/cloud/road/stored
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true

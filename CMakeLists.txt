@@ -139,8 +139,8 @@ add_definitions(${PCL_DEFINITIONS})
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/road_recognizer.cpp
 # )
-add_library(libroad_recognizer
-  src/road_recognizer.cpp
+add_library(libroad_cloud_publisher
+  src/road_cloud_publisher.cpp
 )
 add_library(libroad_point_cloud_storer
   src/road_point_cloud_storer.cpp
@@ -150,13 +150,14 @@ add_library(libroad_point_cloud_storer
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(libroad_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(libroad_cloud_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(libroad_point_cloud_storer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/road_recognizer_node.cpp)
-add_executable(road_recognizer src/road_recognizer_node.cpp)
+add_executable(road_cloud_publisher src/road_cloud_publisher_node.cpp)
 add_executable(road_point_cloud_storer src/road_point_cloud_storer_node.cpp)
 
 ## Rename C++ executable without prefix
@@ -168,17 +169,17 @@ add_executable(road_point_cloud_storer src/road_point_cloud_storer_node.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(road_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(road_cloud_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(road_point_cloud_storer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(road_recognizer
+target_link_libraries(road_cloud_publisher
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
-  libroad_recognizer
+  libroad_cloud_publisher
 )
 target_link_libraries(road_point_cloud_storer
   ${catkin_LIBRARIES}

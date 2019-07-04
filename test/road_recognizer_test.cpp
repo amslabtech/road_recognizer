@@ -2,7 +2,8 @@
 
 #include <ros/ros.h>
 
-#include "road_recognizer/road_recognizer.h"
+#include "road_recognizer/road_cloud_publisher.h"
+#include "road_recognizer/road_point_cloud_storer.h"
 
 TEST(TestSuite, test0)
 {

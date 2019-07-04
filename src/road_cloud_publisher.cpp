@@ -1,6 +1,6 @@
-#include "road_recognizer/road_recognizer.h"
+#include "road_recognizer/road_cloud_publisher.h"
 
-RoadRecognizer::RoadRecognizer(void)
+RoadCloudPublisher::RoadCloudPublisher(void)
 :local_nh("~")
 {
     local_nh.param("HZ", HZ, {20});
@@ -17,8 +17,8 @@ RoadRecognizer::RoadRecognizer(void)
     intensity_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/intensity", 1);
     downsampled_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/downsampled", 1);
     road_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("cloud/road", 1);
-    obstacles_sub = nh.subscribe("/velodyne_obstacles", 1, &RoadRecognizer::obstacles_callback, this);
-    ground_sub = nh.subscribe("/velodyne_clear", 1, &RoadRecognizer::ground_callback, this);
+    obstacles_sub = nh.subscribe("/velodyne_obstacles", 1, &RoadCloudPublisher::obstacles_callback, this);
+    ground_sub = nh.subscribe("/velodyne_clear", 1, &RoadCloudPublisher::ground_callback, this);
 
     obstacles_cloud = CloudXYZIPtr(new CloudXYZI);
     ground_cloud = CloudXYZIPtr(new CloudXYZI);
@@ -40,26 +40,26 @@ RoadRecognizer::RoadRecognizer(void)
     std::cout << "HEIGHT_THRESHOLD: " << HEIGHT_THRESHOLD << std::endl;
 }
 
-void RoadRecognizer::obstacles_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
+void RoadCloudPublisher::obstacles_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
     pcl::fromROSMsg(*msg, *obstacles_cloud);
     obstacles_cloud_updated = true;
 }
 
-void RoadRecognizer::ground_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
+void RoadCloudPublisher::ground_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
     pcl::fromROSMsg(*msg, *ground_cloud);
     ground_cloud_updated = true;
 }
 
-void RoadRecognizer::process(void)
+void RoadCloudPublisher::process(void)
 {
     ros::Rate loop_rate(HZ);
 
     while(ros::ok()){
         if(obstacles_cloud_updated && ground_cloud_updated){
             double start = ros::Time::now().toSec();
-            std::cout << "=== road recognizer ===" << std::endl;
+            std::cout << "=== road cloud publisher ===" << std::endl;
 
             std::cout << "--- downsampling ---" << std::endl;
             downsample();
@@ -96,7 +96,7 @@ void RoadRecognizer::process(void)
     }
 }
 
-void RoadRecognizer::publish_clouds(void)
+void RoadCloudPublisher::publish_clouds(void)
 {
     sensor_msgs::PointCloud2 cloud1;
     pcl::toROSMsg(*ground_cloud, cloud1);
@@ -119,7 +119,7 @@ void RoadRecognizer::publish_clouds(void)
     road_cloud->points.clear();
 }
 
-void RoadRecognizer::downsample(void)
+void RoadCloudPublisher::downsample(void)
 {
     std::cout << "before cloud size: " << ground_cloud->points.size() << std::endl;
     pcl::VoxelGrid<PointXYZI> vg;
@@ -135,7 +135,7 @@ void RoadRecognizer::downsample(void)
     std::cout << "after statistical outlier removal cloud size: " << ground_cloud->points.size() << std::endl;
 }
 
-void RoadRecognizer::estimate_normal(void)
+void RoadCloudPublisher::estimate_normal(void)
 {
     CloudXYZPtr xyz_cloud(new CloudXYZ);
     pcl::copyPointCloud(*ground_cloud, *xyz_cloud);
@@ -168,7 +168,7 @@ void RoadRecognizer::estimate_normal(void)
     }
 }
 
-void RoadRecognizer::filter_curvature(void)
+void RoadCloudPublisher::filter_curvature(void)
 {
     pcl::PassThrough<PointXYZIN> pass;
     pass.setInputCloud(road_cloud);
@@ -181,7 +181,7 @@ void RoadRecognizer::filter_curvature(void)
     pass.filter(*curvature_cloud);
 }
 
-void RoadRecognizer::filter_intensity(void)
+void RoadCloudPublisher::filter_intensity(void)
 {
     pcl::PassThrough<PointXYZIN> intensity_pass;
     intensity_pass.setInputCloud(road_cloud);
@@ -191,7 +191,7 @@ void RoadRecognizer::filter_intensity(void)
     intensity_pass.filter(*intensity_cloud);
 }
 
-void RoadRecognizer::filter_height(void)
+void RoadCloudPublisher::filter_height(void)
 {
     pcl::PassThrough<PointXYZIN> height_pass;
     height_pass.setInputCloud(road_cloud);

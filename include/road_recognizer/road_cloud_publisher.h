@@ -1,5 +1,5 @@
-#ifndef __ROAD_RECOGNIZER_H
-#define __ROAD_RECOGNIZER_H
+#ifndef __ROAD_CLOUD_PUBLISHER
+#define __ROAD_CLOUD_PUBLISHER
 
 #include <ros/ros.h>
 
@@ -21,7 +21,7 @@
 #include <omp.h>
 
 
-class RoadRecognizer
+class RoadCloudPublisher
 {
 public:
     typedef pcl::PointXYZINormal PointXYZIN;
@@ -37,7 +37,7 @@ public:
     typedef pcl::PointCloud<PointN> CloudN;
     typedef pcl::PointCloud<PointN>::Ptr CloudNPtr;
 
-    RoadRecognizer(void);
+    RoadCloudPublisher(void);
 
     void process(void);
     void obstacles_callback(const sensor_msgs::PointCloud2ConstPtr&);
@@ -79,4 +79,4 @@ private:
     bool ground_cloud_updated;
 };
 
-#endif// __ROAD_RECOGNIZER_H
+#endif// __ROAD_CLOUD_PUBLISHER
