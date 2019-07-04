@@ -12,6 +12,8 @@ RoadCloudPublisher::RoadCloudPublisher(void)
     local_nh.param("INTENSITY_UPPER_THRESHOLD", INTENSITY_UPPER_THRESHOLD, {15});
     local_nh.param("INTENSITY_LOWER_THRESHOLD", INTENSITY_LOWER_THRESHOLD, {1});
     local_nh.param("HEIGHT_THRESHOLD", HEIGHT_THRESHOLD, {0});
+    local_nh.param("MAX_RANDOM_SAMPLE_SIZE", MAX_RANDOM_SAMPLE_SIZE, {5000});
+    local_nh.param("RANDOM_SAMPLE_RATIO", RANDOM_SAMPLE_RATIO, {0.25});
 
     curvature_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/curvature", 1);
     intensity_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/intensity", 1);
@@ -38,6 +40,8 @@ RoadCloudPublisher::RoadCloudPublisher(void)
     std::cout << "INTENSITY_UPPER_THRESHOLD: " << INTENSITY_UPPER_THRESHOLD << std::endl;
     std::cout << "INTENSITY_LOWER_THRESHOLD: " << INTENSITY_LOWER_THRESHOLD << std::endl;
     std::cout << "HEIGHT_THRESHOLD: " << HEIGHT_THRESHOLD << std::endl;
+    std::cout << "MAX_RANDOM_SAMPLE_SIZE: " << MAX_RANDOM_SAMPLE_SIZE << std::endl;
+    std::cout << "RANDOM_SAMPLE_RATIO: " << RANDOM_SAMPLE_RATIO << std::endl;
 }
 
 void RoadCloudPublisher::obstacles_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
@@ -75,14 +79,6 @@ void RoadCloudPublisher::process(void)
             *road_cloud = *curvature_cloud + *intensity_cloud;
             filter_height();
             std::cout << "after passthrough filter cloud size: " << road_cloud->points.size() << std::endl;
-
-            std::cout << "before statistical outlier removal cloud size: " << road_cloud->points.size() << std::endl;
-            pcl::StatisticalOutlierRemoval<PointXYZIN> sor_n;
-            sor_n.setInputCloud(road_cloud);
-            sor_n.setMeanK(OUTLIER_REMOVAL_K);
-            sor_n.setStddevMulThresh(OUTLIER_REMOVAL_THRESHOLD);
-            sor_n.filter(*road_cloud);
-            std::cout << "after statistical outlier removal cloud size: " << road_cloud->points.size() << std::endl;
 
             publish_clouds();
 
@@ -122,17 +118,22 @@ void RoadCloudPublisher::publish_clouds(void)
 void RoadCloudPublisher::downsample(void)
 {
     std::cout << "before cloud size: " << ground_cloud->points.size() << std::endl;
-    pcl::VoxelGrid<PointXYZI> vg;
-    vg.setInputCloud(ground_cloud);
-    vg.setLeafSize(LEAF_SIZE, LEAF_SIZE, LEAF_SIZE);
-    vg.filter(*ground_cloud);
-    std::cout << "after voxel grid cloud size: " << ground_cloud->points.size() << std::endl;
-    pcl::StatisticalOutlierRemoval<PointXYZI> sor;
-    sor.setInputCloud(ground_cloud);
-    sor.setMeanK(OUTLIER_REMOVAL_K);
-    sor.setStddevMulThresh(OUTLIER_REMOVAL_THRESHOLD);
-    sor.filter(*ground_cloud);
-    std::cout << "after statistical outlier removal cloud size: " << ground_cloud->points.size() << std::endl;
+    // random sampling
+    std::random_device rnd;
+    std::mt19937 mt(rnd());
+    std::uniform_real_distribution<double> dist(0.0, 1.0);
+    int cloud_size = ground_cloud->points.size();
+    int random_sample_size = std::min(cloud_size * RANDOM_SAMPLE_RATIO, (double)MAX_RANDOM_SAMPLE_SIZE);
+
+    CloudXYZIPtr downsampled_cloud(new CloudXYZI);
+    downsampled_cloud->points.resize(random_sample_size);
+    downsampled_cloud->header = ground_cloud->header;
+    for(int i=0;i<random_sample_size;i++){
+        int index =  cloud_size * dist(mt);
+        downsampled_cloud->points[i] = ground_cloud->points[index];
+    }
+    *ground_cloud = *downsampled_cloud;
+    std::cout << "after random sampling size: " << ground_cloud->points.size() << std::endl;
 }
 
 void RoadCloudPublisher::estimate_normal(void)

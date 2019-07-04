@@ -1,6 +1,8 @@
 #ifndef __ROAD_CLOUD_PUBLISHER
 #define __ROAD_CLOUD_PUBLISHER
 
+#include <random>
+
 #include <ros/ros.h>
 
 // PCL
@@ -59,6 +61,8 @@ private:
     double INTENSITY_UPPER_THRESHOLD;
     double INTENSITY_LOWER_THRESHOLD;
     double HEIGHT_THRESHOLD;
+    int MAX_RANDOM_SAMPLE_SIZE;
+    double RANDOM_SAMPLE_RATIO;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;
