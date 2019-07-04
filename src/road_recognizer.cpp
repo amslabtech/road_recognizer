@@ -11,6 +11,7 @@ RoadRecognizer::RoadRecognizer(void)
     local_nh.param("CURVATURE_THRESHOLD", CURVATURE_THRESHOLD, {0.1});
     local_nh.param("INTENSITY_UPPER_THRESHOLD", INTENSITY_UPPER_THRESHOLD, {15});
     local_nh.param("INTENSITY_LOWER_THRESHOLD", INTENSITY_LOWER_THRESHOLD, {1});
+    local_nh.param("HEIGHT_THRESHOLD", HEIGHT_THRESHOLD, {0});
 
     curvature_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/curvature", 1);
     intensity_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/intensity", 1);
@@ -36,6 +37,7 @@ RoadRecognizer::RoadRecognizer(void)
     std::cout << "CURVATURE_THRESHOLD: " << CURVATURE_THRESHOLD << std::endl;
     std::cout << "INTENSITY_UPPER_THRESHOLD: " << INTENSITY_UPPER_THRESHOLD << std::endl;
     std::cout << "INTENSITY_LOWER_THRESHOLD: " << INTENSITY_LOWER_THRESHOLD << std::endl;
+    std::cout << "HEIGHT_THRESHOLD: " << HEIGHT_THRESHOLD << std::endl;
 }
 
 void RoadRecognizer::obstacles_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
@@ -67,11 +69,11 @@ void RoadRecognizer::process(void)
 
             std::cout << "--- passthrough filter ---" << std::endl;
             filter_curvature();
-            filter_intensity();
-
-            *road_cloud = *curvature_cloud + *intensity_cloud;
             std::cout << "curvature cloud size: " << curvature_cloud->points.size() << std::endl;
+            filter_intensity();
             std::cout << "intensity cloud size: " << intensity_cloud->points.size() << std::endl;
+            *road_cloud = *curvature_cloud + *intensity_cloud;
+            filter_height();
             std::cout << "after passthrough filter cloud size: " << road_cloud->points.size() << std::endl;
 
             std::cout << "before statistical outlier removal cloud size: " << road_cloud->points.size() << std::endl;
@@ -187,4 +189,15 @@ void RoadRecognizer::filter_intensity(void)
     intensity_pass.setFilterLimits(INTENSITY_LOWER_THRESHOLD, INTENSITY_UPPER_THRESHOLD);
     intensity_cloud->header = ground_cloud->header;
     intensity_pass.filter(*intensity_cloud);
+}
+
+void RoadRecognizer::filter_height(void)
+{
+    pcl::PassThrough<PointXYZIN> height_pass;
+    height_pass.setInputCloud(road_cloud);
+    height_pass.setFilterFieldName("z");
+    height_pass.setFilterLimits(HEIGHT_THRESHOLD, 100);
+    height_pass.setFilterLimitsNegative(true);
+    road_cloud->header = ground_cloud->header;
+    height_pass.filter(*road_cloud);
 }

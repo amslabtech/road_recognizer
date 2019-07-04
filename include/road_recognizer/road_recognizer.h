@@ -47,6 +47,7 @@ public:
     void estimate_normal(void);
     void filter_curvature(void);
     void filter_intensity(void);
+    void filter_height(void);
 
 private:
     double HZ;
@@ -57,6 +58,7 @@ private:
     double CURVATURE_THRESHOLD;
     double INTENSITY_UPPER_THRESHOLD;
     double INTENSITY_LOWER_THRESHOLD;
+    double HEIGHT_THRESHOLD;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

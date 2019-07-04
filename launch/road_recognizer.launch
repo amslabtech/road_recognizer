@@ -8,6 +8,7 @@
     <arg name="curvature_threshold" default="0.90"/>
     <arg name="intensity_upper_threshold" default="255"/>
     <arg name="intensity_lower_threshold" default="20"/>
+    <arg name="height_threshold" default="0.0"/>
 
     <arg name="store_num" default="100"/>
     <arg name="position_difference_threshold" default="0.1"/>
@@ -22,6 +23,7 @@
         <param name="CURVATURE_THRESHOLD" value="$(arg curvature_threshold)"/>
         <param name="INTENSITY_UPPER_THRESHOLD" value="$(arg intensity_upper_threshold)"/>
         <param name="INTENSITY_LOWER_THRESHOLD" value="$(arg intensity_lower_threshold)"/>
+        <param name="HEIGHT_THRESHOLD" value="$(arg height_threshold)"/>
     </node>
 
     <node pkg="road_recognizer" type="road_point_cloud_storer" name="road_point_cloud_storer" ns="recognition">
