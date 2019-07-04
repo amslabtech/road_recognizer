@@ -21,7 +21,6 @@ RoadRecognizer::RoadRecognizer(void)
 
     obstacles_cloud = CloudXYZIPtr(new CloudXYZI);
     ground_cloud = CloudXYZIPtr(new CloudXYZI);
-    cloud_normals = CloudXYZINPtr(new CloudXYZIN);
     curvature_cloud = CloudXYZINPtr(new CloudXYZIN);
     intensity_cloud = CloudXYZINPtr(new CloudXYZIN);
     road_cloud = CloudXYZINPtr(new CloudXYZIN);

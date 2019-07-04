@@ -72,7 +72,6 @@ private:
 
     CloudXYZIPtr obstacles_cloud;
     CloudXYZIPtr ground_cloud;
-    CloudXYZINPtr cloud_normals;
     CloudXYZINPtr curvature_cloud;
     CloudXYZINPtr intensity_cloud;
     CloudXYZINPtr road_cloud;
