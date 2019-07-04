@@ -6,6 +6,8 @@ RoadPointCloudStorer::RoadPointCloudStorer(void)
 {
     local_nh.param("HZ", HZ, {20});
     local_nh.param("STORE_NUM", STORE_NUM, {20});
+    local_nh.param("POSITION_DIFFERENCE_THRESHOLD", POSITION_DIFFERENCE_THRESHOLD, {0.1});
+    local_nh.param("YAW_DIFFERENCE_THRESHOLD", YAW_DIFFERENCE_THRESHOLD, {0.1});
 
     road_stored_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("cloud/road/stored", 1);
 
@@ -17,6 +19,8 @@ RoadPointCloudStorer::RoadPointCloudStorer(void)
 
     std::cout << "HZ: " << HZ << std::endl;
     std::cout << "STORE_NUM: " << STORE_NUM << std::endl;
+    std::cout << "POSITION_DIFFERENCE_THRESHOLD: " << POSITION_DIFFERENCE_THRESHOLD << std::endl;
+    std::cout << "YAW_DIFFERENCE_THRESHOLD: " << YAW_DIFFERENCE_THRESHOLD << std::endl;
 }
 
 void RoadPointCloudStorer::callback(const sensor_msgs::PointCloud2ConstPtr& msg_cloud, const nav_msgs::OdometryConstPtr& msg_odom)
@@ -29,6 +33,8 @@ void RoadPointCloudStorer::callback(const sensor_msgs::PointCloud2ConstPtr& msg_
     std::cout << "current_yaw: " << current_yaw << std::endl;
     static Eigen::Vector3d last_position;
     static double last_yaw;
+    static Eigen::Vector3d last_add_position;
+    static double last_add_yaw;
     std::cout << "last_position: " << last_position.transpose() << std::endl;
     std::cout << "last_yaw: " << last_yaw << std::endl;
     CloudXYZINPtr temp_cloud(new CloudXYZIN);
@@ -52,11 +58,15 @@ void RoadPointCloudStorer::callback(const sensor_msgs::PointCloud2ConstPtr& msg_
         std::cout << "affine transformation: \n" << affine_transform.translation() << "\n" << affine_transform.rotation().eulerAngles(0,1,2) << std::endl;
 
         pcl::transformPointCloud(*road_cloud, *road_cloud, affine_transform);
-        *road_cloud += *temp_cloud;
-        cloud_size_list.push_back(cloud_size);
-        if(cloud_size_list.size() > STORE_NUM){
-            road_cloud->points.erase(road_cloud->points.begin(), road_cloud->points.begin() + *(cloud_size_list.begin()));
-            cloud_size_list.pop_front();
+        if(((current_position - last_add_position).norm() > POSITION_DIFFERENCE_THRESHOLD) || (fabs(current_yaw - last_add_yaw) > YAW_DIFFERENCE_THRESHOLD)){
+            *road_cloud += *temp_cloud;
+            cloud_size_list.push_back(cloud_size);
+            if(cloud_size_list.size() > STORE_NUM){
+                road_cloud->points.erase(road_cloud->points.begin(), road_cloud->points.begin() + *(cloud_size_list.begin()));
+                cloud_size_list.pop_front();
+            }
+            last_add_position = current_position;
+            last_add_yaw = current_yaw;
         }
         std::cout << "stored cloud size: " <<  road_cloud->points.size() << std::endl;
         std::cout << "stored clouds num: " <<  cloud_size_list.size() << std::endl;
@@ -69,6 +79,11 @@ void RoadPointCloudStorer::callback(const sensor_msgs::PointCloud2ConstPtr& msg_
         *road_cloud = *temp_cloud;
         cloud_size_list.push_back(cloud_size);
         first_flag = false;
+        road_cloud->header = temp_cloud->header;
+        last_position = current_position;
+        last_add_position = current_position;
+        last_yaw = current_yaw;
+        last_add_yaw = current_yaw;
     }
 
     road_cloud->header = temp_cloud->header;

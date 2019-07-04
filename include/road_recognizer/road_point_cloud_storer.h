@@ -49,6 +49,8 @@ public:
 private:
     double HZ;
     int STORE_NUM;
+    double POSITION_DIFFERENCE_THRESHOLD;
+    double YAW_DIFFERENCE_THRESHOLD;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

@@ -10,6 +10,8 @@
     <arg name="intensity_lower_threshold" default="20"/>
 
     <arg name="store_num" default="100"/>
+    <arg name="position_difference_threshold" default="0.1"/>
+    <arg name="yaw_difference_threshold" default="0.1"/>
 
     <node pkg="road_recognizer" type="road_recognizer" name="road_recognizer" ns="recognition">
         <param name="HZ" value="$(arg hz)"/>
@@ -25,6 +27,8 @@
     <node pkg="road_recognizer" type="road_point_cloud_storer" name="road_point_cloud_storer" ns="recognition">
         <param name="HZ" value="$(arg hz)"/>
         <param name="STORE_NUM" value="$(arg store_num)"/>
+        <param name="POSITION_DIFFERENCE_THRESHOLD" value="$(arg position_difference_threshold)"/>
+        <param name="YAW_DIFFERENCE_THRESHOLD" value="$(arg yaw_difference_threshold)"/>
     </node>
 
 </launch>
