@@ -1,6 +1,9 @@
 #ifndef __ROAD_RECOGNIZER
 #define __ROAD_RECOGNIZER
 
+#include <random>
+#include <functional>
+
 #include <ros/ros.h>
 
 #include <nav_msgs/Odometry.h>
@@ -51,6 +54,8 @@ private:
     double LEAF_SIZE;
     int OUTLIER_REMOVAL_K;
     double OUTLIER_REMOVAL_THRESHOLD;
+    int MAX_RANDOM_SAMPLE_SIZE;
+    double RANDOM_SAMPLE_RATIO;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

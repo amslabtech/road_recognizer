@@ -15,6 +15,9 @@
         <arg name="position_difference_threshold" default="0.1"/>
         <arg name="yaw_difference_threshold" default="0.1"/>
 
+        <arg name="max_random_sample_size" default="5000"/>
+        <arg name="random_sample_ratio" default="0.10"/>
+
         <node pkg="road_recognizer" type="road_cloud_publisher" name="road_cloud_publisher">
             <param name="HZ" value="$(arg hz)"/>
             <param name="NORMAL_ESTIMATION_RADIUS" value="$(arg normal_estimation_radius)"/>
@@ -37,6 +40,8 @@
         <node pkg="road_recognizer" type="road_recognizer" name="road_recognizer">
             <param name="HZ" value="$(arg hz)"/>
             <param name="LEAF_SIZE" value="$(arg leaf_size)"/>
+            <param name="MAX_RANDOM_SAMPLE_SIZE" value="$(arg max_random_sample_size)"/>
+            <param name="RANDOM_SAMPLE_RATIO" value="$(arg random_sample_ratio)"/>
         </node>
 
     </group>
