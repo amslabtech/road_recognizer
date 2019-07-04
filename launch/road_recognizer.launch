@@ -20,4 +20,7 @@
         <param name="INTENSITY_LOWER_THRESHOLD" value="$(arg intensity_lower_threshold)"/>
     </node>
 
+    <node pkg="road_recognizer" type="road_point_cloud_storer" name="road_point_cloud_storer" ns="recognition">
+    </node>
+
 </launch>

@@ -142,6 +142,9 @@ add_definitions(${PCL_DEFINITIONS})
 add_library(libroad_recognizer
   src/road_recognizer.cpp
 )
+add_library(libroad_point_cloud_storer
+  src/road_point_cloud_storer.cpp
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -154,6 +157,7 @@ add_dependencies(libroad_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/road_recognizer_node.cpp)
 add_executable(road_recognizer src/road_recognizer_node.cpp)
+add_executable(road_point_cloud_storer src/road_point_cloud_storer_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -165,6 +169,7 @@ add_executable(road_recognizer src/road_recognizer_node.cpp)
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(road_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(road_point_cloud_storer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
@@ -174,6 +179,11 @@ target_link_libraries(road_recognizer
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
   libroad_recognizer
+)
+target_link_libraries(road_point_cloud_storer
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+  libroad_point_cloud_storer
 )
 
 #############
