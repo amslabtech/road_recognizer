@@ -15,7 +15,7 @@ RoadRecognizer::RoadRecognizer(void)
     curvature_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/curvature", 1);
     intensity_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/intensity", 1);
     downsampled_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/downsampled", 1);
-    road_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/road", 1);
+    road_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("cloud/road", 1);
     obstacles_sub = nh.subscribe("/velodyne_obstacles", 1, &RoadRecognizer::obstacles_callback, this);
     ground_sub = nh.subscribe("/velodyne_clear", 1, &RoadRecognizer::ground_callback, this);
 
