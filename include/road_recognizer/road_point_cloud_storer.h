@@ -7,6 +7,7 @@
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
+#include <tf/tf.h>
 
 // Eigen
 #include <Eigen/Dense>
@@ -47,16 +48,21 @@ public:
 
 private:
     double HZ;
+    int STORE_NUM;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;
 
+    ros::Publisher road_stored_cloud_pub;
     typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::PointCloud2, nav_msgs::Odometry> sync_subs;
     message_filters::Subscriber<sensor_msgs::PointCloud2> road_cloud_sub;
     message_filters::Subscriber<nav_msgs::Odometry> odom_sub;
     message_filters::Synchronizer<sync_subs> sync;
 
     CloudXYZINPtr road_cloud;
+    bool first_flag;
+    Eigen::Affine3d affine_transform;
+    std::list<int> cloud_size_list;
 };
 
 #endif// __ROAD_POINT_CLOUD_STORER
