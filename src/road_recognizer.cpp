@@ -18,7 +18,9 @@ RoadRecognizer::RoadRecognizer(void)
 
     filtered_cloud = CloudXYZINPtr(new CloudXYZIN);
 
-    viewer.setBackgroundColor(0, 0, 0);
+    if(ENABLE_VISUALIZATION){
+        viewer.setBackgroundColor(0, 0, 0);
+    }
 
     std::cout << "HZ: " << HZ << std::endl;
     std::cout << "LEAF_SIZE: " << LEAF_SIZE << std::endl;
