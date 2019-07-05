@@ -65,6 +65,7 @@ private:
 
     ros::Publisher downsampled_pub;
     ros::Publisher filtered_pub;
+    ros::Publisher beam_cloud_pub;
     ros::Subscriber road_stored_cloud_sub;
 
     CloudXYZINPtr filtered_cloud;

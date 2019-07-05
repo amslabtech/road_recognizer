@@ -13,6 +13,7 @@ RoadRecognizer::RoadRecognizer(void)
 
     downsampled_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/downsampled", 1);
     filtered_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/filtered", 1);
+    beam_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/beam_model", 1);
 
     road_stored_cloud_sub = nh.subscribe("cloud/road/stored", 1, &RoadRecognizer::road_cloud_callback, this);
 
@@ -70,6 +71,30 @@ void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr&
     sor.filter(*filtered_cloud);
     std::cout << "after statistical outlier removal cloud size: " << filtered_cloud->points.size() << std::endl;
 
+    std::cout << "--- beam model ---" << std::endl;
+    const int BEAM_ANGLE_NUM = 720;
+    const double MAX_BEAM_RANGE = 20;
+    std::vector<double> beam_list(BEAM_ANGLE_NUM, MAX_BEAM_RANGE);
+    for(const auto& pt : filtered_cloud->points){
+        double distance = sqrt(pt.x * pt.x + pt.y * pt.y);
+        double angle = atan2(pt.y, pt.x);
+        int index = (angle / M_PI + 1) * BEAM_ANGLE_NUM * 0.5;
+        if(0 <= index && index < BEAM_ANGLE_NUM){
+            if(beam_list[index] > distance){
+                beam_list[index] = distance;
+            }
+        }
+    }
+    CloudXYZINPtr beam_cloud(new CloudXYZIN);
+    beam_cloud->points.resize(BEAM_ANGLE_NUM);
+    beam_cloud->header = road_cloud->header;
+    for(int i=0;i<BEAM_ANGLE_NUM;i++){
+        double angle = (i / (BEAM_ANGLE_NUM * 0.5) - 1) * M_PI;
+        beam_cloud->points[i].x = beam_list[i] * cos(angle);
+        beam_cloud->points[i].y = beam_list[i] * sin(angle);
+    }
+    std::cout << "beam cloud size: " << beam_cloud->points.size() << std::endl;
+
     sensor_msgs::PointCloud2 cloud1;
     pcl::toROSMsg(*downsampled_cloud, cloud1);
     downsampled_pub.publish(cloud1);
@@ -77,6 +102,10 @@ void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr&
     sensor_msgs::PointCloud2 cloud2;
     pcl::toROSMsg(*filtered_cloud, cloud2);
     filtered_pub.publish(cloud2);
+
+    sensor_msgs::PointCloud2 cloud3;
+    pcl::toROSMsg(*beam_cloud, cloud3);
+    beam_cloud_pub.publish(cloud3);
 
     if(ENABLE_VISUALIZATION){
         visualize_cloud();
