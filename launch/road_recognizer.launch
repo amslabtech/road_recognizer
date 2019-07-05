@@ -18,6 +18,8 @@
         <arg name="outlier_removal_k" default="50"/>
         <arg name="outlier_removal_threshold" default="1.0"/>
         <arg name="enable_visualization" default="false"/>
+        <arg name="beam_angle_num" default="720"/>
+        <arg name="max_beam_range" default="20"/>
 
         <node pkg="road_recognizer" type="road_cloud_publisher" name="road_cloud_publisher">
             <param name="HZ" value="$(arg hz)"/>
@@ -46,6 +48,8 @@
             <param name="OUTLIER_REMOVAL_K" value="$(arg outlier_removal_k)"/>
             <param name="OUTLIER_REMOVAL_THRESHOLD" value="$(arg outlier_removal_threshold)"/>
             <param name="ENABLE_VISUALIZATION" value="$(arg enable_visualization)"/>
+            <param name="BEAM_ANGLE_NUM" value="$(arg beam_angle_num)"/>
+            <param name="MAX_BEAM_RANGE" value="$(arg max_beam_range)"/>
         </node>
 
     </group>

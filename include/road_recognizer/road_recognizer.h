@@ -30,6 +30,7 @@
 #include <pcl/filters/passthrough.h>
 #include <pcl/filters/statistical_outlier_removal.h>
 #include <pcl/visualization/cloud_viewer.h>
+#include <pcl/sample_consensus/sac_model_line.h>
 
 // OMP
 #include <omp.h>
@@ -38,6 +39,9 @@
 class RoadRecognizer
 {
 public:
+    typedef pcl::PointXYZ PointXYZ;
+    typedef pcl::PointCloud<PointXYZ> CloudXYZ;
+    typedef pcl::PointCloud<PointXYZ>::Ptr CloudXYZPtr;
     typedef pcl::PointXYZINormal PointXYZIN;
     typedef pcl::PointCloud<PointXYZIN> CloudXYZIN;
     typedef pcl::PointCloud<PointXYZIN>::Ptr CloudXYZINPtr;
@@ -59,6 +63,8 @@ private:
     int MAX_RANDOM_SAMPLE_SIZE;
     double RANDOM_SAMPLE_RATIO;
     bool ENABLE_VISUALIZATION;
+    int BEAM_ANGLE_NUM;
+    double MAX_BEAM_RANGE;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

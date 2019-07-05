@@ -10,6 +10,8 @@ RoadRecognizer::RoadRecognizer(void)
     local_nh.param("MAX_RANDOM_SAMPLE_SIZE", MAX_RANDOM_SAMPLE_SIZE, {5000});
     local_nh.param("RANDOM_SAMPLE_RATIO", RANDOM_SAMPLE_RATIO, {0.25});
     local_nh.param("ENABLE_VISUALIZATION", ENABLE_VISUALIZATION, {false});
+    local_nh.param("BEAM_ANGLE_NUM", BEAM_ANGLE_NUM, {720});
+    local_nh.param("MAX_BEAM_RANGE", MAX_BEAM_RANGE, {20});
 
     downsampled_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/downsampled", 1);
     filtered_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/filtered", 1);
@@ -30,6 +32,8 @@ RoadRecognizer::RoadRecognizer(void)
     std::cout << "MAX_RANDOM_SAMPLE_SIZE: " << MAX_RANDOM_SAMPLE_SIZE << std::endl;
     std::cout << "RANDOM_SAMPLE_RATIO: " << RANDOM_SAMPLE_RATIO << std::endl;
     std::cout << "ENABLE_VISUALIZATION: " << ENABLE_VISUALIZATION << std::endl;
+    std::cout << "BEAM_ANGLE_NUM: " << BEAM_ANGLE_NUM << std::endl;
+    std::cout << "MAX_BEAM_RANGE: " << MAX_BEAM_RANGE << std::endl;
 }
 
 void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
@@ -72,20 +76,20 @@ void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr&
     std::cout << "after statistical outlier removal cloud size: " << filtered_cloud->points.size() << std::endl;
 
     std::cout << "--- beam model ---" << std::endl;
-    const int BEAM_ANGLE_NUM = 720;
-    const double MAX_BEAM_RANGE = 20;
+    const double ANGLE_INCREMENT = 2.0 * M_PI / (double)BEAM_ANGLE_NUM;
     std::vector<double> beam_list(BEAM_ANGLE_NUM, MAX_BEAM_RANGE);
     for(const auto& pt : filtered_cloud->points){
         double distance = sqrt(pt.x * pt.x + pt.y * pt.y);
         double angle = atan2(pt.y, pt.x);
-        int index = (angle / M_PI + 1) * BEAM_ANGLE_NUM * 0.5;
+        //int index = (angle / M_PI + 1) * BEAM_ANGLE_NUM * 0.5;
+        int index = (angle + M_PI) / ANGLE_INCREMENT;
         if(0 <= index && index < BEAM_ANGLE_NUM){
             if(beam_list[index] > distance){
                 beam_list[index] = distance;
             }
         }
     }
-    CloudXYZINPtr beam_cloud(new CloudXYZIN);
+    CloudXYZPtr beam_cloud(new CloudXYZ);
     beam_cloud->points.resize(BEAM_ANGLE_NUM);
     beam_cloud->header = road_cloud->header;
     for(int i=0;i<BEAM_ANGLE_NUM;i++){
