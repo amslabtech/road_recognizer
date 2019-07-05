@@ -17,6 +17,7 @@
 
         <arg name="outlier_removal_k" default="50"/>
         <arg name="outlier_removal_threshold" default="1.0"/>
+        <arg name="enable_visualization" default="false"/>
 
         <node pkg="road_recognizer" type="road_cloud_publisher" name="road_cloud_publisher">
             <param name="HZ" value="$(arg hz)"/>
@@ -44,6 +45,7 @@
             <param name="RANDOM_SAMPLE_RATIO" value="$(arg random_sample_ratio)"/>
             <param name="OUTLIER_REMOVAL_K" value="$(arg outlier_removal_k)"/>
             <param name="OUTLIER_REMOVAL_THRESHOLD" value="$(arg outlier_removal_threshold)"/>
+            <param name="ENABLE_VISUALIZATION" value="$(arg enable_visualization)"/>
         </node>
 
     </group>

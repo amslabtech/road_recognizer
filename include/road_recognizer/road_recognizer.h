@@ -29,6 +29,7 @@
 #include <pcl/features/normal_3d_omp.h>
 #include <pcl/filters/passthrough.h>
 #include <pcl/filters/statistical_outlier_removal.h>
+#include <pcl/visualization/cloud_viewer.h>
 
 // OMP
 #include <omp.h>
@@ -48,6 +49,7 @@ public:
 
     void process(void);
     void road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr&);
+    void visualize_cloud(void);
 
 private:
     double HZ;
@@ -56,6 +58,7 @@ private:
     double OUTLIER_REMOVAL_THRESHOLD;
     int MAX_RANDOM_SAMPLE_SIZE;
     double RANDOM_SAMPLE_RATIO;
+    bool ENABLE_VISUALIZATION;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;
@@ -63,6 +66,10 @@ private:
     ros::Publisher downsampled_pub;
     ros::Publisher filtered_pub;
     ros::Subscriber road_stored_cloud_sub;
+
+    CloudXYZINPtr filtered_cloud;
+
+    pcl::visualization::PCLVisualizer viewer{"viewer"};
 };
 
 #endif// __ROAD_RECOGNIZER
