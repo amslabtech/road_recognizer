@@ -20,6 +20,7 @@
         <arg name="enable_visualization" default="false"/>
         <arg name="beam_angle_num" default="720"/>
         <arg name="max_beam_range" default="20"/>
+        <arg name="ransac_distance_threshold" default="0.20"/>
 
         <node pkg="road_recognizer" type="road_cloud_publisher" name="road_cloud_publisher">
             <param name="HZ" value="$(arg hz)"/>
@@ -40,7 +41,7 @@
             <param name="YAW_DIFFERENCE_THRESHOLD" value="$(arg yaw_difference_threshold)"/>
         </node>
 
-        <node pkg="road_recognizer" type="road_recognizer" name="road_recognizer">
+        <node pkg="road_recognizer" type="road_recognizer" name="road_recognizer" output="screen">
             <param name="HZ" value="$(arg hz)"/>
             <param name="LEAF_SIZE" value="$(arg leaf_size)"/>
             <param name="MAX_RANDOM_SAMPLE_SIZE" value="$(arg max_random_sample_size)"/>
@@ -50,6 +51,7 @@
             <param name="ENABLE_VISUALIZATION" value="$(arg enable_visualization)"/>
             <param name="BEAM_ANGLE_NUM" value="$(arg beam_angle_num)"/>
             <param name="MAX_BEAM_RANGE" value="$(arg max_beam_range)"/>
+            <param name="RANSAC_DISTANCE_THRESHOLD" value="$(arg ransac_distance_threshold)"/>
         </node>
 
     </group>

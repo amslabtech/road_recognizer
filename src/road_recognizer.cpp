@@ -12,10 +12,13 @@ RoadRecognizer::RoadRecognizer(void)
     local_nh.param("ENABLE_VISUALIZATION", ENABLE_VISUALIZATION, {false});
     local_nh.param("BEAM_ANGLE_NUM", BEAM_ANGLE_NUM, {720});
     local_nh.param("MAX_BEAM_RANGE", MAX_BEAM_RANGE, {20});
+    local_nh.param("RANSAC_DISTANCE_THRESHOLD", RANSAC_DISTANCE_THRESHOLD, {0.20});
+    local_nh.param("RANSAC_MIN_LINE_LENGTH_THRESHOLD", RANSAC_MIN_LINE_LENGTH_THRESHOLD, {3.0});
 
     downsampled_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/downsampled", 1);
     filtered_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/filtered", 1);
     beam_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/beam_model", 1);
+    linear_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/linear", 1);
 
     road_stored_cloud_sub = nh.subscribe("cloud/road/stored", 1, &RoadRecognizer::road_cloud_callback, this);
 
@@ -35,6 +38,8 @@ RoadRecognizer::RoadRecognizer(void)
     std::cout << "ENABLE_VISUALIZATION: " << ENABLE_VISUALIZATION << std::endl;
     std::cout << "BEAM_ANGLE_NUM: " << BEAM_ANGLE_NUM << std::endl;
     std::cout << "MAX_BEAM_RANGE: " << MAX_BEAM_RANGE << std::endl;
+    std::cout << "RANSAC_DISTANCE_THRESHOLD: " << RANSAC_DISTANCE_THRESHOLD << std::endl;
+    std::cout << "RANSAC_MIN_LINE_LENGTH_THRESHOLD: " << RANSAC_MIN_LINE_LENGTH_THRESHOLD << std::endl;
 }
 
 void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
@@ -98,7 +103,11 @@ void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr&
         beam_cloud->points[i].x = beam_list[i] * cos(angle);
         beam_cloud->points[i].y = beam_list[i] * sin(angle);
     }
+    beam_cloud->height = 1;
+    beam_cloud->width = beam_cloud->points.size();
     std::cout << "beam cloud size: " << beam_cloud->points.size() << std::endl;
+
+    extract_lines(beam_cloud);
 
     sensor_msgs::PointCloud2 cloud1;
     pcl::toROSMsg(*downsampled_cloud, cloud1);
@@ -136,6 +145,100 @@ void RoadRecognizer::visualize_cloud(void)
     viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 1, "normal");
 
     viewer->spinOnce();
+}
+
+void RoadRecognizer::extract_lines(const CloudXYZPtr input_cloud)
+{
+    std::cout << "extract lines" << std::endl;
+    CloudXYZPtr cloud(new CloudXYZ);
+    std::vector<CloudXYZPtr> linear_clouds;
+    pcl::copyPointCloud(*input_cloud, *cloud);
+    while(true){
+        std::cout << "ransac" << std::endl;
+        pcl::SampleConsensusModelLine<PointXYZ>::Ptr model_l(new pcl::SampleConsensusModelLine<PointXYZ>(cloud));
+        pcl::RandomSampleConsensus<PointXYZ> ransac(model_l);
+        ransac.setDistanceThreshold(RANSAC_DISTANCE_THRESHOLD);
+        std::cout << "before computeModel" << std::endl;
+        std::cout << "\tgetIndices()" << std::endl;
+        std::cout << model_l->getIndices()->size() << std::endl;
+        int iteration = 0;
+        std::vector<int> selection;
+        std::cout << "\tgetSamples()" << std::endl;
+        model_l->getSamples(iteration, selection);
+        for(const auto& index : selection){
+            std::cout << "index: " << index << std::endl;
+            std::cout << cloud->points[index] << std::endl;
+        }
+        std::cout << selection.size() << std::endl;
+        Eigen::VectorXf model_coefficients;
+        std::cout << "\tcomputeModelCoefficients()" << std::endl;
+        model_l->computeModelCoefficients(selection, model_coefficients);
+        std::cout << model_coefficients << std::endl;
+        std::cout << "\tcountWithinDistance()" << std::endl;
+        std::cout << model_l->countWithinDistance(model_coefficients, RANSAC_DISTANCE_THRESHOLD);
+        bool computed = ransac.computeModel();
+        std::cout << "after computeModel" << std::endl;
+        if(computed){
+            std::vector<int> inliers;
+            ransac.getInliers(inliers);
+            std::cout << "inliers size:" << inliers.size() << std::endl;
+            CloudXYZPtr linear_cloud(new CloudXYZ);
+            pcl::copyPointCloud(*cloud, inliers, *linear_cloud);
+            std::cout << "linear cloud size: " << linear_cloud->size() << std::endl;
+            if(linear_cloud->size() > 1){
+                double line_length = get_distance(linear_cloud->points[0], linear_cloud->points.back());
+                if(line_length > RANSAC_MIN_LINE_LENGTH_THRESHOLD){
+                    // new linear cloud
+                    std::cout << "new linear cloud" << std::endl;
+                    linear_clouds.push_back(linear_cloud);
+                }
+            }
+            // remove inliers from cloud
+            std::cout << "remove inliers from cloud" << std::endl;
+            int size = cloud->points.size();
+            std::vector<int> outliers;
+            outliers.reserve(size);
+            for(int i=0;i<size;i++){
+                if(std::find(inliers.begin(), inliers.end(), i) != inliers.end()){
+                    outliers.push_back(i);
+                }
+            }
+            pcl::copyPointCloud(*cloud, outliers, *cloud);
+        }else{
+            // no line was detected
+            std::cout << "no line was detected" << std::endl;
+            break;
+        }
+    }
+    int linear_cloud_size = linear_clouds.size();
+    // coloring cloud for visualization
+    std::cout << "coloring cloud for visualization" << std::endl;
+    if(linear_cloud_size > 0){
+        pcl::PointCloud<pcl::PointXYZHSV>::Ptr colored_cloud(new pcl::PointCloud<pcl::PointXYZHSV>);
+        for(int i=0;i<linear_cloud_size;i++){
+            pcl::PointCloud<pcl::PointXYZHSV>::Ptr hsv_cloud(new pcl::PointCloud<pcl::PointXYZHSV>);
+            pcl::copyPointCloud(*linear_clouds[i], *hsv_cloud);
+            for(auto& pt : hsv_cloud->points){
+                pt.h = i / (double)linear_cloud_size;
+                pt.s = 1.0;
+                pt.v = 1.0;
+            }
+            //pcl::PointCloud<pcl::PointXYZRGB>::Ptr rgb_cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+            //pcl::PointXYZHSVtoXYZRGB(*hsv_cloud, *rgb_cloud);
+            *colored_cloud += *hsv_cloud;
+        }
+        sensor_msgs::PointCloud2 _cloud;
+        pcl::toROSMsg(*colored_cloud, _cloud);
+        linear_cloud_pub.publish(_cloud);
+    }
+}
+
+template<typename PointT>
+double RoadRecognizer::get_distance(const PointT& p0, const PointT& p1)
+{
+    Eigen::Vector3d v0(p0.x, p0.y, p0.z);
+    Eigen::Vector3d v1(p1.x, p1.y, p1.z);
+    return (v0 - v1).norm();
 }
 
 void RoadRecognizer::process(void)
