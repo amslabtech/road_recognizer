@@ -22,7 +22,8 @@ RoadRecognizer::RoadRecognizer(void)
     filtered_cloud = CloudXYZINPtr(new CloudXYZIN);
 
     if(ENABLE_VISUALIZATION){
-        viewer.setBackgroundColor(0, 0, 0);
+        viewer = pcl::visualization::PCLVisualizer::Ptr(new pcl::visualization::PCLVisualizer);
+        viewer->setBackgroundColor(0, 0, 0);
     }
 
     std::cout << "HZ: " << HZ << std::endl;
@@ -120,21 +121,21 @@ void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr&
 
 void RoadRecognizer::visualize_cloud(void)
 {
-    viewer.removeAllPointClouds();
+    viewer->removeAllPointClouds();
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr view_cloud(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::copyPointCloud(*filtered_cloud, *view_cloud);
-    viewer.addPointCloud(view_cloud, "cloud");
-    viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 1, 0, 0, "cloud");
-    viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 5, "cloud");
+    viewer->addPointCloud(view_cloud, "cloud");
+    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 1, 0, 0, "cloud");
+    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 5, "cloud");
 
     pcl::PointCloud<pcl::PointNormal>::Ptr view_normal(new pcl::PointCloud<pcl::PointNormal>);
     pcl::copyPointCloud(*filtered_cloud, *view_normal);
-    viewer.addPointCloudNormals<pcl::PointNormal>(view_normal, 1, 1, "normal");
-    viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 0, 1, 0, "normal");
-    viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 1, "normal");
+    viewer->addPointCloudNormals<pcl::PointNormal>(view_normal, 1, 1, "normal");
+    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 0, 1, 0, "normal");
+    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_LINE_WIDTH, 1, "normal");
 
-    viewer.spinOnce();
+    viewer->spinOnce();
 }
 
 void RoadRecognizer::process(void)

@@ -76,7 +76,7 @@ private:
 
     CloudXYZINPtr filtered_cloud;
 
-    pcl::visualization::PCLVisualizer viewer{"viewer"};
+    pcl::visualization::PCLVisualizer::Ptr viewer;
 };
 
 #endif// __ROAD_RECOGNIZER
