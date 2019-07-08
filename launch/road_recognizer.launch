@@ -21,6 +21,7 @@
         <arg name="beam_angle_num" default="720"/>
         <arg name="max_beam_range" default="20"/>
         <arg name="ransac_distance_threshold" default="0.20"/>
+        <arg name="ransac_min_line_length_threshold" default="5.0"/>
 
         <node pkg="road_recognizer" type="road_cloud_publisher" name="road_cloud_publisher">
             <param name="HZ" value="$(arg hz)"/>
@@ -52,6 +53,7 @@
             <param name="BEAM_ANGLE_NUM" value="$(arg beam_angle_num)"/>
             <param name="MAX_BEAM_RANGE" value="$(arg max_beam_range)"/>
             <param name="RANSAC_DISTANCE_THRESHOLD" value="$(arg ransac_distance_threshold)"/>
+            <param name="RANSAC_MIN_LINE_LENGTH_THRESHOLD" value="$(arg ransac_min_line_length_threshold)"/>
         </node>
 
     </group>

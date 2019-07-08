@@ -65,12 +65,6 @@ void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr&
         downsampled_cloud->points[i] = road_cloud->points[index];
     }
     downsampled_cloud->header = road_cloud->header;
-    /*
-    pcl::VoxelGrid<PointXYZIN> vg;
-    vg.setInputCloud(road_cloud);
-    vg.setLeafSize(LEAF_SIZE, LEAF_SIZE, LEAF_SIZE);
-    vg.filter(*downsampled_cloud);
-    */
     std::cout << "after voxel grid cloud size: " << downsampled_cloud->points.size() << std::endl;
 
     std::cout << "before cloud size: " << downsampled_cloud->points.size() << std::endl;
@@ -87,7 +81,6 @@ void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr&
     for(const auto& pt : filtered_cloud->points){
         double distance = sqrt(pt.x * pt.x + pt.y * pt.y);
         double angle = atan2(pt.y, pt.x);
-        //int index = (angle / M_PI + 1) * BEAM_ANGLE_NUM * 0.5;
         int index = (angle + M_PI) / ANGLE_INCREMENT;
         if(0 <= index && index < BEAM_ANGLE_NUM){
             if(beam_list[index] > distance){
@@ -96,12 +89,15 @@ void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr&
         }
     }
     CloudXYZPtr beam_cloud(new CloudXYZ);
-    beam_cloud->points.resize(BEAM_ANGLE_NUM);
     beam_cloud->header = road_cloud->header;
     for(int i=0;i<BEAM_ANGLE_NUM;i++){
-        double angle = (i / (BEAM_ANGLE_NUM * 0.5) - 1) * M_PI;
-        beam_cloud->points[i].x = beam_list[i] * cos(angle);
-        beam_cloud->points[i].y = beam_list[i] * sin(angle);
+        if(beam_list[i] < MAX_BEAM_RANGE){
+            double angle = (i / (BEAM_ANGLE_NUM * 0.5) - 1) * M_PI;
+            PointXYZ pt;
+            pt.x = beam_list[i] * cos(angle);
+            pt.y = beam_list[i] * sin(angle);
+            beam_cloud->points.push_back(pt);
+        }
     }
     beam_cloud->height = 1;
     beam_cloud->width = beam_cloud->points.size();
@@ -169,12 +165,17 @@ void RoadRecognizer::extract_lines(const CloudXYZPtr input_cloud)
             std::cout << "linear cloud size: " << linear_cloud->size() << std::endl;
             if(linear_cloud->size() > 1){
                 double line_length = get_distance(linear_cloud->points[0], linear_cloud->points.back());
+                std::cout << "line length: " << line_length << "[m]" << std::endl;
                 if(line_length > RANSAC_MIN_LINE_LENGTH_THRESHOLD){
                     // new linear cloud
                     std::cout << "new linear cloud" << std::endl;
                     linear_clouds.push_back(linear_cloud);
                     std:cout << "linear cloud num: " << linear_clouds.size() << std::endl;
+                }else{
+                    std::cout << "line length is NOT longer than threshold!" << std::endl;
                 }
+            }else{
+                std::cout << "cloud size is NOT longer than threshold!" << std::endl;
             }
             // remove inliers from cloud
             std::cout << "remove inliers from cloud" << std::endl;
@@ -197,7 +198,6 @@ void RoadRecognizer::extract_lines(const CloudXYZPtr input_cloud)
     // coloring cloud for visualization
     std::cout << "coloring cloud for visualization" << std::endl;
     if(linear_cloud_size > 0){
-        //pcl::PointCloud<pcl::PointXYZHSV>::Ptr colored_cloud(new pcl::PointCloud<pcl::PointXYZHSV>);
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr colored_cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
         for(int i=0;i<linear_cloud_size;i++){
             pcl::PointCloud<pcl::PointXYZHSV>::Ptr hsv_cloud(new pcl::PointCloud<pcl::PointXYZHSV>);
@@ -211,7 +211,6 @@ void RoadRecognizer::extract_lines(const CloudXYZPtr input_cloud)
                 pcl::PointXYZHSVtoXYZRGB(pt, rgb_pt);
                 rgb_cloud->points.push_back(rgb_pt);
             }
-            //*colored_cloud += *hsv_cloud;
             *colored_cloud += *rgb_cloud;
         }
         colored_cloud->header = input_cloud->header;
