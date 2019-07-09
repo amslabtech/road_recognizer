@@ -92,7 +92,7 @@ void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr&
     beam_cloud->header = road_cloud->header;
     for(int i=0;i<BEAM_ANGLE_NUM;i++){
         if(beam_list[i] < MAX_BEAM_RANGE){
-            double angle = (i / (BEAM_ANGLE_NUM * 0.5) - 1) * M_PI;
+            double angle = i * ANGLE_INCREMENT - M_PI;
             PointXYZ pt;
             pt.x = beam_list[i] * cos(angle);
             pt.y = beam_list[i] * sin(angle);
@@ -159,7 +159,6 @@ void RoadRecognizer::extract_lines(const CloudXYZPtr input_cloud)
         if(computed){
             std::vector<int> inliers;
             ransac.getInliers(inliers);
-            std::cout << "inliers size: " << inliers.size() << std::endl;
             CloudXYZPtr linear_cloud(new CloudXYZ);
             pcl::copyPointCloud(*cloud, inliers, *linear_cloud);
             std::cout << "linear cloud size: " << linear_cloud->size() << std::endl;
@@ -195,6 +194,7 @@ void RoadRecognizer::extract_lines(const CloudXYZPtr input_cloud)
         }
     }
     int linear_cloud_size = linear_clouds.size();
+    std::cout << "linear cloud num: " << linear_cloud_size << std::endl;
     // coloring cloud for visualization
     std::cout << "coloring cloud for visualization" << std::endl;
     if(linear_cloud_size > 0){
