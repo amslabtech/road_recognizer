@@ -167,6 +167,7 @@ void RoadRecognizer::extract_lines(const CloudXYZPtr input_cloud)
             std::vector<int> inliers;
             ransac.getInliers(inliers);
             CloudXYZPtr linear_cloud(new CloudXYZ);
+            linear_cloud->header = input_cloud->header;
             pcl::copyPointCloud(*cloud, inliers, *linear_cloud);
             std::cout << "linear cloud size: " << linear_cloud->size() << std::endl;
             if(linear_cloud->size() > 1){
@@ -200,6 +201,50 @@ void RoadRecognizer::extract_lines(const CloudXYZPtr input_cloud)
             break;
         }
     }
+
+    publish_linear_clouds(linear_clouds);
+
+    std::vector<std::tuple<Eigen::Vector2d, Eigen::Vector2d, double, double, double> > line_list;
+    std::cout << "lines" << std::endl;
+    for(const auto& linear_cloud : linear_clouds){
+        Eigen::Vector2d p0(linear_cloud->points[0].x, linear_cloud->points[0].y);
+        Eigen::Vector2d p1(linear_cloud->points.back().x, linear_cloud->points.back().y);
+        Eigen::Vector2d direction_vector = p1 - p0;
+        if(fabs(direction_vector(0)) > 1e-6){
+            // ax + by + c = 0
+            double a = direction_vector(1) / direction_vector(0);
+            double b = -1;
+            double c = p0(1) - a * p0(0);
+            double distance_from_origin = fabs(c) / sqrt(a * a + b * b);
+            if(c >= 0){
+                // if the line is placed on the left side of the robot
+                distance_from_origin = -distance_from_origin;
+            }
+            double direction = atan(a);
+            constexpr double PI_2 = M_PI * 0.5;
+            if(direction > PI_2){
+                direction -= M_PI;
+            }else if(direction < -PI_2){
+                direction += M_PI;
+            }
+            double length = direction_vector.norm();
+            auto line = std::make_tuple(p0, p1, direction, distance_from_origin, length);
+            line_list.push_back(line);
+            std::cout << std::get<2>(line) << "[rad], " << std::get<3>(line) << "[m], " << length << "[m]" << std::endl;
+        }
+    }
+}
+
+template<typename PointT>
+double RoadRecognizer::get_distance(const PointT& p0, const PointT& p1)
+{
+    Eigen::Vector3d v0(p0.x, p0.y, p0.z);
+    Eigen::Vector3d v1(p1.x, p1.y, p1.z);
+    return (v0 - v1).norm();
+}
+
+void RoadRecognizer::publish_linear_clouds(const std::vector<CloudXYZPtr>& linear_clouds)
+{
     int linear_cloud_size = linear_clouds.size();
     std::cout << "linear cloud num: " << linear_cloud_size << std::endl;
     // coloring cloud for visualization
@@ -220,19 +265,11 @@ void RoadRecognizer::extract_lines(const CloudXYZPtr input_cloud)
             }
             *colored_cloud += *rgb_cloud;
         }
-        colored_cloud->header = input_cloud->header;
+        colored_cloud->header = linear_clouds[0]->header;
         sensor_msgs::PointCloud2 _cloud;
         pcl::toROSMsg(*colored_cloud, _cloud);
         linear_cloud_pub.publish(_cloud);
     }
-}
-
-template<typename PointT>
-double RoadRecognizer::get_distance(const PointT& p0, const PointT& p1)
-{
-    Eigen::Vector3d v0(p0.x, p0.y, p0.z);
-    Eigen::Vector3d v1(p1.x, p1.y, p1.z);
-    return (v0 - v1).norm();
 }
 
 void RoadRecognizer::process(void)

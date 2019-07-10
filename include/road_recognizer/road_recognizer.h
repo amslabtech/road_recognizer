@@ -60,6 +60,7 @@ public:
     void extract_lines(const CloudXYZPtr);
     template<typename PointT>
     double get_distance(const PointT&, const PointT&);
+    void publish_linear_clouds(const std::vector<CloudXYZPtr>&);
 
 private:
     double HZ;
