@@ -19,6 +19,7 @@ RoadRecognizer::RoadRecognizer(void)
     filtered_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/filtered", 1);
     beam_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/beam_model", 1);
     linear_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/linear", 1);
+    beam_array_pub = nh.advertise<std_msgs::Float64MultiArray>("beam_array", 1);
 
     road_stored_cloud_sub = nh.subscribe("cloud/road/stored", 1, &RoadRecognizer::road_cloud_callback, this);
 
@@ -117,6 +118,12 @@ void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr&
     pcl::toROSMsg(*beam_cloud, cloud3);
     beam_cloud_pub.publish(cloud3);
 
+    std_msgs::Float64MultiArray beam_array;
+    for(const auto& distance : beam_list){
+        beam_array.data.push_back(distance);
+    }
+    beam_array_pub.publish(beam_array);
+
     if(ENABLE_VISUALIZATION){
         visualize_cloud();
     }
@@ -169,7 +176,7 @@ void RoadRecognizer::extract_lines(const CloudXYZPtr input_cloud)
                     // new linear cloud
                     std::cout << "new linear cloud" << std::endl;
                     linear_clouds.push_back(linear_cloud);
-                    std:cout << "linear cloud num: " << linear_clouds.size() << std::endl;
+                    std::cout << "linear cloud num: " << linear_clouds.size() << std::endl;
                 }else{
                     std::cout << "line length is NOT longer than threshold!" << std::endl;
                 }

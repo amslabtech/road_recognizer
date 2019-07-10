@@ -7,6 +7,7 @@
 #include <ros/ros.h>
 
 #include <nav_msgs/Odometry.h>
+#include <std_msgs/Float64MultiArray.h>
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
@@ -80,6 +81,7 @@ private:
     ros::Publisher filtered_pub;
     ros::Publisher beam_cloud_pub;
     ros::Publisher linear_cloud_pub;
+    ros::Publisher beam_array_pub;
     ros::Subscriber road_stored_cloud_sub;
 
     CloudXYZINPtr filtered_cloud;
