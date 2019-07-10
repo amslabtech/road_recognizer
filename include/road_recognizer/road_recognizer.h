@@ -74,6 +74,7 @@ private:
     double MAX_BEAM_RANGE;
     double RANSAC_DISTANCE_THRESHOLD;
     double RANSAC_MIN_LINE_LENGTH_THRESHOLD;
+    double RANSAC_MIN_LINE_DENSITY_THRESHOLD;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

@@ -14,6 +14,7 @@ RoadRecognizer::RoadRecognizer(void)
     local_nh.param("MAX_BEAM_RANGE", MAX_BEAM_RANGE, {20});
     local_nh.param("RANSAC_DISTANCE_THRESHOLD", RANSAC_DISTANCE_THRESHOLD, {0.20});
     local_nh.param("RANSAC_MIN_LINE_LENGTH_THRESHOLD", RANSAC_MIN_LINE_LENGTH_THRESHOLD, {3.0});
+    local_nh.param("RANSAC_MIN_LINE_DENSITY_THRESHOLD", RANSAC_MIN_LINE_DENSITY_THRESHOLD, {1.0});
 
     downsampled_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/downsampled", 1);
     filtered_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/filtered", 1);
@@ -41,6 +42,7 @@ RoadRecognizer::RoadRecognizer(void)
     std::cout << "MAX_BEAM_RANGE: " << MAX_BEAM_RANGE << std::endl;
     std::cout << "RANSAC_DISTANCE_THRESHOLD: " << RANSAC_DISTANCE_THRESHOLD << std::endl;
     std::cout << "RANSAC_MIN_LINE_LENGTH_THRESHOLD: " << RANSAC_MIN_LINE_LENGTH_THRESHOLD << std::endl;
+    std::cout << "RANSAC_MIN_LINE_DENSITY_THRESHOLD: " << RANSAC_MIN_LINE_DENSITY_THRESHOLD << std::endl;
 }
 
 void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
@@ -174,10 +176,14 @@ void RoadRecognizer::extract_lines(const CloudXYZPtr input_cloud)
                 double line_length = get_distance(linear_cloud->points[0], linear_cloud->points.back());
                 std::cout << "line length: " << line_length << "[m]" << std::endl;
                 if(line_length > RANSAC_MIN_LINE_LENGTH_THRESHOLD){
-                    // new linear cloud
-                    std::cout << "new linear cloud" << std::endl;
-                    linear_clouds.push_back(linear_cloud);
-                    std::cout << "linear cloud num: " << linear_clouds.size() << std::endl;
+                    if(linear_cloud->size() / line_length > RANSAC_MIN_LINE_DENSITY_THRESHOLD){
+                        // new linear cloud
+                        std::cout << "new linear cloud" << std::endl;
+                        linear_clouds.push_back(linear_cloud);
+                        std::cout << "linear cloud num: " << linear_clouds.size() << std::endl;
+                    }else{
+                        std::cout << "line length is NOT denser than threshold!" << std::endl;
+                    }
                 }else{
                     std::cout << "line length is NOT longer than threshold!" << std::endl;
                 }
