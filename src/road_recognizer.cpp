@@ -210,7 +210,7 @@ void RoadRecognizer::extract_lines(const CloudXYZPtr input_cloud)
 
     publish_linear_clouds(linear_clouds);
 
-    std::vector<std::tuple<Eigen::Vector2d, Eigen::Vector2d, double, double, double> > line_list;
+    std::vector<std::tuple<Eigen::Vector2d, Eigen::Vector2d, double, double, double, Eigen::Vector2d> > line_list;
     std::cout << "lines" << std::endl;
     for(const auto& linear_cloud : linear_clouds){
         Eigen::Vector2d p0(linear_cloud->points[0].x, linear_cloud->points[0].y);
@@ -222,10 +222,6 @@ void RoadRecognizer::extract_lines(const CloudXYZPtr input_cloud)
             double b = -1;
             double c = p0(1) - a * p0(0);
             double distance_from_origin = fabs(c) / sqrt(a * a + b * b);
-            if(c >= 0){
-                // if the line is placed on the left side of the robot
-                distance_from_origin = -distance_from_origin;
-            }
             double direction = atan(a);
             constexpr double PI_2 = M_PI * 0.5;
             if(direction > PI_2){
@@ -233,10 +229,17 @@ void RoadRecognizer::extract_lines(const CloudXYZPtr input_cloud)
             }else if(direction < -PI_2){
                 direction += M_PI;
             }
+            double perpendicular_angle = (c >= 0 ? PI_2 : -PI_2) + direction;
+            Eigen::Vector2d perpendicular_intersection_point(distance_from_origin * cos(perpendicular_angle), distance_from_origin * sin(perpendicular_angle));
+            if(c >= 0){
+                // if the line is placed on the left side of the robot
+                distance_from_origin = -distance_from_origin;
+            }
             double length = direction_vector.norm();
-            auto line = std::make_tuple(p0, p1, direction, distance_from_origin, length);
+            auto line = std::make_tuple(p0, p1, direction, distance_from_origin, length, perpendicular_intersection_point);
             line_list.push_back(line);
-            std::cout << std::get<2>(line) << "[rad], " << std::get<3>(line) << "[m], " << length << "[m]" << std::endl;
+            std::cout << std::get<2>(line) << "[rad], " << std::get<3>(line) << "[m], " << std::get<4>(line) << "[m], " << perpendicular_angle << "[rad]" << std::endl;
+            std::cout << "point: " << std::get<5>(line).transpose() << std::endl;
         }
     }
 }

@@ -20,7 +20,7 @@
         <arg name="enable_visualization" default="false"/>
         <arg name="beam_angle_num" default="720"/>
         <arg name="max_beam_range" default="20"/>
-        <arg name="ransac_distance_threshold" default="0.20"/>
+        <arg name="ransac_distance_threshold" default="0.50"/>
         <arg name="ransac_min_line_length_threshold" default="5.0"/>
         <arg name="ransac_min_line_density_threshold" default="1.0"/>
 
