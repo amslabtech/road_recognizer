@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   sensor_msgs
   tf
+  cv_bridge
   amsl_navigation_msgs
 )
 
@@ -27,6 +28,7 @@ endif()
 
 find_package(Eigen3 REQUIRED COMPONENTS system)
 find_package(PCL 1.8 REQUIRED)
+find_package(OpenCV REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -164,6 +166,7 @@ add_dependencies(libroad_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin
 add_executable(road_cloud_publisher src/road_cloud_publisher_node.cpp)
 add_executable(road_point_cloud_storer src/road_point_cloud_storer_node.cpp)
 add_executable(road_recognizer src/road_recognizer_node.cpp)
+add_executable(make_image src/make_image.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -196,6 +199,10 @@ target_link_libraries(road_recognizer
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
   libroad_recognizer
+)
+target_link_libraries(make_image
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
 )
 
 #############
