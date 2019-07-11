@@ -16,6 +16,8 @@ RoadRecognizer::RoadRecognizer(void)
     local_nh.param("RANSAC_MIN_LINE_LENGTH_THRESHOLD", RANSAC_MIN_LINE_LENGTH_THRESHOLD, {3.0});
     local_nh.param("RANSAC_MIN_LINE_DENSITY_THRESHOLD", RANSAC_MIN_LINE_DENSITY_THRESHOLD, {1.0});
     local_nh.param("EUCLIDEAN_CLUSTERING_TOLERANCE", EUCLIDEAN_CLUSTERING_TOLERANCE, {1.0});
+    local_nh.param("MAX_ROAD_EDGE_DIRECTION_DIFFERENCE", MAX_ROAD_EDGE_DIRECTION_DIFFERENCE, {0.1});
+    local_nh.param("MIN_ROAD_WIDTH", MIN_ROAD_WIDTH, {1.0});
 
     downsampled_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/downsampled", 1);
     filtered_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/filtered", 1);
@@ -23,6 +25,7 @@ RoadRecognizer::RoadRecognizer(void)
     linear_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/linear", 1);
     beam_array_pub = nh.advertise<std_msgs::Float64MultiArray>("beam_array", 1);
     line_markers_pub = local_nh.advertise<visualization_msgs::MarkerArray>("road/edge_lines", 1);
+    road_pub = nh.advertise<amsl_navigation_msgs::RoadArray>("road", 1);
 
     road_stored_cloud_sub = nh.subscribe("cloud/road/stored", 1, &RoadRecognizer::road_cloud_callback, this);
 
@@ -46,6 +49,8 @@ RoadRecognizer::RoadRecognizer(void)
     std::cout << "RANSAC_MIN_LINE_LENGTH_THRESHOLD: " << RANSAC_MIN_LINE_LENGTH_THRESHOLD << std::endl;
     std::cout << "RANSAC_MIN_LINE_DENSITY_THRESHOLD: " << RANSAC_MIN_LINE_DENSITY_THRESHOLD << std::endl;
     std::cout << "EUCLIDEAN_CLUSTERING_TOLERANCE: " << EUCLIDEAN_CLUSTERING_TOLERANCE << std::endl;
+    std::cout << "MAX_ROAD_EDGE_DIRECTION_DIFFERENCE: " << MAX_ROAD_EDGE_DIRECTION_DIFFERENCE << std::endl;
+    std::cout << "MIN_ROAD_WIDTH: " << MIN_ROAD_WIDTH << std::endl;
 }
 
 void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
@@ -173,6 +178,51 @@ void RoadRecognizer::extract_lines(const CloudXYZPtr input_cloud)
     get_clustered_lines(line_list, cluster_indices);
 
     make_and_publish_line_marker(cluster_indices, line_list, pcl_conversions::fromPCL(input_cloud->header));
+
+    amsl_navigation_msgs::RoadArray road_array;
+    road_array.header = pcl_conversions::fromPCL(input_cloud->header);
+    std::vector<int> added_indices;
+    int line_num = cluster_indices.size();
+    for(int i=0;i<line_num;i++){
+        if(std::find(added_indices.begin(), added_indices.end(), i) == added_indices.end()){
+            int index = cluster_indices[i].indices[0];
+            LineInformation line = line_list[index];
+            double min_distance = 1e3;
+            int min_index = i;
+            for(int j=i+1;j<line_num;j++){
+                if(std::find(added_indices.begin(), added_indices.end(), j) == added_indices.end()){
+                    int index2 = cluster_indices[j].indices[0];
+                    LineInformation line2 = line_list[index2];
+                    if(fabs(std::get<2>(line) - std::get<2>(line2)) < MAX_ROAD_EDGE_DIRECTION_DIFFERENCE){
+                        double distance = fabs(std::get<3>(line) - std::get<3>(line2));
+                        if(distance > MIN_ROAD_WIDTH){
+                            //std::cout << "line " << i << " and " << j << " can be pair" << std::endl;
+                            //std::cout << "distance is " << distance << "[m]" << std::endl;;
+                            if(distance < min_distance){
+                                min_distance = distance;
+                                min_index = j;
+                            }
+                        }
+                    }
+                }
+            }
+            amsl_navigation_msgs::Road road;
+            road.direction = std::get<2>(line);
+            road.distance_to_right = std::get<3>(line);
+            road.length = std::get<4>(line);
+            added_indices.push_back(i);
+            if(min_index != i){
+                road.width = min_distance;
+                added_indices.push_back(min_index);
+                if(road.distance_to_right < 0){
+                    double right = road.distance_to_right + road.width;
+                    road.distance_to_right = right;
+                }
+            }
+            road_array.roads.push_back(road);
+        }
+    }
+    road_pub.publish(road_array);
 }
 
 template<typename PointT>

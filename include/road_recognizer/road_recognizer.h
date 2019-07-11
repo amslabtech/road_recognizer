@@ -41,6 +41,8 @@
 // OMP
 #include <omp.h>
 
+#include "amsl_navigation_msgs/Road.h"
+#include "amsl_navigation_msgs/RoadArray.h"
 
 class RoadRecognizer
 {
@@ -84,6 +86,8 @@ private:
     double RANSAC_MIN_LINE_LENGTH_THRESHOLD;
     double RANSAC_MIN_LINE_DENSITY_THRESHOLD;
     double EUCLIDEAN_CLUSTERING_TOLERANCE;
+    double MAX_ROAD_EDGE_DIRECTION_DIFFERENCE;
+    double MIN_ROAD_WIDTH;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;
@@ -94,6 +98,7 @@ private:
     ros::Publisher linear_cloud_pub;
     ros::Publisher beam_array_pub;
     ros::Publisher line_markers_pub;
+    ros::Publisher road_pub;
     ros::Subscriber road_stored_cloud_sub;
 
     CloudXYZINPtr filtered_cloud;
