@@ -210,7 +210,7 @@ void RoadRecognizer::extract_lines(const CloudXYZPtr input_cloud)
 
     publish_linear_clouds(linear_clouds);
 
-    std::vector<std::tuple<Eigen::Vector2d, Eigen::Vector2d, double, double, double, Eigen::Vector2d> > line_list;
+    std::vector<std::tuple<Eigen::Vector2d, Eigen::Vector2d, double, double, double, Eigen::Vector2d, int> > line_list;
     std::cout << "lines" << std::endl;
     for(const auto& linear_cloud : linear_clouds){
         Eigen::Vector2d p0(linear_cloud->points[0].x, linear_cloud->points[0].y);
@@ -236,11 +236,38 @@ void RoadRecognizer::extract_lines(const CloudXYZPtr input_cloud)
                 distance_from_origin = -distance_from_origin;
             }
             double length = direction_vector.norm();
-            auto line = std::make_tuple(p0, p1, direction, distance_from_origin, length, perpendicular_intersection_point);
+            auto line = std::make_tuple(p0, p1, direction, distance_from_origin, length, perpendicular_intersection_point, linear_cloud->points.size());
             line_list.push_back(line);
-            std::cout << std::get<2>(line) << "[rad], " << std::get<3>(line) << "[m], " << std::get<4>(line) << "[m], " << perpendicular_angle << "[rad]" << std::endl;
+            std::cout << std::get<2>(line) << "[rad], " << std::get<3>(line) << "[m], " << std::get<4>(line) << "[m], " << perpendicular_angle << "[rad], " << std::get<6>(line) << std::endl;
             std::cout << "point: " << std::get<5>(line).transpose() << std::endl;
         }
+    }
+    // clustering lines
+    CloudXYZPtr line_points(new CloudXYZ);
+    for(const auto& line : line_list){
+        Eigen::Vector2d vec = std::get<5>(line);
+        PointXYZ pt(vec(0), vec(1), 0.0);
+        line_points->points.push_back(pt);
+    }
+    line_points->height = 1;
+    line_points->width = line_points->points.size();
+    pcl::search::KdTree<PointXYZ>::Ptr tree(new pcl::search::KdTree<PointXYZ>);
+    tree->setInputCloud(line_points);
+    std::vector<pcl::PointIndices> cluster_indices;
+    pcl::EuclideanClusterExtraction<PointXYZ> ec;
+    ec.setClusterTolerance(1.0);
+    ec.setMinClusterSize(1);
+    ec.setMaxClusterSize(line_points->points.size());
+    ec.setSearchMethod(tree);
+    ec.setInputCloud(line_points);
+    ec.extract(cluster_indices);
+    int count = 0;
+    for(const auto& indices : cluster_indices){
+        std::cout << "cluster" << count << std::endl;
+        for(const auto& i : indices.indices){
+            std::cout << line_points->points[i] << std::endl;
+        }
+        count++;
     }
 }
 

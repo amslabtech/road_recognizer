@@ -34,6 +34,7 @@
 #include <pcl/visualization/cloud_viewer.h>
 #include <pcl/sample_consensus/sac_model_line.h>
 #include <pcl/sample_consensus/ransac.h>
+#include <pcl/segmentation/extract_clusters.h>
 
 // OMP
 #include <omp.h>
