@@ -159,153 +159,18 @@ void RoadRecognizer::extract_lines(const CloudXYZPtr input_cloud)
     CloudXYZPtr cloud(new CloudXYZ);
     std::vector<CloudXYZPtr> linear_clouds;
     pcl::copyPointCloud(*input_cloud, *cloud);
-    while(cloud->points.size() > 0){
-        std::cout << "ransac" << std::endl;
-        std::cout << "remaining cloud size: " << cloud->points.size() << std::endl;
-        pcl::SampleConsensusModelLine<PointXYZ>::Ptr model_l(new pcl::SampleConsensusModelLine<PointXYZ>(cloud));
-        pcl::RandomSampleConsensus<PointXYZ> ransac(model_l);
-        ransac.setDistanceThreshold(RANSAC_DISTANCE_THRESHOLD);
-        bool computed = ransac.computeModel();
-        if(computed){
-            std::vector<int> inliers;
-            ransac.getInliers(inliers);
-            CloudXYZPtr linear_cloud(new CloudXYZ);
-            linear_cloud->header = input_cloud->header;
-            pcl::copyPointCloud(*cloud, inliers, *linear_cloud);
-            std::cout << "linear cloud size: " << linear_cloud->size() << std::endl;
-            if(linear_cloud->size() > 1){
-                double line_length = get_distance(linear_cloud->points[0], linear_cloud->points.back());
-                std::cout << "line length: " << line_length << "[m]" << std::endl;
-                if(line_length > RANSAC_MIN_LINE_LENGTH_THRESHOLD){
-                    if(linear_cloud->size() / line_length > RANSAC_MIN_LINE_DENSITY_THRESHOLD){
-                        // new linear cloud
-                        std::cout << "new linear cloud" << std::endl;
-                        linear_clouds.push_back(linear_cloud);
-                        std::cout << "linear cloud num: " << linear_clouds.size() << std::endl;
-                    }else{
-                        std::cout << "line length is NOT denser than threshold!" << std::endl;
-                    }
-                }else{
-                    std::cout << "line length is NOT longer than threshold!" << std::endl;
-                }
-            }else{
-                std::cout << "cloud size is NOT longer than threshold!" << std::endl;
-            }
-            // remove inliers from cloud
-            std::cout << "remove inliers from cloud" << std::endl;
-            int size = cloud->points.size();
-            std::vector<int> outliers;
-            outliers.reserve(size);
-            for(int i=0;i<size;i++){
-                if(std::find(inliers.begin(), inliers.end(), i) == inliers.end()){
-                    outliers.push_back(i);
-                }
-            }
-            pcl::copyPointCloud(*cloud, outliers, *cloud);
-        }else{
-            // no line was detected
-            std::cout << "no line was detected" << std::endl;
-            break;
-        }
-    }
+
+    get_linear_clouds(cloud, linear_clouds);
 
     publish_linear_clouds(linear_clouds);
 
-    std::vector<std::tuple<Eigen::Vector2d, Eigen::Vector2d, double, double, double, Eigen::Vector2d, int> > line_list;
-    std::cout << "lines" << std::endl;
-    for(const auto& linear_cloud : linear_clouds){
-        Eigen::Vector2d p0(linear_cloud->points[0].x, linear_cloud->points[0].y);
-        Eigen::Vector2d p1(linear_cloud->points.back().x, linear_cloud->points.back().y);
-        Eigen::Vector2d direction_vector = p1 - p0;
-        if(fabs(direction_vector(0)) > 1e-6){
-            // ax + by + c = 0
-            double a = direction_vector(1) / direction_vector(0);
-            double b = -1;
-            double c = p0(1) - a * p0(0);
-            double distance_from_origin = fabs(c) / sqrt(a * a + b * b);
-            double direction = atan(a);
-            constexpr double PI_2 = M_PI * 0.5;
-            if(direction > PI_2){
-                direction -= M_PI;
-            }else if(direction < -PI_2){
-                direction += M_PI;
-            }
-            double perpendicular_angle = (c >= 0 ? PI_2 : -PI_2) + direction;
-            Eigen::Vector2d perpendicular_intersection_point(distance_from_origin * cos(perpendicular_angle), distance_from_origin * sin(perpendicular_angle));
-            if(c >= 0){
-                // if the line is placed on the left side of the robot
-                distance_from_origin = -distance_from_origin;
-            }
-            double length = direction_vector.norm();
-            auto line = std::make_tuple(p0, p1, direction, distance_from_origin, length, perpendicular_intersection_point, linear_cloud->points.size());
-            line_list.push_back(line);
-            std::cout << std::get<2>(line) << "[rad], " << std::get<3>(line) << "[m], " << std::get<4>(line) << "[m], " << perpendicular_angle << "[rad], " << std::get<6>(line) << std::endl;
-            std::cout << "point: " << std::get<5>(line).transpose() << std::endl;
-        }
-    }
-    // clustering lines
-    CloudXYZPtr line_points(new CloudXYZ);
-    for(const auto& line : line_list){
-        Eigen::Vector2d vec = std::get<5>(line);
-        PointXYZ pt(vec(0), vec(1), 0.0);
-        line_points->points.push_back(pt);
-    }
-    line_points->height = 1;
-    line_points->width = line_points->points.size();
-    pcl::search::KdTree<PointXYZ>::Ptr tree(new pcl::search::KdTree<PointXYZ>);
-    tree->setInputCloud(line_points);
+    std::vector<LineInformation> line_list;
+    get_line_information_from_linear_clouds(linear_clouds, line_list);
+
     std::vector<pcl::PointIndices> cluster_indices;
-    pcl::EuclideanClusterExtraction<PointXYZ> ec;
-    ec.setClusterTolerance(1.0);
-    ec.setMinClusterSize(1);
-    ec.setMaxClusterSize(line_points->points.size());
-    ec.setSearchMethod(tree);
-    ec.setInputCloud(line_points);
-    ec.extract(cluster_indices);
-    int count = 0;
-    for(const auto& indices : cluster_indices){
-        std::cout << "cluster" << count << std::endl;
-        for(const auto& i : indices.indices){
-            std::cout << line_points->points[i] << std::endl;
-        }
-        count++;
-    }
-    // make marker
-    visualization_msgs::MarkerArray line_markers;
-    int cluster_num = cluster_indices.size();
-    static int last_cluster_num = 0;
-    int i = 0;
-    for(;i<cluster_num;i++){
-        auto line_data = line_list[cluster_indices[i].indices[0]];
-        visualization_msgs::Marker line_marker;
-        line_marker.header = pcl_conversions::fromPCL(input_cloud->header);
-        line_marker.ns = "road_recognizer";
-        line_marker.id = i;
-        line_marker.type = visualization_msgs::Marker::LINE_LIST;
-        line_marker.action = visualization_msgs::Marker::ADD;
-        line_marker.scale.x = 0.05;
-        line_marker.color.g = 1.0;
-        line_marker.color.a = 1.0;
-        line_marker.lifetime = ros::Duration(0);
-        geometry_msgs::Point p;
-        p.x = std::get<0>(line_data)(0);
-        p.y = std::get<0>(line_data)(1);
-        line_marker.points.push_back(p);
-        p.x = std::get<1>(line_data)(0);
-        p.y = std::get<1>(line_data)(1);
-        line_marker.points.push_back(p);
-        line_markers.markers.push_back(line_marker);
-    }
-    for(;i<last_cluster_num;i++){
-        visualization_msgs::Marker line_marker;
-        line_marker.header = pcl_conversions::fromPCL(input_cloud->header);
-        line_marker.ns = "road_recognizer";
-        line_marker.id = i;
-        line_marker.action = visualization_msgs::Marker::DELETE;
-        line_markers.markers.push_back(line_marker);
-    }
-    last_cluster_num = cluster_num;
-    line_markers_pub.publish(line_markers);
+    get_clustered_lines(line_list, cluster_indices);
+
+    make_and_publish_line_marker(cluster_indices, line_list, pcl_conversions::fromPCL(input_cloud->header));
 }
 
 template<typename PointT>
@@ -342,6 +207,162 @@ void RoadRecognizer::publish_linear_clouds(const std::vector<CloudXYZPtr>& linea
         sensor_msgs::PointCloud2 _cloud;
         pcl::toROSMsg(*colored_cloud, _cloud);
         linear_cloud_pub.publish(_cloud);
+    }
+}
+
+void RoadRecognizer::get_linear_clouds(const CloudXYZPtr input_cloud, std::vector<CloudXYZPtr>& linear_clouds)
+{
+    while(input_cloud->points.size() > 0){
+        std::cout << "ransac" << std::endl;
+        std::cout << "remaining cloud size: " << input_cloud->points.size() << std::endl;
+        pcl::SampleConsensusModelLine<PointXYZ>::Ptr model_l(new pcl::SampleConsensusModelLine<PointXYZ>(input_cloud));
+        pcl::RandomSampleConsensus<PointXYZ> ransac(model_l);
+        ransac.setDistanceThreshold(RANSAC_DISTANCE_THRESHOLD);
+        bool computed = ransac.computeModel();
+        if(computed){
+            std::vector<int> inliers;
+            ransac.getInliers(inliers);
+            CloudXYZPtr linear_cloud(new CloudXYZ);
+            linear_cloud->header = input_cloud->header;
+            pcl::copyPointCloud(*input_cloud, inliers, *linear_cloud);
+            std::cout << "linear cloud size: " << linear_cloud->size() << std::endl;
+            if(linear_cloud->size() > 1){
+                double line_length = get_distance(linear_cloud->points[0], linear_cloud->points.back());
+                std::cout << "line length: " << line_length << "[m]" << std::endl;
+                if(line_length > RANSAC_MIN_LINE_LENGTH_THRESHOLD){
+                    if(linear_cloud->size() / line_length > RANSAC_MIN_LINE_DENSITY_THRESHOLD){
+                        // new linear cloud
+                        std::cout << "new linear cloud" << std::endl;
+                        linear_clouds.push_back(linear_cloud);
+                        std::cout << "linear cloud num: " << linear_clouds.size() << std::endl;
+                    }else{
+                        std::cout << "line length is NOT denser than threshold!" << std::endl;
+                    }
+                }else{
+                    std::cout << "line length is NOT longer than threshold!" << std::endl;
+                }
+            }else{
+                std::cout << "cloud size is NOT longer than threshold!" << std::endl;
+            }
+            // remove inliers from cloud
+            std::cout << "remove inliers from cloud" << std::endl;
+            int size = input_cloud->points.size();
+            std::vector<int> outliers;
+            outliers.reserve(size);
+            for(int i=0;i<size;i++){
+                if(std::find(inliers.begin(), inliers.end(), i) == inliers.end()){
+                    outliers.push_back(i);
+                }
+            }
+            pcl::copyPointCloud(*input_cloud, outliers, *input_cloud);
+        }else{
+            // no line was detected
+            std::cout << "no line was detected" << std::endl;
+            break;
+        }
+    }
+}
+
+void RoadRecognizer::make_and_publish_line_marker(const std::vector<pcl::PointIndices>& cluster_indices, const std::vector<LineInformation>& line_list, const std_msgs::Header& header)
+{
+    visualization_msgs::MarkerArray line_markers;
+    int cluster_num = cluster_indices.size();
+    static int last_cluster_num = 0;
+    int i = 0;
+    for(;i<cluster_num;i++){
+        auto line_data = line_list[cluster_indices[i].indices[0]];
+        visualization_msgs::Marker line_marker;
+        line_marker.header = header;
+        line_marker.ns = "road_recognizer";
+        line_marker.id = i;
+        line_marker.type = visualization_msgs::Marker::LINE_LIST;
+        line_marker.action = visualization_msgs::Marker::ADD;
+        line_marker.scale.x = 0.05;
+        line_marker.color.g = 1.0;
+        line_marker.color.a = 1.0;
+        line_marker.lifetime = ros::Duration(0);
+        geometry_msgs::Point p;
+        p.x = std::get<0>(line_data)(0);
+        p.y = std::get<0>(line_data)(1);
+        line_marker.points.push_back(p);
+        p.x = std::get<1>(line_data)(0);
+        p.y = std::get<1>(line_data)(1);
+        line_marker.points.push_back(p);
+        line_markers.markers.push_back(line_marker);
+    }
+    for(;i<last_cluster_num;i++){
+        visualization_msgs::Marker line_marker;
+        line_marker.header = header;
+        line_marker.ns = "road_recognizer";
+        line_marker.id = i;
+        line_marker.action = visualization_msgs::Marker::DELETE;
+        line_markers.markers.push_back(line_marker);
+    }
+    last_cluster_num = cluster_num;
+    line_markers_pub.publish(line_markers);
+}
+
+void RoadRecognizer::get_clustered_lines(const std::vector<LineInformation>& line_list, std::vector<pcl::PointIndices>& cluster_indices)
+{
+    CloudXYZPtr line_points(new CloudXYZ);
+    for(const auto& line : line_list){
+        Eigen::Vector2d vec = std::get<5>(line);
+        PointXYZ pt(vec(0), vec(1), 0.0);
+        line_points->points.push_back(pt);
+    }
+    line_points->height = 1;
+    line_points->width = line_points->points.size();
+    pcl::search::KdTree<PointXYZ>::Ptr tree(new pcl::search::KdTree<PointXYZ>);
+    tree->setInputCloud(line_points);
+    pcl::EuclideanClusterExtraction<PointXYZ> ec;
+    ec.setClusterTolerance(1.0);
+    ec.setMinClusterSize(1);
+    ec.setMaxClusterSize(line_points->points.size());
+    ec.setSearchMethod(tree);
+    ec.setInputCloud(line_points);
+    ec.extract(cluster_indices);
+    int count = 0;
+    for(const auto& indices : cluster_indices){
+        std::cout << "cluster" << count << std::endl;
+        for(const auto& i : indices.indices){
+            std::cout << line_points->points[i] << std::endl;
+        }
+        count++;
+    }
+}
+
+void RoadRecognizer::get_line_information_from_linear_clouds(const std::vector<CloudXYZPtr>& linear_clouds, std::vector<LineInformation>& line_list)
+{
+    std::cout << "lines" << std::endl;
+    for(const auto& linear_cloud : linear_clouds){
+        Eigen::Vector2d p0(linear_cloud->points[0].x, linear_cloud->points[0].y);
+        Eigen::Vector2d p1(linear_cloud->points.back().x, linear_cloud->points.back().y);
+        Eigen::Vector2d direction_vector = p1 - p0;
+        if(fabs(direction_vector(0)) > 1e-6){
+            // ax + by + c = 0
+            double a = direction_vector(1) / direction_vector(0);
+            double b = -1;
+            double c = p0(1) - a * p0(0);
+            double distance_from_origin = fabs(c) / sqrt(a * a + b * b);
+            double direction = atan(a);
+            constexpr double PI_2 = M_PI * 0.5;
+            if(direction > PI_2){
+                direction -= M_PI;
+            }else if(direction < -PI_2){
+                direction += M_PI;
+            }
+            double perpendicular_angle = (c >= 0 ? PI_2 : -PI_2) + direction;
+            Eigen::Vector2d perpendicular_intersection_point(distance_from_origin * cos(perpendicular_angle), distance_from_origin * sin(perpendicular_angle));
+            if(c >= 0){
+                // if the line is placed on the left side of the robot
+                distance_from_origin = -distance_from_origin;
+            }
+            double length = direction_vector.norm();
+            auto line = std::make_tuple(p0, p1, direction, distance_from_origin, length, perpendicular_intersection_point, linear_cloud->points.size());
+            line_list.push_back(line);
+            std::cout << std::get<2>(line) << "[rad], " << std::get<3>(line) << "[m], " << std::get<4>(line) << "[m], " << perpendicular_angle << "[rad], " << std::get<6>(line) << std::endl;
+            std::cout << "point: " << std::get<5>(line).transpose() << std::endl;
+        }
     }
 }
 

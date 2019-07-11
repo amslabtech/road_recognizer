@@ -54,6 +54,7 @@ public:
     typedef pcl::PointXYZI PointXYZI;
     typedef pcl::PointCloud<PointXYZI> CloudXYZI;
     typedef pcl::PointCloud<PointXYZI>::Ptr CloudXYZIPtr;
+    typedef std::tuple<Eigen::Vector2d, Eigen::Vector2d, double, double, double, Eigen::Vector2d, int> LineInformation;
 
     RoadRecognizer(void);
 
@@ -64,6 +65,10 @@ public:
     template<typename PointT>
     double get_distance(const PointT&, const PointT&);
     void publish_linear_clouds(const std::vector<CloudXYZPtr>&);
+    void get_linear_clouds(const CloudXYZPtr, std::vector<CloudXYZPtr>&);
+    void make_and_publish_line_marker(const std::vector<pcl::PointIndices>&, const std::vector<LineInformation>&, const std_msgs::Header&);
+    void get_clustered_lines(const std::vector<LineInformation>&, std::vector<pcl::PointIndices>&);
+    void get_line_information_from_linear_clouds(const std::vector<CloudXYZPtr>&, std::vector<LineInformation>&);
 
 private:
     double HZ;
