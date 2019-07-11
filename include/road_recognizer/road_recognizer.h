@@ -12,6 +12,8 @@
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
 #include <tf/tf.h>
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 
 // Eigen
 #include <Eigen/Dense>
@@ -85,6 +87,7 @@ private:
     ros::Publisher beam_cloud_pub;
     ros::Publisher linear_cloud_pub;
     ros::Publisher beam_array_pub;
+    ros::Publisher line_markers_pub;
     ros::Subscriber road_stored_cloud_sub;
 
     CloudXYZINPtr filtered_cloud;

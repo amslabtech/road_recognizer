@@ -21,6 +21,7 @@ RoadRecognizer::RoadRecognizer(void)
     beam_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/beam_model", 1);
     linear_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/linear", 1);
     beam_array_pub = nh.advertise<std_msgs::Float64MultiArray>("beam_array", 1);
+    line_markers_pub = local_nh.advertise<visualization_msgs::MarkerArray>("road/edge_lines", 1);
 
     road_stored_cloud_sub = nh.subscribe("cloud/road/stored", 1, &RoadRecognizer::road_cloud_callback, this);
 
@@ -269,6 +270,42 @@ void RoadRecognizer::extract_lines(const CloudXYZPtr input_cloud)
         }
         count++;
     }
+    // make marker
+    visualization_msgs::MarkerArray line_markers;
+    int cluster_num = cluster_indices.size();
+    static int last_cluster_num = 0;
+    int i = 0;
+    for(;i<cluster_num;i++){
+        auto line_data = line_list[cluster_indices[i].indices[0]];
+        visualization_msgs::Marker line_marker;
+        line_marker.header = pcl_conversions::fromPCL(input_cloud->header);
+        line_marker.ns = "road_recognizer";
+        line_marker.id = i;
+        line_marker.type = visualization_msgs::Marker::LINE_LIST;
+        line_marker.action = visualization_msgs::Marker::ADD;
+        line_marker.scale.x = 0.05;
+        line_marker.color.g = 1.0;
+        line_marker.color.a = 1.0;
+        line_marker.lifetime = ros::Duration(0);
+        geometry_msgs::Point p;
+        p.x = std::get<0>(line_data)(0);
+        p.y = std::get<0>(line_data)(1);
+        line_marker.points.push_back(p);
+        p.x = std::get<1>(line_data)(0);
+        p.y = std::get<1>(line_data)(1);
+        line_marker.points.push_back(p);
+        line_markers.markers.push_back(line_marker);
+    }
+    for(;i<last_cluster_num;i++){
+        visualization_msgs::Marker line_marker;
+        line_marker.header = pcl_conversions::fromPCL(input_cloud->header);
+        line_marker.ns = "road_recognizer";
+        line_marker.id = i;
+        line_marker.action = visualization_msgs::Marker::DELETE;
+        line_markers.markers.push_back(line_marker);
+    }
+    last_cluster_num = cluster_num;
+    line_markers_pub.publish(line_markers);
 }
 
 template<typename PointT>
