@@ -15,6 +15,7 @@ RoadRecognizer::RoadRecognizer(void)
     local_nh.param("RANSAC_DISTANCE_THRESHOLD", RANSAC_DISTANCE_THRESHOLD, {0.20});
     local_nh.param("RANSAC_MIN_LINE_LENGTH_THRESHOLD", RANSAC_MIN_LINE_LENGTH_THRESHOLD, {3.0});
     local_nh.param("RANSAC_MIN_LINE_DENSITY_THRESHOLD", RANSAC_MIN_LINE_DENSITY_THRESHOLD, {1.0});
+    local_nh.param("EUCLIDEAN_CLUSTERING_TOLERANCE", EUCLIDEAN_CLUSTERING_TOLERANCE, {1.0});
 
     downsampled_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/downsampled", 1);
     filtered_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/filtered", 1);
@@ -44,6 +45,7 @@ RoadRecognizer::RoadRecognizer(void)
     std::cout << "RANSAC_DISTANCE_THRESHOLD: " << RANSAC_DISTANCE_THRESHOLD << std::endl;
     std::cout << "RANSAC_MIN_LINE_LENGTH_THRESHOLD: " << RANSAC_MIN_LINE_LENGTH_THRESHOLD << std::endl;
     std::cout << "RANSAC_MIN_LINE_DENSITY_THRESHOLD: " << RANSAC_MIN_LINE_DENSITY_THRESHOLD << std::endl;
+    std::cout << "EUCLIDEAN_CLUSTERING_TOLERANCE: " << EUCLIDEAN_CLUSTERING_TOLERANCE << std::endl;
 }
 
 void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
@@ -306,7 +308,7 @@ void RoadRecognizer::get_clustered_lines(const std::vector<LineInformation>& lin
 {
     CloudXYZPtr line_points(new CloudXYZ);
     for(const auto& line : line_list){
-        Eigen::Vector2d vec = std::get<5>(line);
+        Eigen::Vector2d vec = std::get<6>(line);
         PointXYZ pt(vec(0), vec(1), 0.0);
         line_points->points.push_back(pt);
     }
@@ -315,7 +317,7 @@ void RoadRecognizer::get_clustered_lines(const std::vector<LineInformation>& lin
     pcl::search::KdTree<PointXYZ>::Ptr tree(new pcl::search::KdTree<PointXYZ>);
     tree->setInputCloud(line_points);
     pcl::EuclideanClusterExtraction<PointXYZ> ec;
-    ec.setClusterTolerance(1.0);
+    ec.setClusterTolerance(EUCLIDEAN_CLUSTERING_TOLERANCE);
     ec.setMinClusterSize(1);
     ec.setMaxClusterSize(line_points->points.size());
     ec.setSearchMethod(tree);
@@ -358,10 +360,10 @@ void RoadRecognizer::get_line_information_from_linear_clouds(const std::vector<C
                 distance_from_origin = -distance_from_origin;
             }
             double length = direction_vector.norm();
-            auto line = std::make_tuple(p0, p1, direction, distance_from_origin, length, perpendicular_intersection_point, linear_cloud->points.size());
+            auto line = std::make_tuple(p0, p1, direction, distance_from_origin, length, perpendicular_angle, perpendicular_intersection_point, linear_cloud->points.size());
             line_list.push_back(line);
-            std::cout << std::get<2>(line) << "[rad], " << std::get<3>(line) << "[m], " << std::get<4>(line) << "[m], " << perpendicular_angle << "[rad], " << std::get<6>(line) << std::endl;
-            std::cout << "point: " << std::get<5>(line).transpose() << std::endl;
+            std::cout << std::get<2>(line) << "[rad], " << std::get<3>(line) << "[m], " << std::get<4>(line) << "[m], " << std::get<5>(line) << "[rad], " << std::get<7>(line) << std::endl;
+            std::cout << "point: " << std::get<6>(line).transpose() << std::endl;
         }
     }
 }

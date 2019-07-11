@@ -54,7 +54,7 @@ public:
     typedef pcl::PointXYZI PointXYZI;
     typedef pcl::PointCloud<PointXYZI> CloudXYZI;
     typedef pcl::PointCloud<PointXYZI>::Ptr CloudXYZIPtr;
-    typedef std::tuple<Eigen::Vector2d, Eigen::Vector2d, double, double, double, Eigen::Vector2d, int> LineInformation;
+    typedef std::tuple<Eigen::Vector2d, Eigen::Vector2d, double, double, double, double, Eigen::Vector2d, int> LineInformation;
 
     RoadRecognizer(void);
 
@@ -83,6 +83,7 @@ private:
     double RANSAC_DISTANCE_THRESHOLD;
     double RANSAC_MIN_LINE_LENGTH_THRESHOLD;
     double RANSAC_MIN_LINE_DENSITY_THRESHOLD;
+    double EUCLIDEAN_CLUSTERING_TOLERANCE;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

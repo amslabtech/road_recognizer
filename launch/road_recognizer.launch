@@ -23,6 +23,7 @@
         <arg name="ransac_distance_threshold" default="0.50"/>
         <arg name="ransac_min_line_length_threshold" default="5.0"/>
         <arg name="ransac_min_line_density_threshold" default="1.0"/>
+        <arg name="euclidean_clustering_tolerance" default="1.0"/>
 
         <node pkg="road_recognizer" type="road_cloud_publisher" name="road_cloud_publisher">
             <param name="HZ" value="$(arg hz)"/>
@@ -56,6 +57,7 @@
             <param name="RANSAC_DISTANCE_THRESHOLD" value="$(arg ransac_distance_threshold)"/>
             <param name="RANSAC_MIN_LINE_LENGTH_THRESHOLD" value="$(arg ransac_min_line_length_threshold)"/>
             <param name="RANSAC_MIN_LINE_DENSITY_THRESHOLD" value="$(arg ransac_min_line_density_threshold)"/>
+            <param name="EUCLIDEAN_CLUSTERING_TOLERANCE" value="$(arg euclidean_clustering_tolerance)"/>
         </node>
 
     </group>
