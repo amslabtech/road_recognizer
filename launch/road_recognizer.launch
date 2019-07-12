@@ -26,6 +26,7 @@
         <arg name="euclidean_clustering_tolerance" default="1.0"/>
         <arg name="max_road_direction_difference" default="0.1"/>
         <arg name="min_road_width" default="1.0"/>
+        <arg name="beam_mean_n" default="9"/>
 
         <node pkg="road_recognizer" type="road_cloud_publisher" name="road_cloud_publisher">
             <param name="HZ" value="$(arg hz)"/>
@@ -62,6 +63,7 @@
             <param name="EUCLIDEAN_CLUSTERING_TOLERANCE" value="$(arg euclidean_clustering_tolerance)"/>
             <param name="MAX_ROAD_DIRECTION_DIFFERENCE" value="$(arg max_road_direction_difference)"/>
             <param name="MIN_ROAD_WIDTH" value="$(arg min_road_width)"/>
+            <param name="BEAM_MEAN_N" value="$(arg beam_mean_n)"/>
         </node>
 
     </group>

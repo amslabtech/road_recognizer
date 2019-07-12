@@ -71,6 +71,7 @@ public:
     void make_and_publish_line_marker(const std::vector<pcl::PointIndices>&, const std::vector<LineInformation>&, const std_msgs::Header&);
     void get_clustered_lines(const std::vector<LineInformation>&, std::vector<pcl::PointIndices>&);
     void get_line_information_from_linear_clouds(const std::vector<CloudXYZPtr>&, std::vector<LineInformation>&);
+    void get_beam_cloud(const CloudXYZINPtr&, CloudXYZPtr&);
 
 private:
     double HZ;
@@ -88,6 +89,7 @@ private:
     double EUCLIDEAN_CLUSTERING_TOLERANCE;
     double MAX_ROAD_EDGE_DIRECTION_DIFFERENCE;
     double MIN_ROAD_WIDTH;
+    int BEAM_MEAN_N;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

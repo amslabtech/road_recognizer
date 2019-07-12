@@ -18,6 +18,7 @@ RoadRecognizer::RoadRecognizer(void)
     local_nh.param("EUCLIDEAN_CLUSTERING_TOLERANCE", EUCLIDEAN_CLUSTERING_TOLERANCE, {1.0});
     local_nh.param("MAX_ROAD_EDGE_DIRECTION_DIFFERENCE", MAX_ROAD_EDGE_DIRECTION_DIFFERENCE, {0.1});
     local_nh.param("MIN_ROAD_WIDTH", MIN_ROAD_WIDTH, {1.0});
+    local_nh.param("BEAM_MEAN_N", BEAM_MEAN_N, {9});
 
     downsampled_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/downsampled", 1);
     filtered_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/filtered", 1);
@@ -51,6 +52,7 @@ RoadRecognizer::RoadRecognizer(void)
     std::cout << "EUCLIDEAN_CLUSTERING_TOLERANCE: " << EUCLIDEAN_CLUSTERING_TOLERANCE << std::endl;
     std::cout << "MAX_ROAD_EDGE_DIRECTION_DIFFERENCE: " << MAX_ROAD_EDGE_DIRECTION_DIFFERENCE << std::endl;
     std::cout << "MIN_ROAD_WIDTH: " << MIN_ROAD_WIDTH << std::endl;
+    std::cout << "BEAM_MEAN_N: " << BEAM_MEAN_N << std::endl;
 }
 
 void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
@@ -87,31 +89,9 @@ void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr&
     std::cout << "after statistical outlier removal cloud size: " << filtered_cloud->points.size() << std::endl;
 
     std::cout << "--- beam model ---" << std::endl;
-    const double ANGLE_INCREMENT = 2.0 * M_PI / (double)BEAM_ANGLE_NUM;
-    std::vector<double> beam_list(BEAM_ANGLE_NUM, MAX_BEAM_RANGE);
-    for(const auto& pt : filtered_cloud->points){
-        double distance = sqrt(pt.x * pt.x + pt.y * pt.y);
-        double angle = atan2(pt.y, pt.x);
-        int index = (angle + M_PI) / ANGLE_INCREMENT;
-        if(0 <= index && index < BEAM_ANGLE_NUM){
-            if(beam_list[index] > distance){
-                beam_list[index] = distance;
-            }
-        }
-    }
     CloudXYZPtr beam_cloud(new CloudXYZ);
     beam_cloud->header = road_cloud->header;
-    for(int i=0;i<BEAM_ANGLE_NUM;i++){
-        if(beam_list[i] < MAX_BEAM_RANGE){
-            double angle = i * ANGLE_INCREMENT - M_PI;
-            PointXYZ pt;
-            pt.x = beam_list[i] * cos(angle);
-            pt.y = beam_list[i] * sin(angle);
-            beam_cloud->points.push_back(pt);
-        }
-    }
-    beam_cloud->height = 1;
-    beam_cloud->width = beam_cloud->points.size();
+    get_beam_cloud(filtered_cloud, beam_cloud);
     std::cout << "beam cloud size: " << beam_cloud->points.size() << std::endl;
 
     extract_lines(beam_cloud);
@@ -127,12 +107,6 @@ void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr&
     sensor_msgs::PointCloud2 cloud3;
     pcl::toROSMsg(*beam_cloud, cloud3);
     beam_cloud_pub.publish(cloud3);
-
-    std_msgs::Float64MultiArray beam_array;
-    for(const auto& distance : beam_list){
-        beam_array.data.push_back(distance);
-    }
-    beam_array_pub.publish(beam_array);
 
     if(ENABLE_VISUALIZATION){
         visualize_cloud();
@@ -416,6 +390,65 @@ void RoadRecognizer::get_line_information_from_linear_clouds(const std::vector<C
             std::cout << "point: " << std::get<6>(line).transpose() << std::endl;
         }
     }
+}
+
+void RoadRecognizer::get_beam_cloud(const CloudXYZINPtr& input_cloud, CloudXYZPtr& beam_cloud)
+{
+    const double ANGLE_INCREMENT = 2.0 * M_PI / (double)BEAM_ANGLE_NUM;
+    std::vector<double> beam_list(BEAM_ANGLE_NUM, MAX_BEAM_RANGE);
+    for(const auto& pt : input_cloud->points){
+        double distance = sqrt(pt.x * pt.x + pt.y * pt.y);
+        double angle = atan2(pt.y, pt.x);
+        int index = (angle + M_PI) / ANGLE_INCREMENT;
+        if(0 <= index && index < BEAM_ANGLE_NUM){
+            if(beam_list[index] > distance){
+                beam_list[index] = distance;
+            }
+        }
+    }
+    // publish beam list
+    std_msgs::Float64MultiArray beam_array;
+    for(const auto& distance : beam_list){
+        beam_array.data.push_back(distance);
+    }
+    beam_array_pub.publish(beam_array);
+
+    // N mean
+    static const int N_2 = BEAM_MEAN_N * 0.5;
+    std::vector<double> mean_beam(BEAM_ANGLE_NUM);
+    for(int i=0;i<BEAM_ANGLE_NUM;i++){
+        double mean = 0;
+        int count = 0;
+        if(beam_list[i] >= MAX_BEAM_RANGE){
+            mean_beam[i] = beam_list[i];
+            continue;
+        }
+        for(int j=i-N_2;j<=i+N_2;j++){
+            double range = beam_list[(j + BEAM_ANGLE_NUM) % BEAM_ANGLE_NUM];
+            if(range < MAX_BEAM_RANGE){
+                mean += range;
+                count++;
+            }
+        }
+        if(count > 0){
+            mean /= (double)count;
+        }else{
+            mean = MAX_BEAM_RANGE;
+        }
+        mean_beam[i] = mean;
+        std::cout << beam_list[i] << ", " << mean_beam[i] << std::endl;
+    }
+    for(int i=0;i<BEAM_ANGLE_NUM;i++){
+        if(mean_beam[i] < MAX_BEAM_RANGE){
+            double angle = i * ANGLE_INCREMENT - M_PI;
+            PointXYZ pt;
+            pt.x = mean_beam[i] * cos(angle);
+            pt.y = mean_beam[i] * sin(angle);
+            beam_cloud->points.push_back(pt);
+        }
+    }
+    beam_cloud->height = 1;
+    beam_cloud->width = beam_cloud->points.size();
 }
 
 void RoadRecognizer::process(void)
