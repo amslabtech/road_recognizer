@@ -89,7 +89,7 @@ private:
     double EUCLIDEAN_CLUSTERING_TOLERANCE;
     double MAX_ROAD_EDGE_DIRECTION_DIFFERENCE;
     double MIN_ROAD_WIDTH;
-    int BEAM_MEAN_N;
+    int BEAM_MEDIAN_N;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

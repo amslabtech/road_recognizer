@@ -22,11 +22,11 @@
         <arg name="max_beam_range" default="20"/>
         <arg name="ransac_distance_threshold" default="0.20"/>
         <arg name="ransac_min_line_length_threshold" default="5.0"/>
-        <arg name="ransac_min_line_density_threshold" default="3.0"/>
+        <arg name="ransac_min_line_density_threshold" default="5.0"/>
         <arg name="euclidean_clustering_tolerance" default="1.0"/>
         <arg name="max_road_direction_difference" default="0.1"/>
         <arg name="min_road_width" default="1.0"/>
-        <arg name="beam_mean_n" default="9"/>
+        <arg name="beam_median_n" default="5"/>
 
         <node pkg="road_recognizer" type="road_cloud_publisher" name="road_cloud_publisher">
             <param name="HZ" value="$(arg hz)"/>
@@ -63,7 +63,7 @@
             <param name="EUCLIDEAN_CLUSTERING_TOLERANCE" value="$(arg euclidean_clustering_tolerance)"/>
             <param name="MAX_ROAD_DIRECTION_DIFFERENCE" value="$(arg max_road_direction_difference)"/>
             <param name="MIN_ROAD_WIDTH" value="$(arg min_road_width)"/>
-            <param name="BEAM_MEAN_N" value="$(arg beam_mean_n)"/>
+            <param name="BEAM_MEDIAN_N" value="$(arg beam_median_n)"/>
         </node>
 
     </group>

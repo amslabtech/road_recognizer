@@ -18,7 +18,7 @@ RoadRecognizer::RoadRecognizer(void)
     local_nh.param("EUCLIDEAN_CLUSTERING_TOLERANCE", EUCLIDEAN_CLUSTERING_TOLERANCE, {1.0});
     local_nh.param("MAX_ROAD_EDGE_DIRECTION_DIFFERENCE", MAX_ROAD_EDGE_DIRECTION_DIFFERENCE, {0.1});
     local_nh.param("MIN_ROAD_WIDTH", MIN_ROAD_WIDTH, {1.0});
-    local_nh.param("BEAM_MEAN_N", BEAM_MEAN_N, {9});
+    local_nh.param("BEAM_MEDIAN_N", BEAM_MEDIAN_N, {9});
 
     downsampled_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/downsampled", 1);
     filtered_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/filtered", 1);
@@ -52,7 +52,7 @@ RoadRecognizer::RoadRecognizer(void)
     std::cout << "EUCLIDEAN_CLUSTERING_TOLERANCE: " << EUCLIDEAN_CLUSTERING_TOLERANCE << std::endl;
     std::cout << "MAX_ROAD_EDGE_DIRECTION_DIFFERENCE: " << MAX_ROAD_EDGE_DIRECTION_DIFFERENCE << std::endl;
     std::cout << "MIN_ROAD_WIDTH: " << MIN_ROAD_WIDTH << std::endl;
-    std::cout << "BEAM_MEAN_N: " << BEAM_MEAN_N << std::endl;
+    std::cout << "BEAM_MEDIAN_N: " << BEAM_MEDIAN_N << std::endl;
 }
 
 void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
@@ -413,37 +413,39 @@ void RoadRecognizer::get_beam_cloud(const CloudXYZINPtr& input_cloud, CloudXYZPt
     }
     beam_array_pub.publish(beam_array);
 
-    // N mean
-    static const int N_2 = BEAM_MEAN_N * 0.5;
-    std::vector<double> mean_beam(BEAM_ANGLE_NUM);
+    // N median
+    static const int N_2 = BEAM_MEDIAN_N * 0.5;
+    std::vector<double> median_beam(BEAM_ANGLE_NUM);
     for(int i=0;i<BEAM_ANGLE_NUM;i++){
-        double mean = 0;
+        std::vector<double> beams;
+        double median = 0;
         int count = 0;
         if(beam_list[i] >= MAX_BEAM_RANGE){
-            mean_beam[i] = beam_list[i];
+            median_beam[i] = beam_list[i];
             continue;
         }
         for(int j=i-N_2;j<=i+N_2;j++){
             double range = beam_list[(j + BEAM_ANGLE_NUM) % BEAM_ANGLE_NUM];
             if(range < MAX_BEAM_RANGE){
-                mean += range;
+                beams.push_back(range);
                 count++;
             }
         }
         if(count > 0){
-            mean /= (double)count;
+            std::sort(beams.begin(), beams.end());
+            median = beams[BEAM_MEDIAN_N / 2 + 1];
         }else{
-            mean = MAX_BEAM_RANGE;
+            median = MAX_BEAM_RANGE;
         }
-        mean_beam[i] = mean;
-        std::cout << beam_list[i] << ", " << mean_beam[i] << std::endl;
+        median_beam[i] = median;
+        //std::cout << beam_list[i] << ", " << median_beam[i] << std::endl;
     }
     for(int i=0;i<BEAM_ANGLE_NUM;i++){
-        if(mean_beam[i] < MAX_BEAM_RANGE){
+        if(median_beam[i] < MAX_BEAM_RANGE){
             double angle = i * ANGLE_INCREMENT - M_PI;
             PointXYZ pt;
-            pt.x = mean_beam[i] * cos(angle);
-            pt.y = mean_beam[i] * sin(angle);
+            pt.x = median_beam[i] * cos(angle);
+            pt.y = median_beam[i] * sin(angle);
             beam_cloud->points.push_back(pt);
         }
     }
