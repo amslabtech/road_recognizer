@@ -14,6 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   sensor_msgs
   tf
+
+  pcl_ros #added by nagai
 )
 
 ## System dependencies are found with CMake's conventions
@@ -148,9 +150,9 @@ add_library(libroad_recognizer
   src/road_recognizer.cpp
 )
 
-add_library(intensity_partition # added by nagai
-  src/intensity_partition.cpp
-)
+# add_library(intensity_partition # added by nagai
+#   src/intensity_partition.cpp
+# )
 
 
 ## Add cmake target dependencies of the library
@@ -161,7 +163,7 @@ add_dependencies(libroad_cloud_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${c
 add_dependencies(libroad_point_cloud_storer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(libroad_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_dependencies(intensity_partition ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}) # added by nagai
+# add_dependencies(intensity_partition ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}) # added by nagai
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
@@ -171,7 +173,7 @@ add_executable(road_cloud_publisher src/road_cloud_publisher_node.cpp)
 add_executable(road_point_cloud_storer src/road_point_cloud_storer_node.cpp)
 add_executable(road_recognizer src/road_recognizer_node.cpp)
 
-#add_executable(intensity_partition src/intensity_partition.cpp) # added by nagai
+add_executable(intensity_partition src/intensity_partition.cpp) # added by nagai
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -211,7 +213,7 @@ target_link_libraries(road_recognizer
 target_link_libraries(intensity_partition
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
-  libroad_recognizer
+  # libroad_recognizer
 )
 
 #############
