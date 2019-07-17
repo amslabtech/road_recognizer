@@ -66,6 +66,8 @@ public:
     void extract_lines(const CloudXYZPtr);
     template<typename PointT>
     double get_distance(const PointT&, const PointT&);
+    double get_length_from_linear_cloud(const CloudXYZPtr&);
+    double get_length_from_linear_cloud(const CloudXYZPtr&, Eigen::Vector2d&, Eigen::Vector2d&);
     void publish_linear_clouds(const std::vector<CloudXYZPtr>&);
     void get_linear_clouds(const CloudXYZPtr, std::vector<CloudXYZPtr>&);
     void make_and_publish_line_marker(const std::vector<pcl::PointIndices>&, const std::vector<LineInformation>&, const std_msgs::Header&);

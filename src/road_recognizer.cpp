@@ -207,6 +207,62 @@ double RoadRecognizer::get_distance(const PointT& p0, const PointT& p1)
     return (v0 - v1).norm();
 }
 
+double RoadRecognizer::get_length_from_linear_cloud(const CloudXYZPtr& cloud)
+{
+    std::vector<double> distance_list(cloud->points.size());
+    Eigen::Vector2d begin_vector(cloud->points[0].x, cloud->points[0].y);
+    Eigen::Vector2d end_vector(cloud->points.back().x, cloud->points.back().y);
+    Eigen::Vector2d direction_vector = end_vector - begin_vector;
+    double line_direction = atan2(direction_vector(1), direction_vector(0));
+    double max_d_p = 0;
+    double max_d_n = 0;
+    for(const auto& pt : cloud->points){
+        Eigen::Vector2d point(pt.x, pt.y);
+        Eigen::Vector2d relative_point = point - begin_vector;
+        double angle = line_direction - atan2(relative_point(1), relative_point(0));
+        double d = relative_point.norm() * cos(angle);
+        if(fabs(angle) > M_PI){
+            d = -d;
+        }
+        if(max_d_p <= d){
+            max_d_p = d;
+        }
+        if(max_d_n >= d){
+            max_d_n = d;
+        }
+    }
+    return fabs(max_d_p) + fabs(max_d_n);
+}
+
+double RoadRecognizer::get_length_from_linear_cloud(const CloudXYZPtr& cloud, Eigen::Vector2d& p0, Eigen::Vector2d& p1)
+{
+    std::vector<double> distance_list(cloud->points.size());
+    Eigen::Vector2d begin_vector(cloud->points[0].x, cloud->points[0].y);
+    Eigen::Vector2d end_vector(cloud->points.back().x, cloud->points.back().y);
+    Eigen::Vector2d direction_vector = end_vector - begin_vector;
+    double line_direction = atan2(direction_vector(1), direction_vector(0));
+    double max_d_p = 0;
+    double max_d_n = 0;
+    for(const auto& pt : cloud->points){
+        Eigen::Vector2d point(pt.x, pt.y);
+        Eigen::Vector2d relative_point = point - begin_vector;
+        double angle = line_direction - atan2(relative_point(1), relative_point(0));
+        double d = relative_point.norm() * cos(angle);
+        if(fabs(angle) > M_PI){
+            d = -d;
+        }
+        if(max_d_p <= d){
+            max_d_p = d;
+            p0 << pt.x, pt.y;
+        }
+        if(max_d_n >= d){
+            max_d_n = d;
+            p1 << pt.x, pt.y;
+        }
+    }
+    return fabs(max_d_p) + fabs(max_d_n);
+}
+
 void RoadRecognizer::publish_linear_clouds(const std::vector<CloudXYZPtr>& linear_clouds)
 {
     int linear_cloud_size = linear_clouds.size();
@@ -239,7 +295,7 @@ void RoadRecognizer::publish_linear_clouds(const std::vector<CloudXYZPtr>& linea
 void RoadRecognizer::get_linear_clouds(const CloudXYZPtr input_cloud, std::vector<CloudXYZPtr>& linear_clouds)
 {
     while(input_cloud->points.size() > 0){
-        std::cout << "ransac" << std::endl;
+        //std::cout << "ransac" << std::endl;
         std::cout << "remaining cloud size: " << input_cloud->points.size() << std::endl;
         pcl::SampleConsensusModelLine<PointXYZ>::Ptr model_l(new pcl::SampleConsensusModelLine<PointXYZ>(input_cloud));
         pcl::RandomSampleConsensus<PointXYZ> ransac(model_l);
@@ -253,25 +309,26 @@ void RoadRecognizer::get_linear_clouds(const CloudXYZPtr input_cloud, std::vecto
             pcl::copyPointCloud(*input_cloud, inliers, *linear_cloud);
             std::cout << "linear cloud size: " << linear_cloud->size() << std::endl;
             if(linear_cloud->size() > 1){
-                double line_length = get_distance(linear_cloud->points[0], linear_cloud->points.back());
+                double line_length = get_length_from_linear_cloud(linear_cloud);
                 std::cout << "line length: " << line_length << "[m]" << std::endl;
                 if(line_length > RANSAC_MIN_LINE_LENGTH_THRESHOLD){
                     if(linear_cloud->size() / line_length > RANSAC_MIN_LINE_DENSITY_THRESHOLD){
                         // new linear cloud
-                        std::cout << "new linear cloud" << std::endl;
+                        //std::cout << "new linear cloud" << std::endl;
                         linear_clouds.push_back(linear_cloud);
-                        std::cout << "linear cloud num: " << linear_clouds.size() << std::endl;
+                        //std::cout << "linear cloud num: " << linear_clouds.size() << std::endl;
                     }else{
-                        std::cout << "line length is NOT denser than threshold!" << std::endl;
+                        //std::cout << "line length is NOT denser than threshold!" << std::endl;
                     }
                 }else{
-                    std::cout << "line length is NOT longer than threshold!" << std::endl;
+                    //std::cout << "line length is NOT longer than threshold!" << std::endl;
                 }
             }else{
-                std::cout << "cloud size is NOT longer than threshold!" << std::endl;
+                //std::cout << "cloud size is NOT biggner than threshold!" << std::endl;
+                break;
             }
             // remove inliers from cloud
-            std::cout << "remove inliers from cloud" << std::endl;
+            //std::cout << "remove inliers from cloud" << std::endl;
             int size = input_cloud->points.size();
             std::vector<int> outliers;
             outliers.reserve(size);
@@ -283,7 +340,7 @@ void RoadRecognizer::get_linear_clouds(const CloudXYZPtr input_cloud, std::vecto
             pcl::copyPointCloud(*input_cloud, outliers, *input_cloud);
         }else{
             // no line was detected
-            std::cout << "no line was detected" << std::endl;
+            //std::cout << "no line was detected" << std::endl;
             break;
         }
     }
@@ -361,8 +418,9 @@ void RoadRecognizer::get_line_information_from_linear_clouds(const std::vector<C
 {
     std::cout << "lines" << std::endl;
     for(const auto& linear_cloud : linear_clouds){
-        Eigen::Vector2d p0(linear_cloud->points[0].x, linear_cloud->points[0].y);
-        Eigen::Vector2d p1(linear_cloud->points.back().x, linear_cloud->points.back().y);
+        Eigen::Vector2d p0;
+        Eigen::Vector2d p1;
+        double length = get_length_from_linear_cloud(linear_cloud, p0, p1);
         Eigen::Vector2d direction_vector = p1 - p0;
         if(fabs(direction_vector(0)) > 1e-6){
             // ax + by + c = 0
@@ -383,7 +441,6 @@ void RoadRecognizer::get_line_information_from_linear_clouds(const std::vector<C
                 // if the line is placed on the left side of the robot
                 distance_from_origin = -distance_from_origin;
             }
-            double length = direction_vector.norm();
             auto line = std::make_tuple(p0, p1, direction, distance_from_origin, length, perpendicular_angle, perpendicular_intersection_point, linear_cloud->points.size());
             line_list.push_back(line);
             std::cout << std::get<2>(line) << "[rad], " << std::get<3>(line) << "[m], " << std::get<4>(line) << "[m], " << std::get<5>(line) << "[rad], " << std::get<7>(line) << std::endl;
