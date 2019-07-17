@@ -251,9 +251,9 @@ void IntensityPartition::calc_otsu_binary(void)
 	}
 
 	// calc separation
-	struct GAA var[R_RESOLUTION][histogram_size -1];
-	struct GAA num[R_RESOLUTION][histogram_size -1];
-	struct GAA avr[R_RESOLUTION][histogram_size -1];
+	struct GAA var[R_RESOLUTION][histogram_size-1];
+	struct GAA num[R_RESOLUTION][histogram_size-1];
+	struct GAA avr[R_RESOLUTION][histogram_size-1];
 	for(int r_g=0; r_g<R_RESOLUTION; r_g++){
 		for(int i_threshold=1; i_threshold<histogram_size; i_threshold++){
 			var[r_g][i_threshold-1].grass = calc_variance(histogram, r_g, i_threshold, GRASS);
