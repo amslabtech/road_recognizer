@@ -1,0 +1,4 @@
+std_msgs/Int32 range_resolution
+std_msgs/Int32 theta_resolution
+std_msgs/Float32 range_max
+std_msgs/Float32MultiArray threshold_list

@@ -16,6 +16,9 @@
 
 #include <boost/thread.hpp>
 
+#include "road_recognizer/OtsuBinary.h"
+
+
 
 typedef pcl::PointXYZI PointI;
 typedef pcl::PointCloud<PointI> CloudI;
@@ -32,26 +35,33 @@ class IntensityPartition
 
 		const int GRASS = 1;
 		const int ASPHALT = 2;
-		const static int R_RESOLUTION = 50;
+		
+		/* ---------- Tuning Params ---------- */
+		const static int RANGE_RESOLUTION = 50;
 		const static int THETA_RESOLUTION = 360;
+		double RANGE_MAX = 20.0;
+		bool PC_PUBLISH_FLAG = false; // true : publish grass points | false : publish only otsu_binary_msg
+		/* ----------------------------------- */
 
-		float RANGE_MAX = 20.0;
-		float dR = RANGE_MAX / (float)R_RESOLUTION;
+		float dR = RANGE_MAX / (float)RANGE_RESOLUTION;
 		float dTheta = 2*M_PI / (float)THETA_RESOLUTION;
 		float intensity_max = 0.0;
 		float avr_grass = 0.0, avr_asphalt = 0.0;
 		float sum_grass = 0.0, sum_asphalt = 0.0;
 
-		float s_max[R_RESOLUTION];
-		float otsu_threshold_tmp[R_RESOLUTION];
+		float s_max[RANGE_RESOLUTION];
+		float otsu_threshold_tmp[RANGE_RESOLUTION];
 
-		int polar_grid_pt_cnt[R_RESOLUTION][THETA_RESOLUTION];
-		float polar_grid_avr_intensity[R_RESOLUTION][THETA_RESOLUTION];
-		float PolarGrid_sumIntensity[R_RESOLUTION][THETA_RESOLUTION];
+		int polar_grid_pt_cnt[RANGE_RESOLUTION][THETA_RESOLUTION];
+		float polar_grid_avr_intensity[RANGE_RESOLUTION][THETA_RESOLUTION];
+		float PolarGrid_sumIntensity[RANGE_RESOLUTION][THETA_RESOLUTION];
 
+		ros::NodeHandle nh;
+		ros::NodeHandle local_nh;
 		ros::Subscriber pc_subscriber;
 		ros::Subscriber odom_subscriber;
 		ros::Publisher grass_pc_publisher;
+		ros::Publisher otsu_binary_publisher;
 
 		sensor_msgs::PointCloud2 pub_pc;
 
@@ -59,6 +69,8 @@ class IntensityPartition
 		CloudIPtr polar_pc_ {new CloudI};
 
 		std::vector<float> ptz_list;
+
+		road_recognizer::OtsuBinary otsu_binary_msg; 
 
 		struct WB{
 			float within;
@@ -77,7 +89,7 @@ class IntensityPartition
 		void execution(void);
 		void initialize(void);
 		void cartesian_pt_2_polar_grid(CloudIPtr);
-		float calc_variance(std::vector<std::array<int, R_RESOLUTION> >, int, int, const int);
+		float calc_variance(std::vector<std::array<int, RANGE_RESOLUTION> >, int, int, int);
 		void calc_otsu_binary(void);
 		CloudIPtr otsu_pc_generator(void);
 };
@@ -96,15 +108,18 @@ int main(int argc, char** argv)
 
 
 IntensityPartition::IntensityPartition(void)
+:local_nh("~")
 {
-	ros::NodeHandle n;
-	ros::NodeHandle nh("~");
 
-	//nh.getParam("RANGE_MAX", RANGE_MAX);
+	otsu_binary_msg.range_resolution.data = RANGE_RESOLUTION;
+	otsu_binary_msg.theta_resolution.data = THETA_RESOLUTION;
+	otsu_binary_msg.range_max.data = RANGE_MAX;
+	otsu_binary_msg.threshold_list.data.resize(RANGE_RESOLUTION);
 
-	pc_subscriber = n.subscribe("/velodyne_clear", 10, &IntensityPartition::pc_callback, this);
+	pc_subscriber = nh.subscribe("/velodyne_clear", 10, &IntensityPartition::pc_callback, this);
 
-	grass_pc_publisher = n.advertise<sensor_msgs::PointCloud2>("/grass_pc", 10);
+	otsu_binary_publisher = local_nh.advertise<road_recognizer::OtsuBinary>("otsu_binary_info", 10);
+	grass_pc_publisher = nh.advertise<sensor_msgs::PointCloud2>("/grass_pc", 10);
 }
 
 
@@ -117,10 +132,14 @@ void IntensityPartition::pc_callback(const sensor_msgs::PointCloud2ConstPtr &msg
 	
 	cartesian_pt_2_polar_grid(input_pc_);
 	calc_otsu_binary();
-	otsu_binary_pc_ = otsu_pc_generator();
-	
-	pcl::toROSMsg(*otsu_binary_pc_, pub_pc);
-	grass_pc_publisher.publish(pub_pc);
+
+	if(PC_PUBLISH_FLAG){
+		otsu_binary_pc_ = otsu_pc_generator();
+		pcl::toROSMsg(*otsu_binary_pc_, pub_pc);
+		grass_pc_publisher.publish(pub_pc);
+	}
+
+	otsu_binary_publisher.publish(otsu_binary_msg);
 	
 	ptz_list.clear();
 }
@@ -134,7 +153,7 @@ void IntensityPartition::execution(void)
 
 void IntensityPartition::initialize(void)
 {
-	for(int i=0; i<R_RESOLUTION; i++){
+	for(int i=0; i<RANGE_RESOLUTION; i++){
 		for(int j=0; j<THETA_RESOLUTION; j++){
 			polar_grid_pt_cnt[i][j] = 0;
 			PolarGrid_sumIntensity[i][j] = 0;
@@ -148,7 +167,7 @@ void IntensityPartition::initialize(void)
 
 void IntensityPartition::cartesian_pt_2_polar_grid(CloudIPtr cartesian_pc_)
 {
-	float r_tmp, theta_tmp;
+	float r_tmp, theta_tmp, z_tmp;
 	size_t i = 0;
 	initialize();
 	
@@ -159,16 +178,20 @@ void IntensityPartition::cartesian_pt_2_polar_grid(CloudIPtr cartesian_pc_)
 			theta_tmp = 2 * M_PI + theta_tmp;
 		}
 		
+		// create polar grid informations
 		bool r_flag = false, theta_flag = false;
-		for(int r_g=0; r_g<R_RESOLUTION; r_g++){
-			for(int theta_g=0; theta_g<THETA_RESOLUTION; theta_g++){
+		for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
+			for(int theta_g = 0; theta_g < THETA_RESOLUTION; theta_g++){
 				if((r_g == (int)(r_tmp / dR)) && (theta_g == (int)(theta_tmp / dTheta))){
 					polar_grid_pt_cnt[r_g][theta_g] += 1;
 					PolarGrid_sumIntensity[r_g][theta_g] += pt.intensity;
 					polar_grid_avr_intensity[r_g][theta_g] = PolarGrid_sumIntensity[r_g][theta_g] / (float)polar_grid_pt_cnt[r_g][theta_g];
 					
+					if(PC_PUBLISH_FLAG){
+						z_tmp = polar_pc_->points[i].z;
+						ptz_list.push_back(z_tmp);
+					}
 					polar_pc_->points[i].z = r_tmp;
-					ptz_list.push_back(pt.z);
 
 					r_flag = true;
 					theta_flag = true;
@@ -186,39 +209,39 @@ void IntensityPartition::cartesian_pt_2_polar_grid(CloudIPtr cartesian_pc_)
 }
 
 
-float IntensityPartition::calc_variance(std::vector<std::array<int, R_RESOLUTION> > histogram_list, int RG, int threshold_tmp, int grass_or_asphalt)
+float IntensityPartition::calc_variance(std::vector<std::array<int, RANGE_RESOLUTION> > histogram_list, int r_g, int threshold_tmp, int grass_or_asphalt)
 {
 	float variance = 0, sum = 0, distpow_sum = 0, mu = 0;
 	int cnt = 0;
 	
 	switch(grass_or_asphalt){ 
 		case 1: // grass
-			for(int i=0; i<threshold_tmp; i++){
-				sum += (float)(histogram_list.at(i)).at(RG);
+			for(int i = 0; i < threshold_tmp; i++){
+				sum += (float)(histogram_list.at(i)).at(r_g);
 				cnt++;
 			}
 			sum_grass = sum;
 			n_grass = cnt;
 			mu = sum / cnt;
 			avr_grass = mu;
-			for(int i=0; i<threshold_tmp; i++){
-				float dist = (float)(histogram_list.at(i)).at(RG) - mu;
+			for(int i = 0; i < threshold_tmp; i++){
+				float dist = (float)(histogram_list.at(i)).at(r_g) - mu;
 				distpow_sum += dist * dist;
 			}
 			variance = distpow_sum / cnt;
 			break;
 
 		case 2: //asphalt
-			for(int i=threshold_tmp; i<(int)intensity_max; i++){
-				sum += (float)(histogram_list.at(i)).at(RG);
+			for(int i = threshold_tmp; i < (int)intensity_max; i++){
+				sum += (float)(histogram_list.at(i)).at(r_g);
 				cnt++;
 			}
 			sum_asphalt = sum;
 			n_asphalt = cnt;
 			mu = sum / cnt;
 			avr_asphalt = mu;
-			for(int i=threshold_tmp; i<(int)intensity_max; i++){
-				float dist = (float)(histogram_list.at(i)).at(RG) - mu;
+			for(int i = threshold_tmp; i < (int)intensity_max; i++){
+				float dist = (float)(histogram_list.at(i)).at(r_g) - mu;
 				distpow_sum += dist * dist;
 			}
 			variance = distpow_sum / cnt;
@@ -233,29 +256,29 @@ void IntensityPartition::calc_otsu_binary(void)
 {
 	// initialize
 	const int histogram_size = (int)intensity_max;
-	std::array<int, R_RESOLUTION> r_res_array;
-	std::vector<std::array<int, R_RESOLUTION> > histogram;
-	for(int i=0; i<R_RESOLUTION; i++){
+	std::array<int, RANGE_RESOLUTION> r_res_array;
+	std::vector<std::array<int, RANGE_RESOLUTION> > histogram;
+	for(int i = 0; i < RANGE_RESOLUTION; i++){
 		r_res_array[i] = 0;
 	}
-	for(int j=0; j<histogram_size; j++){
+	for(int j = 0; j < histogram_size; j++){
 		histogram.push_back(r_res_array);
 	}
 
 	// calc histogram
-	for(int r_g=0; r_g<R_RESOLUTION; r_g++){
-		for(int theta_g=0; theta_g<THETA_RESOLUTION; theta_g++){
+	for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
+		for(int theta_g = 0; theta_g < THETA_RESOLUTION; theta_g++){
 			int intensity_tmp = (int)polar_grid_avr_intensity[r_g][theta_g];
 			histogram[r_g][intensity_tmp] += 1;
 		}
 	}
 
 	// calc separation
-	struct GAA var[R_RESOLUTION][histogram_size-1];
-	struct GAA num[R_RESOLUTION][histogram_size-1];
-	struct GAA avr[R_RESOLUTION][histogram_size-1];
-	for(int r_g=0; r_g<R_RESOLUTION; r_g++){
-		for(int i_threshold=1; i_threshold<histogram_size; i_threshold++){
+	struct GAA var[RANGE_RESOLUTION][histogram_size-1];
+	struct GAA num[RANGE_RESOLUTION][histogram_size-1];
+	struct GAA avr[RANGE_RESOLUTION][histogram_size-1];
+	for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
+		for(int i_threshold = 1; i_threshold < histogram_size; i_threshold++){
 			var[r_g][i_threshold-1].grass = calc_variance(histogram, r_g, i_threshold, GRASS);
 			var[r_g][i_threshold-1].asphalt = calc_variance(histogram, r_g, i_threshold, ASPHALT);
 			num[r_g][i_threshold-1].grass = (float)n_grass;
@@ -267,8 +290,8 @@ void IntensityPartition::calc_otsu_binary(void)
 		}
 	}
 	struct WB var_wb;
-	for(int r_g=0; r_g<R_RESOLUTION; r_g++){
-		for(int i_threshold=1; i_threshold<histogram_size; i_threshold++){
+	for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
+		for(int i_threshold = 1; i_threshold < histogram_size; i_threshold++){
 			float ng = (float)num[r_g][i_threshold-1].grass;
 			float na = (float)num[r_g][i_threshold-1].asphalt;
 			float n_all = (float)num[r_g][i_threshold-1].all;
@@ -283,6 +306,11 @@ void IntensityPartition::calc_otsu_binary(void)
 				otsu_threshold_tmp[r_g] = (float)i_threshold;
 			}
 		}
+		if(r_g == 0){
+			otsu_binary_msg.threshold_list.data[r_g] = 0.0;
+		}else{
+			otsu_binary_msg.threshold_list.data[r_g] = otsu_threshold_tmp[r_g];
+		}
 	}
 
 	histogram.clear();
@@ -293,15 +321,15 @@ CloudIPtr IntensityPartition::otsu_pc_generator(void)
 {
 	size_t iz = 0;
 	for(auto& pt : polar_pc_->points){
-		for(int r_g=0; r_g<R_RESOLUTION; r_g++){
+		for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
 			if(((float)r_g <= pt.z && pt.z < (float)r_g+1.0) && otsu_threshold_tmp[r_g] > pt.intensity){
 				pt.intensity = -1.0;
 			}
 		}
-		pt.z = ptz_list[iz];
+		pt.z = ptz_list.at(iz);
 		iz++;
 	}
-	
+
 	pcl::PassThrough<PointI> pass;
 	CloudIPtr filtered_pc_ {new CloudI};
 	pass.setInputCloud(polar_pc_);

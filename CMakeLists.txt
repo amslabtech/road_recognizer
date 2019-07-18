@@ -14,8 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   sensor_msgs
   tf
-
-  pcl_ros #added by nagai
+  pcl_ros
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -59,11 +59,10 @@ find_package(PCL 1.8 REQUIRED)
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files(
+	FILES
+	OtsuBinary.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -80,10 +79,10 @@ find_package(PCL 1.8 REQUIRED)
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+generate_messages(
+	DEPENDENCIES
+	std_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -117,7 +116,7 @@ find_package(PCL 1.8 REQUIRED)
 catkin_package(
    INCLUDE_DIRS include
 #  LIBRARIES road_recognizer
-#  CATKIN_DEPENDS pcl_ros roscpp rospy std_msgs
+	CATKIN_DEPENDS pcl_ros roscpp rospy std_msgs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -150,10 +149,6 @@ add_library(libroad_recognizer
   src/road_recognizer.cpp
 )
 
-# add_library(intensity_partition # added by nagai
-#   src/intensity_partition.cpp
-# )
-
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -172,7 +167,6 @@ add_dependencies(libroad_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin
 add_executable(road_cloud_publisher src/road_cloud_publisher_node.cpp)
 add_executable(road_point_cloud_storer src/road_point_cloud_storer_node.cpp)
 add_executable(road_recognizer src/road_recognizer_node.cpp)
-
 add_executable(intensity_partition src/intensity_partition.cpp) # added by nagai
 
 ## Rename C++ executable without prefix
@@ -187,7 +181,6 @@ add_executable(intensity_partition src/intensity_partition.cpp) # added by nagai
 add_dependencies(road_cloud_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(road_point_cloud_storer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(road_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
 add_dependencies(intensity_partition ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}) # added by nagai
 
 ## Specify libraries to link a library or executable target against
@@ -209,11 +202,9 @@ target_link_libraries(road_recognizer
   ${PCL_LIBRARIES}
   libroad_recognizer
 )
-
 target_link_libraries(intensity_partition
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
-  # libroad_recognizer
 )
 
 #############
