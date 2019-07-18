@@ -34,7 +34,7 @@ class MakeImage{
 		/*const values*/
 		const double w = 30.0;	//x[m]
 		const double h = 30.0;	//y[m]
-		const double resolution = 0.1;	//[m]
+		const double resolution = 0.05;	//[m]
 		const double resolution_inv = 1/resolution;	
 		const int image_w = int(w*resolution_inv);
 		const int image_h = int(h*resolution_inv);
@@ -115,18 +115,21 @@ void MakeImage::make_image(void)
 	
 	int max = 0;
 	AddPointData(grass,image,max);
-	normalize(image,max);
 
-	
-	// 入力画像，出力画像，閾値，maxVal，閾値処理手法
-	// cv::threshold(image, image, 0, 255, cv::THRESH_BINARY|cv::THRESH_OTSU);
+
 
 	AddPointData_obs(rmground,image);
-
-	// cv::erode(image, image, cv::Mat(), cv::Point(-1,-1), 1);
-	// cv::dilate(image, image, cv::Mat(), cv::Point(-1,-1), 1);
-	cv::medianBlur(image, image, 5);
+	cv::medianBlur(image, image, 7);
+	cv::GaussianBlur(image, image, cv::Size(7,7), 10, 10);// src_img, out_img，karnel_size，標準偏差x, y
+	cv::medianBlur(image, image, 7);
+	// normalize(image,max);
+	// cv::threshold(image, image, 0, 255, cv::THRESH_BINARY|cv::THRESH_OTSU);
+	// cv::erode(image, image, cv::Mat(), cv::Point(-1,-1), 1); 
+	// cv::dilate(image, image, cv::Mat(), cv::Point(-1,-1), 1); 
 	cvtColor(image, image_c, CV_GRAY2RGB);
+
+
+
 
 	HoughLineP(image, image_c);
 
@@ -140,9 +143,11 @@ void MakeImage::AddPointData(pcl::PointCloud<pcl::PointXYZI>::Ptr& pc, cv::Mat& 
 		for(size_t i=0;i<lim;i++){
 			int px_x = MeterpointToPixel_x(pc->points[i].y);
 			int px_y = MeterpointToPixel_y(pc->points[i].x);
-			int r = sqrt(pc->points[i].x*pc->points[i].x+pc->points[i].y*pc->points[i].y);
+			// double r = sqrt(pc->points[i].x*pc->points[i].x+pc->points[i].y*pc->points[i].y);
 			int ind = px_y*image_w + px_x;
-			image.data[ind] += (r*r*0.8+4);
+			// image.data[ind] += 1;
+			// image.data[ind] += int(r*r*0.5+4);
+			image.data[ind] = 255;
 			if(image.data[ind]>max){
 				max = image.data[ind];
 				if(max>200)std::cout<<"max:"<<max<<", x:"<<px_x<< ", y:"<<px_y <<std::endl;
@@ -190,7 +195,7 @@ void MakeImage::HoughLineP(cv::Mat& image,cv::Mat& image_c)
 	std::vector<cv::Vec4i> lines;
 	// 入力画像，出力，距離分解能，角度分解能，閾値，線分の最小長さ，
 	// 2点が同一線分上にあると見なす場合に許容される最大距離
-	cv::HoughLinesP(image, lines, 1, CV_PI/180, 90, 40, 20);
+	cv::HoughLinesP(image, lines, 1, CV_PI/180*0.5, 80, 110, 20);
 	std::vector<cv::Vec4i>::iterator it = lines.begin();
 	for(; it!=lines.end(); ++it) {
 		cv::Vec4i l = *it;
