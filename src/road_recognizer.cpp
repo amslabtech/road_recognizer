@@ -478,19 +478,37 @@ void RoadRecognizer::get_beam_cloud(const CloudXYZINPtr& input_cloud, CloudXYZPt
     }
     beam_array_pub.publish(beam_array);
 
-    // N median
+    std::vector<double> filtered_beam;
+    apply_median_filter(beam_list, filtered_beam);
+
+    for(int i=0;i<BEAM_ANGLE_NUM;i++){
+        if(filtered_beam[i] < MAX_BEAM_RANGE){
+            double angle = i * ANGLE_INCREMENT - M_PI;
+            PointXYZ pt;
+            pt.x = filtered_beam[i] * cos(angle);
+            pt.y = filtered_beam[i] * sin(angle);
+            beam_cloud->points.push_back(pt);
+            //std::cout << i << ": " << median_beam[i] << "[m]" << std::endl;
+        }
+    }
+    beam_cloud->height = 1;
+    beam_cloud->width = beam_cloud->points.size();
+}
+
+void RoadRecognizer::apply_median_filter(const std::vector<double>& beam, std::vector<double>& filtered_beam)
+{
     static const int N_2 = BEAM_MEDIAN_N * 0.5;
     std::vector<double> median_beam(BEAM_ANGLE_NUM, MAX_BEAM_RANGE);
     for(int i=0;i<BEAM_ANGLE_NUM;i++){
         std::vector<double> beams;
         double median = 0;
         int count = 0;
-        if(beam_list[i] >= MAX_BEAM_RANGE){
-            median_beam[i] = beam_list[i];
+        if(beam[i] >= MAX_BEAM_RANGE){
+            median_beam[i] = beam[i];
             continue;
         }
         for(int j=i-N_2;j<=i+N_2;j++){
-            double range = beam_list[(j + BEAM_ANGLE_NUM) % BEAM_ANGLE_NUM];
+            double range = beam[(j + BEAM_ANGLE_NUM) % BEAM_ANGLE_NUM];
             if(range < MAX_BEAM_RANGE){
                 beams.push_back(range);
                 count++;
@@ -517,20 +535,9 @@ void RoadRecognizer::get_beam_cloud(const CloudXYZINPtr& input_cloud, CloudXYZPt
         }
         median_beam[i] = median;
         //std::cout << i << ": " << median_beam[i] << "[m]" << std::endl;
-        //std::cout << beam_list[i] << ", " << median_beam[i] << std::endl;
+        //std::cout << beam[i] << ", " << median_beam[i] << std::endl;
     }
-    for(int i=0;i<BEAM_ANGLE_NUM;i++){
-        if(median_beam[i] < MAX_BEAM_RANGE){
-            double angle = i * ANGLE_INCREMENT - M_PI;
-            PointXYZ pt;
-            pt.x = median_beam[i] * cos(angle);
-            pt.y = median_beam[i] * sin(angle);
-            beam_cloud->points.push_back(pt);
-            //std::cout << i << ": " << median_beam[i] << "[m]" << std::endl;
-        }
-    }
-    beam_cloud->height = 1;
-    beam_cloud->width = beam_cloud->points.size();
+    filtered_beam = median_beam;
 }
 
 void RoadRecognizer::process(void)

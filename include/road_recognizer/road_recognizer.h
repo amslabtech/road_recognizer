@@ -74,6 +74,7 @@ public:
     void get_clustered_lines(const std::vector<LineInformation>&, std::vector<pcl::PointIndices>&);
     void get_line_information_from_linear_clouds(const std::vector<CloudXYZPtr>&, std::vector<LineInformation>&);
     void get_beam_cloud(const CloudXYZINPtr&, CloudXYZPtr&);
+    void apply_median_filter(const std::vector<double>&, std::vector<double>&);
 
 private:
     double HZ;
