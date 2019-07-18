@@ -116,23 +116,27 @@ void MakeImage::make_image(void)
 	int max = 0;
 	AddPointData(grass,image,max);
 
+	////////////////////////////////////////////////////////////
+	
+	// IplConvKernel* karnel = cvCreateStructuringElementEx(7,7,4,4,2); //	size_x,y,offset_x,y,shape
 
-
-	AddPointData_obs(rmground,image);
 	cv::medianBlur(image, image, 7);
+	cv::erode(image, image, cv::Mat(), cv::Point(-1,-1), 1); 
+	AddPointData_obs(rmground,image);
 	cv::GaussianBlur(image, image, cv::Size(7,7), 10, 10);// src_img, out_img，karnel_size，標準偏差x, y
+	cv::erode(image, image, cv::Mat(), cv::Point(-1,-1), 1); 
 	cv::medianBlur(image, image, 7);
 	// normalize(image,max);
 	// cv::threshold(image, image, 0, 255, cv::THRESH_BINARY|cv::THRESH_OTSU);
-	// cv::erode(image, image, cv::Mat(), cv::Point(-1,-1), 1); 
-	// cv::dilate(image, image, cv::Mat(), cv::Point(-1,-1), 1); 
+	cv::erode(image, image, cv::Mat(), cv::Point(-1,-1), 1); 
+	cv::dilate(image, image, cv::Mat(), cv::Point(-1,-1), 1); 
 	cvtColor(image, image_c, CV_GRAY2RGB);
 
 
-
+	/////////////////////////////////////////////////////////////
 
 	HoughLineP(image, image_c);
-
+	cv::circle(image_c, cv::Point(image_w*0.5,image_h*0.5), 3, cv::Scalar(100,255,0), -1, CV_AA);
 	image_ros = cv_bridge::CvImage(std_msgs::Header(), "rgb8", image_c).toImageMsg();
 }
 
@@ -195,7 +199,7 @@ void MakeImage::HoughLineP(cv::Mat& image,cv::Mat& image_c)
 	std::vector<cv::Vec4i> lines;
 	// 入力画像，出力，距離分解能，角度分解能，閾値，線分の最小長さ，
 	// 2点が同一線分上にあると見なす場合に許容される最大距離
-	cv::HoughLinesP(image, lines, 1, CV_PI/180*0.5, 80, 110, 20);
+	cv::HoughLinesP(image, lines, 1, CV_PI/180*0.5, 80, 100, 20);
 	std::vector<cv::Vec4i>::iterator it = lines.begin();
 	for(; it!=lines.end(); ++it) {
 		cv::Vec4i l = *it;
