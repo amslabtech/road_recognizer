@@ -479,7 +479,8 @@ void RoadRecognizer::get_beam_cloud(const CloudXYZINPtr& input_cloud, CloudXYZPt
     beam_array_pub.publish(beam_array);
 
     std::vector<double> filtered_beam;
-    apply_median_filter(beam_list, filtered_beam);
+    //apply_median_filter(beam_list, filtered_beam);
+    apply_mean_filter(beam_list, filtered_beam);
 
     for(int i=0;i<BEAM_ANGLE_NUM;i++){
         if(filtered_beam[i] < MAX_BEAM_RANGE){
@@ -538,6 +539,45 @@ void RoadRecognizer::apply_median_filter(const std::vector<double>& beam, std::v
         //std::cout << beam[i] << ", " << median_beam[i] << std::endl;
     }
     filtered_beam = median_beam;
+}
+
+void RoadRecognizer::apply_mean_filter(const std::vector<double>& beam, std::vector<double>& filtered_beam)
+{
+    static const int N_2 = BEAM_MEDIAN_N * 0.5;
+    std::vector<double> mean_beam(BEAM_ANGLE_NUM, MAX_BEAM_RANGE);
+    for(int i=0;i<BEAM_ANGLE_NUM;i++){
+        std::vector<double> beams;
+        double mean = 0;
+        int count = 0;
+        if(beam[i] >= MAX_BEAM_RANGE){
+            mean_beam[i] = beam[i];
+            continue;
+        }
+        for(int j=i-N_2;j<=i+N_2;j++){
+            double range = beam[(j + BEAM_ANGLE_NUM) % BEAM_ANGLE_NUM];
+            if(range < MAX_BEAM_RANGE){
+                beams.push_back(range);
+                count++;
+            }
+        }
+        if(count > 0){
+            std::sort(beams.begin(), beams.end());
+            if(count > 2){
+                for(int j=0;j<count;j++){
+                    mean += beams[j];
+                }
+                mean /= (double)count;
+            }else{
+                mean = MAX_BEAM_RANGE;
+            }
+        }else{
+            mean = MAX_BEAM_RANGE;
+        }
+        mean_beam[i] = mean;
+        //std::cout << i << ": " << mean_beam[i] << "[m]" << std::endl;
+        //std::cout << beam[i] << ", " << mean_beam[i] << std::endl;
+    }
+    filtered_beam = mean_beam;
 }
 
 void RoadRecognizer::process(void)
