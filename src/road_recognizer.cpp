@@ -12,6 +12,7 @@ RoadRecognizer::RoadRecognizer(void)
     local_nh.param("ENABLE_VISUALIZATION", ENABLE_VISUALIZATION, {false});
     local_nh.param("BEAM_ANGLE_NUM", BEAM_ANGLE_NUM, {720});
     local_nh.param("MAX_BEAM_RANGE", MAX_BEAM_RANGE, {20});
+    local_nh.param("MIN_BEAM_RANGE", MIN_BEAM_RANGE, {1.0});
     local_nh.param("RANSAC_DISTANCE_THRESHOLD", RANSAC_DISTANCE_THRESHOLD, {0.20});
     local_nh.param("RANSAC_MIN_LINE_LENGTH_THRESHOLD", RANSAC_MIN_LINE_LENGTH_THRESHOLD, {3.0});
     local_nh.param("RANSAC_MIN_LINE_DENSITY_THRESHOLD", RANSAC_MIN_LINE_DENSITY_THRESHOLD, {1.0});
@@ -46,6 +47,7 @@ RoadRecognizer::RoadRecognizer(void)
     std::cout << "ENABLE_VISUALIZATION: " << ENABLE_VISUALIZATION << std::endl;
     std::cout << "BEAM_ANGLE_NUM: " << BEAM_ANGLE_NUM << std::endl;
     std::cout << "MAX_BEAM_RANGE: " << MAX_BEAM_RANGE << std::endl;
+    std::cout << "MIN_BEAM_RANGE: " << MIN_BEAM_RANGE << std::endl;
     std::cout << "RANSAC_DISTANCE_THRESHOLD: " << RANSAC_DISTANCE_THRESHOLD << std::endl;
     std::cout << "RANSAC_MIN_LINE_LENGTH_THRESHOLD: " << RANSAC_MIN_LINE_LENGTH_THRESHOLD << std::endl;
     std::cout << "RANSAC_MIN_LINE_DENSITY_THRESHOLD: " << RANSAC_MIN_LINE_DENSITY_THRESHOLD << std::endl;
@@ -80,6 +82,7 @@ void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr&
     downsampled_cloud->header = road_cloud->header;
     std::cout << "after voxel grid cloud size: " << downsampled_cloud->points.size() << std::endl;
 
+    /*
     std::cout << "before cloud size: " << downsampled_cloud->points.size() << std::endl;
     pcl::StatisticalOutlierRemoval<PointXYZIN> sor;
     sor.setInputCloud(downsampled_cloud);
@@ -87,11 +90,13 @@ void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr&
     sor.setStddevMulThresh(OUTLIER_REMOVAL_THRESHOLD);
     sor.filter(*filtered_cloud);
     std::cout << "after statistical outlier removal cloud size: " << filtered_cloud->points.size() << std::endl;
+    */
 
     std::cout << "--- beam model ---" << std::endl;
     CloudXYZPtr beam_cloud(new CloudXYZ);
     beam_cloud->header = road_cloud->header;
-    get_beam_cloud(filtered_cloud, beam_cloud);
+    //get_beam_cloud(filtered_cloud, beam_cloud);
+    get_beam_cloud(downsampled_cloud, beam_cloud);
     std::cout << "beam cloud size: " << beam_cloud->points.size() << std::endl;
 
     extract_lines(beam_cloud);
@@ -100,9 +105,9 @@ void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr&
     pcl::toROSMsg(*downsampled_cloud, cloud1);
     downsampled_pub.publish(cloud1);
 
-    sensor_msgs::PointCloud2 cloud2;
-    pcl::toROSMsg(*filtered_cloud, cloud2);
-    filtered_pub.publish(cloud2);
+    // sensor_msgs::PointCloud2 cloud2;
+    // pcl::toROSMsg(*filtered_cloud, cloud2);
+    // filtered_pub.publish(cloud2);
 
     sensor_msgs::PointCloud2 cloud3;
     pcl::toROSMsg(*beam_cloud, cloud3);
@@ -455,6 +460,9 @@ void RoadRecognizer::get_beam_cloud(const CloudXYZINPtr& input_cloud, CloudXYZPt
     std::vector<double> beam_list(BEAM_ANGLE_NUM, MAX_BEAM_RANGE);
     for(const auto& pt : input_cloud->points){
         double distance = sqrt(pt.x * pt.x + pt.y * pt.y);
+        if(distance < MIN_BEAM_RANGE){
+            continue;
+        }
         double angle = atan2(pt.y, pt.x);
         int index = (angle + M_PI) / ANGLE_INCREMENT;
         if(0 <= index && index < BEAM_ANGLE_NUM){
@@ -472,7 +480,7 @@ void RoadRecognizer::get_beam_cloud(const CloudXYZINPtr& input_cloud, CloudXYZPt
 
     // N median
     static const int N_2 = BEAM_MEDIAN_N * 0.5;
-    std::vector<double> median_beam(BEAM_ANGLE_NUM);
+    std::vector<double> median_beam(BEAM_ANGLE_NUM, MAX_BEAM_RANGE);
     for(int i=0;i<BEAM_ANGLE_NUM;i++){
         std::vector<double> beams;
         double median = 0;
@@ -490,11 +498,25 @@ void RoadRecognizer::get_beam_cloud(const CloudXYZINPtr& input_cloud, CloudXYZPt
         }
         if(count > 0){
             std::sort(beams.begin(), beams.end());
-            median = beams[BEAM_MEDIAN_N / 2 + 1];
+            // if(count > 1){
+            //     if(count % 2 == 0){
+            //         count--;
+            //     }
+            //     median = beams[count / 2 + 1];
+            // }else{
+            //     median = beams[0];
+            // }
+            //std::cout << "count: " << count << ", " << median << "[m]" << std::endl;
+            if(count > 2){
+                median = beams[count / 2 + 1];
+            }else{
+                median = MAX_BEAM_RANGE;
+            }
         }else{
             median = MAX_BEAM_RANGE;
         }
         median_beam[i] = median;
+        //std::cout << i << ": " << median_beam[i] << "[m]" << std::endl;
         //std::cout << beam_list[i] << ", " << median_beam[i] << std::endl;
     }
     for(int i=0;i<BEAM_ANGLE_NUM;i++){
@@ -504,6 +526,7 @@ void RoadRecognizer::get_beam_cloud(const CloudXYZINPtr& input_cloud, CloudXYZPt
             pt.x = median_beam[i] * cos(angle);
             pt.y = median_beam[i] * sin(angle);
             beam_cloud->points.push_back(pt);
+            //std::cout << i << ": " << median_beam[i] << "[m]" << std::endl;
         }
     }
     beam_cloud->height = 1;
