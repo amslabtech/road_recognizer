@@ -61,7 +61,7 @@ public:
     RoadRecognizer(void);
 
     void process(void);
-    void road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr&);
+    void callback(const sensor_msgs::PointCloud2ConstPtr&, const sensor_msgs::PointCloud2ConstPtr&);
     void visualize_cloud(void);
     void extract_lines(const CloudXYZPtr);
     template<typename PointT>
@@ -106,7 +106,10 @@ private:
     ros::Publisher beam_array_pub;
     ros::Publisher line_markers_pub;
     ros::Publisher road_pub;
-    ros::Subscriber road_stored_cloud_sub;
+    typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::PointCloud2, sensor_msgs::PointCloud2> sync_subs;
+    message_filters::Subscriber<sensor_msgs::PointCloud2> road_stored_cloud_sub;
+    message_filters::Subscriber<sensor_msgs::PointCloud2> obstacles_cloud_sub;
+    message_filters::Synchronizer<sync_subs> sync;
 
     CloudXYZINPtr filtered_cloud;
 

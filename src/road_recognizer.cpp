@@ -1,7 +1,7 @@
 #include "road_recognizer/road_recognizer.h"
 
 RoadRecognizer::RoadRecognizer(void)
-:local_nh("~")
+:local_nh("~"), road_stored_cloud_sub(nh, "cloud/road/stored", 10), obstacles_cloud_sub(nh, "/velodyne_obstacles", 10), sync(sync_subs(10), road_stored_cloud_sub, obstacles_cloud_sub)
 {
     local_nh.param("HZ", HZ, {20});
     local_nh.param("LEAF_SIZE", LEAF_SIZE, {0.1});
@@ -29,7 +29,7 @@ RoadRecognizer::RoadRecognizer(void)
     line_markers_pub = local_nh.advertise<visualization_msgs::MarkerArray>("road/edge_lines", 1);
     road_pub = nh.advertise<amsl_navigation_msgs::RoadArray>("road", 1);
 
-    road_stored_cloud_sub = nh.subscribe("cloud/road/stored", 1, &RoadRecognizer::road_cloud_callback, this);
+    sync.registerCallback(boost::bind(&RoadRecognizer::callback, this, _1, _2));
 
     filtered_cloud = CloudXYZINPtr(new CloudXYZIN);
 
@@ -57,12 +57,19 @@ RoadRecognizer::RoadRecognizer(void)
     std::cout << "BEAM_MEDIAN_N: " << BEAM_MEDIAN_N << std::endl;
 }
 
-void RoadRecognizer::road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
+void RoadRecognizer::callback(const sensor_msgs::PointCloud2ConstPtr& msg_road_stored_cloud, const sensor_msgs::PointCloud2ConstPtr& msg_obstacles_cloud)
 {
     std::cout << "=== road recognizer ===" << std::endl;
     double start = ros::Time::now().toSec();
+
     CloudXYZINPtr road_cloud(new CloudXYZIN);
-    pcl::fromROSMsg(*msg, *road_cloud);
+    pcl::fromROSMsg(*msg_road_stored_cloud, *road_cloud);
+
+    CloudXYZINPtr obstacles_cloud(new CloudXYZIN);
+    pcl::fromROSMsg(*msg_obstacles_cloud, *obstacles_cloud);
+
+    *road_cloud += *obstacles_cloud;
+
     int cloud_size = road_cloud->points.size();
     std::cout << "road cloud size: " <<  cloud_size << std::endl;
 
