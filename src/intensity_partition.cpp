@@ -147,6 +147,8 @@ void IntensityPartition::pc_callback(const sensor_msgs::PointCloud2ConstPtr &msg
 
 	otsu_binary_publisher.publish(otsu_binary_msg);
 	
+	first_flag = true;
+
 	ptz_list.clear();
 }
 
@@ -168,8 +170,8 @@ void IntensityPartition::initialize(void)
 		s_max[i] = 0.0;
 		otsu_threshold_tmp[i] = 0.0;
 		sumAll[i] = 0.0;
-		intensity_max[i] = 0.0;
-		intensity_min[i] = 999.9;
+		/* intensity_max[i] = 0.0; */
+		/* intensity_min[i] = 255.0; */
 	}
 	intensity_max_all = 0.0;
 }
@@ -210,10 +212,10 @@ void IntensityPartition::cartesian_pt_2_polar_grid(CloudIPtr cartesian_pc_)
 				if(theta_flag) break;
 			}
 			
-			if(intensity_min[r_g] > pt.intensity){
+			if(intensity_min[r_g] > pt.intensity || !first_flag){
 				intensity_min[r_g] = pt.intensity;
 			}
-			if(intensity_max[r_g] < pt.intensity){
+			if(intensity_max[r_g] < pt.intensity || !first_flag){
 				intensity_max[r_g] = pt.intensity;
 			}
 		}
@@ -231,7 +233,7 @@ void IntensityPartition::cartesian_pt_2_polar_grid(CloudIPtr cartesian_pc_)
 			otsu_binary_msg.intensity[r_g].max = 0.0;
 		}else{
 			otsu_binary_msg.intensity[r_g].min = intensity_min[r_g];
-			otsu_binary_msg.intensity[r_g].min = intensity_max[r_g];
+			otsu_binary_msg.intensity[r_g].max = intensity_max[r_g];
 		}
 	}
 }
