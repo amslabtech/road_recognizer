@@ -1,11 +1,13 @@
 <launch>
 	<param name="use_sim_time" value="true"/>
 	
-	<node pkg="road_recognizer" type="intensity_partition" name="intensity_partition"/>
+	<node pkg="road_recognizer" type="intensity_partition" name="intensity_partition" output="screen"/>
 
 	<include file="$(find velodyne_pointcloud)/launch/32e_points.launch"/>
 	<include file="$(find velodyne_height_map)/launch/amsl_velodyne_heightmap.launch"/>
 	
-	<node pkg="rosbag" name="player" type="play" args="--clock /home/amsl/bagfiles/cats/2019/left_start.bag"/>
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/left_start.bag &#45;l"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 1300"/> -->
+	<node pkg="rosbag" name="player" type="play" args="--clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag"/>
 	<node pkg="rviz" name="rviz" type="rviz" args="-d /home/amsl/.rviz/otsu.rviz"/>
 </launch>

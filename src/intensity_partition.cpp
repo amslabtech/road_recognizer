@@ -17,6 +17,7 @@
 #include <boost/thread.hpp>
 
 #include "road_recognizer/OtsuBinary.h"
+#include "road_recognizer/ThresholdList.h"
 
 
 
@@ -37,15 +38,19 @@ class IntensityPartition
 		const int ASPHALT = 2;
 		
 		/* ---------- Tuning Params ---------- */
-		const static int RANGE_RESOLUTION = 50;
+		const static int RANGE_RESOLUTION = 20;
 		const static int THETA_RESOLUTION = 360;
 		double RANGE_MAX = 20.0;
-		bool PC_PUBLISH_FLAG = false; // true : publish grass points | false : publish only otsu_binary_msg
+		bool PC_PUBLISH_FLAG = true; // true : publish grass points
+		//bool PC_PUBLISH_FLAG = false; // false : publish only otsu_binary_msg
 		/* ----------------------------------- */
 
 		float dR = RANGE_MAX / (float)RANGE_RESOLUTION;
 		float dTheta = 2*M_PI / (float)THETA_RESOLUTION;
-		float intensity_max = 0.0;
+		float sumAll[RANGE_RESOLUTION];
+		float intensity_max_all;
+		float intensity_max[RANGE_RESOLUTION];
+		float intensity_min[RANGE_RESOLUTION];
 		float avr_grass = 0.0, avr_asphalt = 0.0;
 		float sum_grass = 0.0, sum_asphalt = 0.0;
 
@@ -54,7 +59,7 @@ class IntensityPartition
 
 		int polar_grid_pt_cnt[RANGE_RESOLUTION][THETA_RESOLUTION];
 		float polar_grid_avr_intensity[RANGE_RESOLUTION][THETA_RESOLUTION];
-		float PolarGrid_sumIntensity[RANGE_RESOLUTION][THETA_RESOLUTION];
+		float polar_grid_sum_intensity[RANGE_RESOLUTION][THETA_RESOLUTION];
 
 		ros::NodeHandle nh;
 		ros::NodeHandle local_nh;
@@ -76,10 +81,9 @@ class IntensityPartition
 			float within;
 			float between;
 		};
-		struct GAA{
+		struct GA{
 			float grass;
 			float asphalt;
-			float all;
 		};
 
 	public:
@@ -100,6 +104,7 @@ int main(int argc, char** argv)
 {
 	ros::init(argc, argv, "intensity_partition");
 
+	
 	IntensityPartition intensity_partition;
 	intensity_partition.execution();
 
@@ -111,10 +116,11 @@ IntensityPartition::IntensityPartition(void)
 :local_nh("~")
 {
 
-	otsu_binary_msg.range_resolution.data = RANGE_RESOLUTION;
-	otsu_binary_msg.theta_resolution.data = THETA_RESOLUTION;
-	otsu_binary_msg.range_max.data = RANGE_MAX;
-	otsu_binary_msg.threshold_list.data.resize(RANGE_RESOLUTION);
+	otsu_binary_msg.range_resolution = RANGE_RESOLUTION;
+	otsu_binary_msg.theta_resolution = THETA_RESOLUTION;
+	otsu_binary_msg.range_max = RANGE_MAX;
+	otsu_binary_msg.intensity.resize(RANGE_RESOLUTION);
+	otsu_binary_msg.analysis.resize(RANGE_RESOLUTION);
 
 	pc_subscriber = nh.subscribe("/velodyne_clear", 10, &IntensityPartition::pc_callback, this);
 
@@ -156,12 +162,16 @@ void IntensityPartition::initialize(void)
 	for(int i=0; i<RANGE_RESOLUTION; i++){
 		for(int j=0; j<THETA_RESOLUTION; j++){
 			polar_grid_pt_cnt[i][j] = 0;
-			PolarGrid_sumIntensity[i][j] = 0;
+			polar_grid_sum_intensity[i][j] = 0;
 			polar_grid_avr_intensity[i][j] = 0;
 		}
 		s_max[i] = 0.0;
 		otsu_threshold_tmp[i] = 0.0;
+		sumAll[i] = 0.0;
+		intensity_max[i] = 0.0;
+		intensity_min[i] = 999.9;
 	}
+	intensity_max_all = 0.0;
 }
 
 
@@ -184,9 +194,10 @@ void IntensityPartition::cartesian_pt_2_polar_grid(CloudIPtr cartesian_pc_)
 			for(int theta_g = 0; theta_g < THETA_RESOLUTION; theta_g++){
 				if((r_g == (int)(r_tmp / dR)) && (theta_g == (int)(theta_tmp / dTheta))){
 					polar_grid_pt_cnt[r_g][theta_g] += 1;
-					PolarGrid_sumIntensity[r_g][theta_g] += pt.intensity;
-					polar_grid_avr_intensity[r_g][theta_g] = PolarGrid_sumIntensity[r_g][theta_g] / (float)polar_grid_pt_cnt[r_g][theta_g];
-					
+					polar_grid_sum_intensity[r_g][theta_g] += pt.intensity;
+					polar_grid_avr_intensity[r_g][theta_g] = polar_grid_sum_intensity[r_g][theta_g] / (float)polar_grid_pt_cnt[r_g][theta_g];
+					sumAll[r_g] += 1.0;
+
 					if(PC_PUBLISH_FLAG){
 						z_tmp = polar_pc_->points[i].z;
 						ptz_list.push_back(z_tmp);
@@ -196,15 +207,32 @@ void IntensityPartition::cartesian_pt_2_polar_grid(CloudIPtr cartesian_pc_)
 					r_flag = true;
 					theta_flag = true;
 				}
-				if(r_flag) break;
+				if(theta_flag) break;
 			}
-			if(theta_flag) break;
+			
+			if(intensity_min[r_g] > pt.intensity){
+				intensity_min[r_g] = pt.intensity;
+			}
+			if(intensity_max[r_g] < pt.intensity){
+				intensity_max[r_g] = pt.intensity;
+			}
 		}
 		
-		if(intensity_max < pt.intensity){
-			intensity_max = pt.intensity;
+		if(intensity_max_all < pt.intensity){
+			intensity_max_all = pt.intensity;
 		}
+
 		i++;
+	}
+
+	for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
+		if(r_g == 0){
+			otsu_binary_msg.intensity[r_g].min = 0.0;
+			otsu_binary_msg.intensity[r_g].max = 0.0;
+		}else{
+			otsu_binary_msg.intensity[r_g].min = intensity_min[r_g];
+			otsu_binary_msg.intensity[r_g].min = intensity_max[r_g];
+		}
 	}
 }
 
@@ -232,7 +260,7 @@ float IntensityPartition::calc_variance(std::vector<std::array<int, RANGE_RESOLU
 			break;
 
 		case 2: //asphalt
-			for(int i = threshold_tmp; i < (int)intensity_max; i++){
+			for(int i = threshold_tmp; i < (int)intensity_max_all; i++){
 				sum += (float)(histogram_list.at(i)).at(r_g);
 				cnt++;
 			}
@@ -240,7 +268,7 @@ float IntensityPartition::calc_variance(std::vector<std::array<int, RANGE_RESOLU
 			n_asphalt = cnt;
 			mu = sum / cnt;
 			avr_asphalt = mu;
-			for(int i = threshold_tmp; i < (int)intensity_max; i++){
+			for(int i = threshold_tmp; i < (int)intensity_max_all; i++){
 				float dist = (float)(histogram_list.at(i)).at(r_g) - mu;
 				distpow_sum += dist * dist;
 			}
@@ -254,62 +282,96 @@ float IntensityPartition::calc_variance(std::vector<std::array<int, RANGE_RESOLU
 
 void IntensityPartition::calc_otsu_binary(void)
 {
-	// initialize
-	const int histogram_size = (int)intensity_max;
+	const int histogram_size = (int)intensity_max_all;
+	int n_all = histogram_size;
+	float avr_all[RANGE_RESOLUTION], var_all[RANGE_RESOLUTION], dist_all[histogram_size], sum_tmp1[RANGE_RESOLUTION], sum_tmp2[RANGE_RESOLUTION];
 	std::array<int, RANGE_RESOLUTION> r_res_array;
 	std::vector<std::array<int, RANGE_RESOLUTION> > histogram;
+
+	// initialize
 	for(int i = 0; i < RANGE_RESOLUTION; i++){
 		r_res_array[i] = 0;
+		sum_tmp1[i] = 0;
+		sum_tmp2[i] = 0;
 	}
 	for(int j = 0; j < histogram_size; j++){
 		histogram.push_back(r_res_array);
 	}
 
-	// calc histogram
+	// make histogram
 	for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
 		for(int theta_g = 0; theta_g < THETA_RESOLUTION; theta_g++){
 			int intensity_tmp = (int)polar_grid_avr_intensity[r_g][theta_g];
 			histogram[r_g][intensity_tmp] += 1;
 		}
 	}
+	for(int r_g=0; r_g < RANGE_RESOLUTION; r_g++){
+		otsu_binary_msg.analysis[r_g].distribution.resize(histogram_size);
+		for(int idx_intensity = 0; idx_intensity < histogram_size; idx_intensity++){
+			otsu_binary_msg.analysis[r_g].distribution[idx_intensity].intensity = (float)histogram[r_g][idx_intensity];
+		}
+	}
+
+	// calc whole variance
+	for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
+		avr_all[r_g] = sumAll[r_g] / (float)n_all;
+		for(int i_threshold = 0; i_threshold < histogram_size; i_threshold++){
+			dist_all[i_threshold] = (float)histogram[r_g][i_threshold] - avr_all[r_g];
+			sum_tmp1[r_g] += dist_all[i_threshold] * dist_all[i_threshold];
+		}
+		var_all[r_g] = sum_tmp1[r_g] / (float)n_all;
+	}
 
 	// calc separation
-	struct GAA var[RANGE_RESOLUTION][histogram_size-1];
-	struct GAA num[RANGE_RESOLUTION][histogram_size-1];
-	struct GAA avr[RANGE_RESOLUTION][histogram_size-1];
+	struct GA var[RANGE_RESOLUTION][histogram_size-1];
+	struct GA num[RANGE_RESOLUTION][histogram_size-1];
+	struct GA avr[RANGE_RESOLUTION][histogram_size-1];
 	for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
 		for(int i_threshold = 1; i_threshold < histogram_size; i_threshold++){
 			var[r_g][i_threshold-1].grass = calc_variance(histogram, r_g, i_threshold, GRASS);
 			var[r_g][i_threshold-1].asphalt = calc_variance(histogram, r_g, i_threshold, ASPHALT);
 			num[r_g][i_threshold-1].grass = (float)n_grass;
 			num[r_g][i_threshold-1].asphalt = (float)n_asphalt;
-			num[r_g][i_threshold-1].all = (float)n_grass + (float)n_asphalt;
 			avr[r_g][i_threshold-1].grass = avr_grass;
 			avr[r_g][i_threshold-1].asphalt = avr_asphalt;
-			avr[r_g][i_threshold-1].all = (sum_grass + sum_asphalt) / (float)num[r_g][i_threshold-1].all;
 		}
 	}
-	struct WB var_wb;
+	struct WB var_wb;	
 	for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
 		for(int i_threshold = 1; i_threshold < histogram_size; i_threshold++){
 			float ng = (float)num[r_g][i_threshold-1].grass;
 			float na = (float)num[r_g][i_threshold-1].asphalt;
-			float n_all = (float)num[r_g][i_threshold-1].all;
-			float avr_all = avr[r_g][i_threshold-1].all;
-			var_wb.within = (ng * var[r_g][i_threshold-1].grass + na * var[r_g][i_threshold-1].asphalt) / n_all;
-			float distpow_mg = (avr[r_g][i_threshold-1].grass - avr_all) * (avr[r_g][i_threshold-1].grass - avr_all);
-			float distpow_ma = (avr[r_g][i_threshold-1].asphalt - avr_all) * (avr[r_g][i_threshold-1].asphalt - avr_all);
-			var_wb.between = (ng * distpow_mg + na * distpow_ma) / n_all;
+			var_wb.within = (ng * var[r_g][i_threshold-1].grass + na * var[r_g][i_threshold-1].asphalt) / (float)n_all;
+			float dist_mg = avr[r_g][i_threshold-1].grass - avr_all[r_g];
+			float dist_ma = avr[r_g][i_threshold-1].asphalt - avr_all[r_g];
+			var_wb.between = (ng * dist_mg * dist_mg + na * dist_ma * dist_ma) / (float)n_all;
 			float s_tmp = var_wb.between / var_wb.within;
+			
 			if(s_max[r_g] < s_tmp){
 				s_max[r_g] = s_tmp;
 				otsu_threshold_tmp[r_g] = (float)i_threshold;
 			}
 		}
+		
 		if(r_g == 0){
-			otsu_binary_msg.threshold_list.data[r_g] = 0.0;
+			otsu_binary_msg.intensity[r_g].threshold = 0.0;
+			otsu_binary_msg.analysis[r_g].separation = 0.0;
 		}else{
-			otsu_binary_msg.threshold_list.data[r_g] = otsu_threshold_tmp[r_g];
+			otsu_binary_msg.intensity[r_g].threshold = otsu_threshold_tmp[r_g];
+			otsu_binary_msg.analysis[r_g].separation = s_max[r_g];
+		}
+	}
+
+	// calc skewness
+	for(int r_g=0; r_g < RANGE_RESOLUTION; r_g++){
+		for(int idx_intensity = 1; idx_intensity < histogram_size; idx_intensity++){
+			float z_score = dist_all[idx_intensity-1] / var_all[r_g];
+			sum_tmp2[r_g] += z_score * z_score * z_score;
+		}
+		if(r_g == 0){
+			otsu_binary_msg.analysis[r_g].skewness = 0.0;
+		}else{
+			otsu_binary_msg.analysis[r_g].skewness = sum_tmp2[r_g] / (float)n_all;
 		}
 	}
 
@@ -334,7 +396,7 @@ CloudIPtr IntensityPartition::otsu_pc_generator(void)
 	CloudIPtr filtered_pc_ {new CloudI};
 	pass.setInputCloud(polar_pc_);
 	pass.setFilterFieldName ("intensity");
-	pass.setFilterLimits(0.0, intensity_max);
+	pass.setFilterLimits(0.0, intensity_max_all);
 	pass.filter(*filtered_pc_);
 
 	size_t otsu_size = filtered_pc_->points.size();

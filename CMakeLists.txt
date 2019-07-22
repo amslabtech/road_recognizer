@@ -62,6 +62,9 @@ find_package(PCL 1.8 REQUIRED)
 add_message_files(
 	FILES
 	OtsuBinary.msg
+	Analysis.msg
+	Intensity.msg
+	Distribution.msg
 )
 
 ## Generate services in the 'srv' folder
