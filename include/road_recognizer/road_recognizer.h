@@ -69,13 +69,15 @@ public:
     double get_length_from_linear_cloud(const CloudXYZPtr&);
     double get_length_from_linear_cloud(const CloudXYZPtr&, Eigen::Vector2d&, Eigen::Vector2d&);
     void publish_linear_clouds(const std::vector<CloudXYZPtr>&);
-    void get_linear_clouds(const CloudXYZPtr, std::vector<CloudXYZPtr>&);
+    void get_linear_clouds(const CloudXYZINPtr, std::vector<CloudXYZPtr>&);
     void make_and_publish_line_marker(const std::vector<pcl::PointIndices>&, const std::vector<LineInformation>&, const std_msgs::Header&);
     void get_clustered_lines(const std::vector<LineInformation>&, std::vector<pcl::PointIndices>&);
     void get_line_information_from_linear_clouds(const std::vector<CloudXYZPtr>&, std::vector<LineInformation>&);
     void get_beam_cloud(const CloudXYZINPtr&, CloudXYZPtr&);
     void apply_median_filter(const std::vector<double>&, std::vector<double>&);
     void apply_mean_filter(const std::vector<double>&, std::vector<double>&);
+    void estimate_normal_2d(const CloudXYZPtr&, CloudXYZINPtr&);
+    bool check_line_with_normal(const CloudXYZINPtr&, std::vector<int>&);
 
 private:
     double HZ;
@@ -95,6 +97,8 @@ private:
     double MAX_ROAD_EDGE_DIRECTION_DIFFERENCE;
     double MIN_ROAD_WIDTH;
     int BEAM_MEDIAN_N;
+    double LINE_NORMAL_MEAN_INNER_PRODUCT_THRESHOLD;
+    double RADIUS_FOR_2D_NORMAL;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

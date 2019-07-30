@@ -20,6 +20,8 @@ RoadRecognizer::RoadRecognizer(void)
     local_nh.param("MAX_ROAD_EDGE_DIRECTION_DIFFERENCE", MAX_ROAD_EDGE_DIRECTION_DIFFERENCE, {0.1});
     local_nh.param("MIN_ROAD_WIDTH", MIN_ROAD_WIDTH, {1.0});
     local_nh.param("BEAM_MEDIAN_N", BEAM_MEDIAN_N, {9});
+    local_nh.param("LINE_NORMAL_MEAN_INNER_PRODUCT_THRESHOLD", LINE_NORMAL_MEAN_INNER_PRODUCT_THRESHOLD, {0.5});
+    local_nh.param("RADIUS_FOR_2D_NORMAL", RADIUS_FOR_2D_NORMAL, {1.0});
 
     downsampled_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/downsampled", 1);
     filtered_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/filtered", 1);
@@ -55,6 +57,8 @@ RoadRecognizer::RoadRecognizer(void)
     std::cout << "MAX_ROAD_EDGE_DIRECTION_DIFFERENCE: " << MAX_ROAD_EDGE_DIRECTION_DIFFERENCE << std::endl;
     std::cout << "MIN_ROAD_WIDTH: " << MIN_ROAD_WIDTH << std::endl;
     std::cout << "BEAM_MEDIAN_N: " << BEAM_MEDIAN_N << std::endl;
+    std::cout << "LINE_NORMAL_MEAN_INNER_PRODUCT_THRESHOLD: " << LINE_NORMAL_MEAN_INNER_PRODUCT_THRESHOLD << std::endl;
+    std::cout << "RADIUS_FOR_2D_NORMAL: " << RADIUS_FOR_2D_NORMAL << std::endl;
 }
 
 void RoadRecognizer::callback(const sensor_msgs::PointCloud2ConstPtr& msg_road_stored_cloud, const sensor_msgs::PointCloud2ConstPtr& msg_obstacles_cloud)
@@ -116,10 +120,6 @@ void RoadRecognizer::callback(const sensor_msgs::PointCloud2ConstPtr& msg_road_s
     // pcl::toROSMsg(*filtered_cloud, cloud2);
     // filtered_pub.publish(cloud2);
 
-    sensor_msgs::PointCloud2 cloud3;
-    pcl::toROSMsg(*beam_cloud, cloud3);
-    beam_cloud_pub.publish(cloud3);
-
     if(ENABLE_VISUALIZATION){
         visualize_cloud();
     }
@@ -150,10 +150,19 @@ void RoadRecognizer::extract_lines(const CloudXYZPtr input_cloud)
 {
     std::cout << "extract lines" << std::endl;
     CloudXYZPtr cloud(new CloudXYZ);
+    CloudXYZINPtr cloud_n(new CloudXYZIN);
     std::vector<CloudXYZPtr> linear_clouds;
     pcl::copyPointCloud(*input_cloud, *cloud);
+    std::cout << "cloud: " << cloud->points.size() << std::endl;
 
-    get_linear_clouds(cloud, linear_clouds);
+    estimate_normal_2d(cloud, cloud_n);
+    cloud_n->header = input_cloud->header;
+    std::cout << "cloud_n: " << cloud_n->points.size() << std::endl;
+
+    sensor_msgs::PointCloud2 cloud3;
+    pcl::toROSMsg(*cloud_n, cloud3);
+    beam_cloud_pub.publish(cloud3);
+    get_linear_clouds(cloud_n, linear_clouds);
 
     publish_linear_clouds(linear_clouds);
 
@@ -304,13 +313,13 @@ void RoadRecognizer::publish_linear_clouds(const std::vector<CloudXYZPtr>& linea
     }
 }
 
-void RoadRecognizer::get_linear_clouds(const CloudXYZPtr input_cloud, std::vector<CloudXYZPtr>& linear_clouds)
+void RoadRecognizer::get_linear_clouds(const CloudXYZINPtr input_cloud, std::vector<CloudXYZPtr>& linear_clouds)
 {
     while(input_cloud->points.size() > 0){
         //std::cout << "ransac" << std::endl;
         std::cout << "remaining cloud size: " << input_cloud->points.size() << std::endl;
-        pcl::SampleConsensusModelLine<PointXYZ>::Ptr model_l(new pcl::SampleConsensusModelLine<PointXYZ>(input_cloud));
-        pcl::RandomSampleConsensus<PointXYZ> ransac(model_l);
+        pcl::SampleConsensusModelLine<PointXYZIN>::Ptr model_l(new pcl::SampleConsensusModelLine<PointXYZIN>(input_cloud));
+        pcl::RandomSampleConsensus<PointXYZIN> ransac(model_l);
         ransac.setDistanceThreshold(RANSAC_DISTANCE_THRESHOLD);
         bool computed = ransac.computeModel();
         if(computed){
@@ -319,24 +328,42 @@ void RoadRecognizer::get_linear_clouds(const CloudXYZPtr input_cloud, std::vecto
             CloudXYZPtr linear_cloud(new CloudXYZ);
             linear_cloud->header = input_cloud->header;
             pcl::copyPointCloud(*input_cloud, inliers, *linear_cloud);
+            int linear_cloud_size = linear_cloud->size();
             std::cout << "linear cloud size: " << linear_cloud->size() << std::endl;
-            if(linear_cloud->size() > 1){
-                double line_length = get_length_from_linear_cloud(linear_cloud);
-                std::cout << "line length: " << line_length << "[m]" << std::endl;
-                if(line_length > RANSAC_MIN_LINE_LENGTH_THRESHOLD){
-                    if(linear_cloud->size() / line_length > RANSAC_MIN_LINE_DENSITY_THRESHOLD){
-                        // new linear cloud
-                        //std::cout << "new linear cloud" << std::endl;
-                        linear_clouds.push_back(linear_cloud);
-                        //std::cout << "linear cloud num: " << linear_clouds.size() << std::endl;
+            if(linear_cloud_size > 1){
+                Eigen::VectorXf coeff;
+                ransac.getModelCoefficients(coeff);
+                Eigen::Vector2f line_vector = coeff.segment(3, 2);
+                // std::cout << coeff.transpose() << std::endl;
+                // std::cout << line_vector.transpose() << std::endl;
+                double cost = 0;
+                for(int i=0;i<linear_cloud_size;i++){
+                    Eigen::Vector2f normal(input_cloud->points[inliers[i]].normal_x, input_cloud->points[inliers[i]].normal_y);
+                    // std::cout << i << ": " << normal.transpose() << std::endl;
+                    cost += fabs(normal.dot(line_vector));
+                }
+                cost /= (double)linear_cloud_size;
+                std::cout << "cost: " << cost << std::endl;
+                if(cost < LINE_NORMAL_MEAN_INNER_PRODUCT_THRESHOLD){
+                    double line_length = get_length_from_linear_cloud(linear_cloud);
+                    std::cout << "line length: " << line_length << "[m]" << std::endl;
+                    if(line_length > RANSAC_MIN_LINE_LENGTH_THRESHOLD){
+                        if(linear_cloud->size() / line_length > RANSAC_MIN_LINE_DENSITY_THRESHOLD){
+                            // new linear cloud
+                            //std::cout << "new linear cloud" << std::endl;
+                            linear_clouds.push_back(linear_cloud);
+                            //std::cout << "linear cloud num: " << linear_clouds.size() << std::endl;
+                        }else{
+                            std::cout << "line length is NOT denser than threshold!" << std::endl;
+                        }
                     }else{
-                        //std::cout << "line length is NOT denser than threshold!" << std::endl;
+                        std::cout << "line length is NOT longer than threshold!" << std::endl;
                     }
                 }else{
-                    //std::cout << "line length is NOT longer than threshold!" << std::endl;
+                    std::cout << "difference between line and cloud normals is NOT smaller than threshold!" << std::endl;
                 }
             }else{
-                //std::cout << "cloud size is NOT biggner than threshold!" << std::endl;
+                std::cout << "cloud size is NOT biggner than threshold!" << std::endl;
                 break;
             }
             // remove inliers from cloud
@@ -585,6 +612,67 @@ void RoadRecognizer::apply_mean_filter(const std::vector<double>& beam, std::vec
         //std::cout << beam[i] << ", " << mean_beam[i] << std::endl;
     }
     filtered_beam = mean_beam;
+}
+
+void RoadRecognizer::estimate_normal_2d(const CloudXYZPtr& input_cloud, CloudXYZINPtr& output_cloud)
+{
+    pcl::KdTreeFLANN<PointXYZ> kdtree;
+    kdtree.setInputCloud(input_cloud);
+
+    int input_size = input_cloud->points.size();
+    std::vector<int> computed_indices;
+    computed_indices.reserve(input_size);
+    for(int i=0;i<input_size;i++){
+        computed_indices.push_back(i);
+        std::vector<int> indices;
+        std::vector<float> distances;
+        kdtree.radiusSearch(input_cloud->points[i], RADIUS_FOR_2D_NORMAL, indices, distances);
+        // add itself
+        indices.push_back(i);
+        int num = indices.size();
+        if(num > 2){
+            double sum_x = 0;
+            double sum_y = 0;
+            for(int j=0;j<num;j++){
+                sum_x += input_cloud->points[indices[j]].x;
+                sum_y += input_cloud->points[indices[j]].y;
+                computed_indices.push_back(indices[j]);
+            }
+            double ave_x = sum_x / (double)num;
+            double ave_y = sum_y / (double)num;
+            double sum_sigma_x = 0;
+            double sum_sigma_y = 0;
+            double sum_sigma_xy = 0;
+            for(int j=0;j<num;j++){
+                sum_sigma_x += (input_cloud->points[indices[j]].x - ave_x) * (input_cloud->points[indices[j]].x - ave_x);
+                sum_sigma_y += (input_cloud->points[indices[j]].y - ave_y) * (input_cloud->points[indices[j]].y - ave_y);
+                sum_sigma_xy = (input_cloud->points[indices[j]].x - ave_x) * (input_cloud->points[indices[j]].y - ave_y);
+            }
+            double sigma_x = sum_sigma_x / (double)num;
+            double sigma_y = sum_sigma_y / (double)num;
+            double sigma_xy = sum_sigma_xy / (double)num;
+            Eigen::Matrix2d mat;
+            mat << sigma_x, sigma_xy,
+                   sigma_xy, sigma_y;
+            Eigen::EigenSolver<Eigen::Matrix2d> eigensolver(mat);
+            Eigen::Vector2d e_values = eigensolver.eigenvalues().real();
+            Eigen::Matrix2d e_vectors = eigensolver.eigenvectors().real();
+            Eigen::Vector2d second = e_vectors.col((e_values(0) > e_values(1)) ? 1 : 0);
+            PointXYZIN pt;
+            pt.x = input_cloud->points[i].x;
+            pt.y = input_cloud->points[i].y;
+            pt.z = input_cloud->points[i].z;
+            pt.normal_x = second(0);
+            pt.normal_y = second(1);
+            pt.normal_z = 0;
+            output_cloud->points.push_back(pt);
+        }
+    }
+}
+
+bool RoadRecognizer::check_line_with_normal(const CloudXYZINPtr& cloud, std::vector<int>& indices)
+{
+    return true;
 }
 
 void RoadRecognizer::process(void)

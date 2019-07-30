@@ -19,16 +19,18 @@
         <arg name="outlier_removal_k" default="50"/>
         <arg name="outlier_removal_threshold" default="1.0"/>
         <arg name="enable_visualization" default="false"/>
-        <arg name="beam_angle_num" default="720"/>
+        <arg name="beam_angle_num" default="120"/>
         <arg name="max_beam_range" default="20"/>
         <arg name="min_beam_range" default="1.0"/>
         <arg name="ransac_distance_threshold" default="0.20"/>
         <arg name="ransac_min_line_length_threshold" default="5.0"/>
-        <arg name="ransac_min_line_density_threshold" default="5.0"/>
+        <arg name="ransac_min_line_density_threshold" default="3.0"/>
         <arg name="euclidean_clustering_tolerance" default="1.0"/>
         <arg name="max_road_direction_difference" default="0.1"/>
         <arg name="min_road_width" default="1.0"/>
-        <arg name="beam_median_n" default="5"/>
+        <arg name="beam_median_n" default="3"/>
+        <arg name="line_normal_mean_inner_product_threshold" default="0.5"/>
+        <arg name="radius_for_2d_normal" default="1.0"/>
 
         <node pkg="road_recognizer" type="road_cloud_publisher" name="road_cloud_publisher">
             <param name="HZ" value="$(arg hz)"/>
@@ -67,6 +69,8 @@
             <param name="MAX_ROAD_DIRECTION_DIFFERENCE" value="$(arg max_road_direction_difference)"/>
             <param name="MIN_ROAD_WIDTH" value="$(arg min_road_width)"/>
             <param name="BEAM_MEDIAN_N" value="$(arg beam_median_n)"/>
+            <param name="LINE_NORMAL_MEAN_INNER_PRODUCT_THRESHOLD" value="$(arg line_normal_mean_inner_product_threshold)"/>
+            <param name="RADIUS_FOR_2D_NORMAL" value="$(arg radius_for_2d_normal)"/>
         </node>
 
     </group>
