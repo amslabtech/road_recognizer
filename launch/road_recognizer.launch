@@ -71,6 +71,7 @@
             <param name="BEAM_MEDIAN_N" value="$(arg beam_median_n)"/>
             <param name="LINE_NORMAL_MEAN_INNER_PRODUCT_THRESHOLD" value="$(arg line_normal_mean_inner_product_threshold)"/>
             <param name="RADIUS_FOR_2D_NORMAL" value="$(arg radius_for_2d_normal)"/>
+            <remap from="/velodyne_obstacles" to="/cloud/static"/>
         </node>
 
     </group>
