@@ -6,10 +6,11 @@ MakeImage::MakeImage()
 {
 	w = 40.0;
 	h = 40.0;
-	resolution = 0.05;
+	resolution = 0.1;
 	resolution_rec = 1/resolution;
 	image_w = int(w*resolution_rec);
 	image_h = int(h*resolution_rec);
+	houghline_flag = true;
 }
 
 void MakeImage::setparam(const double wid, const double hei, const double res)
@@ -44,6 +45,7 @@ void MakeImage::make_image(void)
 
 	int max = 0;
 	AddPointData(grass,image,max);
+	AddPointData_obs(rmground,image);
 
 	////////////////////////////////////////////////////////////
 	
@@ -69,7 +71,8 @@ void MakeImage::make_image(void)
 
 	cv::dilate(image, image, element, cv::Point(-1,-1), 1); 
 	cv::erode(image, image, element, cv::Point(-1,-1), 2); 
-	cv::dilate(image, image, element, cv::Point(-1,-1), 1); 
+	cv::dilate(image, image, element, cv::Point(-1,-1), 3); 
+	cv::erode(image, image, element, cv::Point(-1,-1), 2); 
 
 
 
@@ -80,7 +83,7 @@ void MakeImage::make_image(void)
 	// cv::Canny(image, image, 50, 200, 3); 
 	cvtColor(image, image_c, CV_GRAY2RGB);
 
-	HoughLineP(image, image_c);
+	if(houghline_flag)HoughLineP(image, image_c);
 	cv::circle(image_c, cv::Point(image_w*0.5,image_h*0.5), 3, cv::Scalar(100,255,0), -1, CV_AA);
 	image_ros = cv_bridge::CvImage(std_msgs::Header(), "rgb8", image_c).toImageMsg();
 }
@@ -146,12 +149,12 @@ void MakeImage::HoughLineP(cv::Mat& image,cv::Mat& image_c)
 	// 入力画像，出力，距離分解能，角度分解能，閾値，線分の最小長さ，
 	// 2点が同一線分上にあると見なす場合に許容される最大距離
 	// cv::HoughLinesP(image, lines, 1, CV_PI/180*0.5, 80, 120, 15);
-	cv::HoughLinesP(image, lines, 1, CV_PI/180*0.5, 70, 100, 30);
+	cv::HoughLinesP(image, lines, 1, CV_PI/180, 70, 100, 30);
 	std::vector<cv::Vec4i>::iterator it = lines.begin();
 	std::cout << "number of lines: " << lines.size() << std::endl;
 	for(; it!=lines.end(); ++it) {
 		cv::Vec4i l = *it;
-	    // cv::line(image_c, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(255,0,0), 2, CV_AA);
+	    cv::line(image_c, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(255,0,0), 2, CV_AA);
 	}
 }
 

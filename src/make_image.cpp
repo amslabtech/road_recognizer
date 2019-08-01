@@ -21,6 +21,7 @@ using std::vector;
 class makeimage{
 	private:
 		ros::NodeHandle nh;
+		ros::NodeHandle private_nh;
 		ros::Subscriber sub_rmground;
 		ros::Subscriber sub_grass;
 		ros::Publisher pub_image;
@@ -28,6 +29,10 @@ class makeimage{
 		ros::Time pub_stamp;
 		bool firstcallback_rmg = true;
 		bool firstcallback_grs = true;
+		double IMAGE_WIDTH;
+		double IMAGE_HEIGHT;
+		double IMAGE_RESOLUTION;
+		bool HOUGHLINE_FLAG;
 		MakeImage MI;
 
 	public:
@@ -39,7 +44,20 @@ class makeimage{
 };
 
 makeimage::makeimage()
+	: private_nh("~")
 {
+	
+	private_nh.param("IMAGE_WIDTH", IMAGE_WIDTH, {40});
+	private_nh.param("IMAGE_HEIGHT", IMAGE_HEIGHT, {40});
+	private_nh.param("IMAGE_RESOLUTION", IMAGE_RESOLUTION, {0.1});
+	private_nh.param("HOUGHLINE_FLAG", HOUGHLINE_FLAG, {true});
+	std::cout << "IMAGE_WIDTH 		: " << IMAGE_WIDTH << std::endl;
+	std::cout << "IMAGE_HEIGHT 		: " << IMAGE_HEIGHT << std::endl;
+	std::cout << "IMAGE_RESOLUTION 	: " << IMAGE_RESOLUTION << std::endl;
+	std::cout << "HOUGHLINE_FLAG 	: " << HOUGHLINE_FLAG << std::endl;
+	
+	MI.houghline_flag=HOUGHLINE_FLAG;
+	MI.setparam(IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_RESOLUTION);
 	sub_rmground = nh.subscribe("/rm_ground", 1, &makeimage::CallbackRmGround, this);
 	sub_grass = nh.subscribe("/grass", 1, &makeimage::CallbackGrass, this);
 	pub_image = nh.advertise<sensor_msgs::Image>("/image", 1);
