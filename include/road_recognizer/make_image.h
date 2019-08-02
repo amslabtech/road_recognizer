@@ -29,12 +29,15 @@ class MakeImage
 		int image_w;
 		int image_h;
 		bool houghline_flag;
+		vector<vector<int>> precast;
 		sensor_msgs::ImagePtr image_ros;
 
 		MakeImage();
 		void setparam(const double, const double, const double);
 		void ExtractPCInRange(pcl::PointCloud<pcl::PointXYZI>::Ptr&);
 		void make_image(void);
+		void Precast(const int, const int);
+		void BEAM(const int, const int, cv::Mat&);
 		void AddPointData(const pcl::PointCloud<pcl::PointXYZI>::Ptr&, cv::Mat&, int&);
 		void AddPointData_obs(const pcl::PointCloud<pcl::PointXYZI>::Ptr&, cv::Mat&);
 		void normalize(cv::Mat& image,const int);

@@ -37,6 +37,7 @@ void MakeImage::ExtractPCInRange(pcl::PointCloud<pcl::PointXYZI>::Ptr& pc)
 	pass.filter(*pc);
 }
 
+
 void MakeImage::make_image(void)
 {
 	// std::cout<<"make_image"<<std::endl;
@@ -75,7 +76,7 @@ void MakeImage::make_image(void)
 	cv::erode(image, image, element, cv::Point(-1,-1), 2); 
 
 
-
+	BEAM(image_w*0.5, image_h*0.5, image);
 
 	// normalize(image,max);
 	// cv::threshold(image, image, 0, 255, cv::THRESH_BINARY|cv::THRESH_OTSU);
@@ -86,6 +87,96 @@ void MakeImage::make_image(void)
 	if(houghline_flag)HoughLineP(image, image_c);
 	cv::circle(image_c, cv::Point(image_w*0.5,image_h*0.5), 3, cv::Scalar(100,255,0), -1, CV_AA);
 	image_ros = cv_bridge::CvImage(std_msgs::Header(), "rgb8", image_c).toImageMsg();
+}
+
+void MakeImage::Precast(const int cx, const int cy)
+{
+	const int BEAM_ANGLE_NUM = 60;
+	precast.resize(BEAM_ANGLE_NUM);
+
+    const double ANGLE_INCREMENT = 2.0 * M_PI / (double)BEAM_ANGLE_NUM;
+    for(int i=0;i<image_h;i++){
+    	for(int j=0;j<image_w;j++){
+			int ind = j * image_h + i;
+			int dx = j - cx;
+			int dy = i - cy;
+    	    double distance = sqrt(dx*dx + dy*dy)*resolution;
+			double  grid_size_angle = atan2(distance, resolution*0.5);
+			int grid_beam_width = 0;
+			for(int k=1; grid_size_angle>=ANGLE_INCREMENT*i; k++){
+				grid_beam_width = i;
+			}
+			double angle = atan2(dx, -dy);
+			int index = (angle + M_PI) / ANGLE_INCREMENT;
+			for(int k=-grid_beam_width; k<=grid_beam_width ; k++){
+				precast[(index+k)%BEAM_ANGLE_NUM].push_back(ind);
+			}
+		}
+    }
+
+}
+
+void MakeImage::BEAM(const int cx, const int cy, cv::Mat& image)
+{
+	// Precast(cx,cy);
+	// const int BEAM_ANGLE_NUM = 60;
+	// const double MAX_BEAM_RANGE = 1023;
+    // const double ANGLE_INCREMENT = 2.0 * M_PI / (double)BEAM_ANGLE_NUM;
+    // for(int i=0;i<BEAM_ANGLE_NUM;i++){
+	// 	int angle_grid_num = precast[i].size();
+	// 	double min_dist = MAX_BEAM_RANGE;
+	// 	int min_dist_ind = 0;
+    // 	for(int j=0; j<angle_grid_num; j++){
+	// 		int ind = precast[i][j];
+	// 		if(image.data[ind]>0){
+	// 			int pxx = ind % image_h;
+	// 			int pxy = (ind-pxx) / image_w;
+	// 			int dx = pxx - cx;
+	// 			int dy = pxy - cy;
+	// 			double distance = sqrt(dx*dx+dy*dy);
+    // 	    	double angle = atan2(dx, -dy);
+    // 	    	int index = (angle + M_PI) / ANGLE_INCREMENT;
+	// 			if(min_dist > distance){
+	// 				image.data[min_dist_ind] = 0; 
+	// 				min_dist = distance;
+	// 				min_dist_ind = ind;
+	// 			}else{
+	// 				image.data[ind] = 0;
+	// 			}
+    //
+	// 		}
+	// 	}
+    // }
+
+
+
+
+	const int BEAM_ANGLE_NUM = 60;
+	const double MAX_BEAM_RANGE = 1023;
+    const double ANGLE_INCREMENT = 2.0 * M_PI / (double)BEAM_ANGLE_NUM;
+    std::vector<double> beam_list(BEAM_ANGLE_NUM, MAX_BEAM_RANGE);
+    std::vector<int> ind_list(BEAM_ANGLE_NUM, 0);
+    std::vector<bool> ind_list_flag(BEAM_ANGLE_NUM, false);
+    for(int i=0;i<image_h;i++){
+    	for(int j=0;j<image_w;j++){
+			int ind = j * image_h + i;
+			if(image.data[ind]>0){
+				int dx = j - cx;
+				int dy = i - cy;
+    	    	double distance = sqrt(dx*dx + dy*dy)*resolution;
+    	    	double angle = atan2(dx, -dy);
+    	    	int index = (angle + M_PI) / ANGLE_INCREMENT;
+    	    	if(beam_list[index] > distance){
+					if(ind_list_flag[index])image.data[ind_list[index]] = 0;
+					ind_list_flag[index] = true;
+					ind_list[index] = ind;
+    	    	    beam_list[index] = distance;
+    	    	}else{
+					image.data[ind] = 0;
+				}
+			}
+		}
+    }
 }
 
 void MakeImage::AddPointData(const pcl::PointCloud<pcl::PointXYZI>::Ptr& pc, cv::Mat& image, int& max)
