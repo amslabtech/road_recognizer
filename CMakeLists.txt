@@ -152,8 +152,8 @@ add_library(libroad_point_cloud_storer
 add_library(libroad_recognizer
   src/road_recognizer.cpp
 )
-add_library(make_image_
-  src/make_image_.cpp
+add_library(make_image
+  src/make_image.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -163,7 +163,7 @@ add_library(make_image_
 add_dependencies(libroad_cloud_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(libroad_point_cloud_storer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(libroad_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(make_image_ ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(make_image ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
@@ -172,7 +172,7 @@ add_dependencies(make_image_ ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORT
 add_executable(road_cloud_publisher src/road_cloud_publisher_node.cpp)
 add_executable(road_point_cloud_storer src/road_point_cloud_storer_node.cpp)
 add_executable(road_recognizer src/road_recognizer_node.cpp)
-add_executable(make_image src/make_image.cpp)
+add_executable(make_image_node src/make_image_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -186,7 +186,7 @@ add_executable(make_image src/make_image.cpp)
 add_dependencies(road_cloud_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(road_point_cloud_storer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(road_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(make_image ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(make_image_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
@@ -207,8 +207,8 @@ target_link_libraries(road_recognizer
   ${PCL_LIBRARIES}
   libroad_recognizer
 )
-target_link_libraries(make_image
-  make_image_
+target_link_libraries(make_image_node
+  make_image
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
   ${OpenCV_LIBRARIES}

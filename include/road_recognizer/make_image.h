@@ -37,21 +37,21 @@ class MakeImage
 		sensor_msgs::PointCloud2 grass_pc2;
 
 		MakeImage();
-		void setparam(const double, const double, const double);
-		void ExtractPCInRange(pcl::PointCloud<pcl::PointXYZI>::Ptr&);
+		void set_param(const double, const double, const double);
+		void extract_pc_in_range(pcl::PointCloud<pcl::PointXYZI>::Ptr&);
 		void pcl_generater(pcl::PointCloud<pcl::PointXYZI>::Ptr&);
 		void make_image(void);
 		void generate_pcl(const cv::Mat&);
-		void Precast(const int, const int, const int);
-		void BEAM(const int, const int, const cv::Mat&, cv::Mat&);
-		void AddPointData(const pcl::PointCloud<pcl::PointXYZI>::Ptr&, cv::Mat&, int&);
-		void AddPointData_obs(const pcl::PointCloud<pcl::PointXYZI>::Ptr&, cv::Mat&);
+		void precasting(const int, const int, const int);
+		void beam(const int, const int, const cv::Mat&, cv::Mat&);
+		void add_point_data(const pcl::PointCloud<pcl::PointXYZI>::Ptr&, cv::Mat&, int&);
+		void add_point_data_obs(const pcl::PointCloud<pcl::PointXYZI>::Ptr&, cv::Mat&);
 		void normalize(cv::Mat& image,const int);
 		void amp(cv::Mat& image,const double);
-		int MeterpointToPixel_x(const double);
-		int MeterpointToPixel_y(const double);
-		double PicelyToMeterpoint_x(const int);
-		double PicelxToMeterpoint_y(const int);
-		void HoughLineP(cv::Mat& image,cv::Mat&);
+		int meter_point_to_pixel_x(const double);
+		int meter_point_to_pixel_y(const double);
+		double pixel_y_to_meter_point_x(const int);
+		double pixel_x_to_meter_point_y(const int);
+		void hough_line_p(cv::Mat& image,cv::Mat&);
 };
 #endif //__MAKE_IMAGE_H
