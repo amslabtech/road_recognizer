@@ -36,11 +36,12 @@
 		<node pkg="road_recognizer" type="make_image" name="make_image" output="screen">
 			<remap from="/rm_ground" to="/cloud/static"/>
 			<remap from="/grass" to="/recognition/road_recognizer/cloud/road/stored"/>
-			<remap from="/image" to="/image_grass"/>
+			<remap from="/image" to="/image/grass"/>
+			<remap from="/image2" to="/image/edge"/>
             <param name="IMAGE_WIDTH" type="double" value="40"/>
 			<param name="IMAGE_HEIGHT" type="double" value="40"/>
 			<param name="IMAGE_RESILUTION" type="double" value="0.1"/>
-			<param name="HOUGHLINE_FLAG" type="bool" value="0"/>
+			<param name="HOUGHLINE_FLAG" type="bool" value="false"/>
 		</node>
 
         <node pkg="road_recognizer" type="road_cloud_publisher" name="road_cloud_publisher">

@@ -42,7 +42,9 @@ void MakeImage::make_image(void)
 {
 	// std::cout<<"make_image"<<std::endl;
 	cv::Mat image(cv::Size(image_w,image_h), CV_8UC1, cv::Scalar(0));
+	cv::Mat image_edge(cv::Size(image_w,image_h), CV_8UC1, cv::Scalar(0));
 	cv::Mat image_c(cv::Size(image_w,image_h), CV_8UC3, cv::Scalar(0));
+	cv::Mat image_c2(cv::Size(image_w,image_h), CV_8UC3, cv::Scalar(0));
 
 	int max = 0;
 	AddPointData(grass,image,max);
@@ -73,23 +75,48 @@ void MakeImage::make_image(void)
 	cv::dilate(image, image, element, cv::Point(-1,-1), 1); 
 	cv::erode(image, image, element, cv::Point(-1,-1), 2); 
 	cv::dilate(image, image, element, cv::Point(-1,-1), 3); 
-	cv::erode(image, image, element, cv::Point(-1,-1), 2); 
+	cv::erode(image, image, element, cv::Point(-1,-1), 4); 
+	cv::dilate(image, image, element, cv::Point(-1,-1), 2); 
+	
+	BEAM(image_w*0.5, image_h*0.5, image, image_edge);
 
-
-	BEAM(image_w*0.5, image_h*0.5, image);
 
 	// normalize(image,max);
 	// cv::threshold(image, image, 0, 255, cv::THRESH_BINARY|cv::THRESH_OTSU);
 	/////////////////////////////////////////////////////////////
 	// cv::Canny(image, image, 50, 200, 3); 
-	cvtColor(image, image_c, CV_GRAY2RGB);
+	
+	generate_pcl(image);
 
-	if(houghline_flag)HoughLineP(image, image_c);
+	cvtColor(image, image_c, CV_GRAY2RGB);
+	// if(houghline_flag)HoughLineP(image, image_c);
 	cv::circle(image_c, cv::Point(image_w*0.5,image_h*0.5), 3, cv::Scalar(100,255,0), -1, CV_AA);
 	image_ros = cv_bridge::CvImage(std_msgs::Header(), "rgb8", image_c).toImageMsg();
+	
+	cvtColor(image_edge, image_c2, CV_GRAY2RGB);
+	if(houghline_flag)HoughLineP(image_edge, image_c2);
+	cv::circle(image_c2, cv::Point(image_w*0.5,image_h*0.5), 3, cv::Scalar(100,255,0), -1, CV_AA);
+	image_ros2 = cv_bridge::CvImage(std_msgs::Header(), "rgb8", image_c2).toImageMsg();
 }
 
-void MakeImage::Precast(const int cx, const int cy)
+void MakeImage::generate_pcl(const cv::Mat& image){
+	grass_points->points.clear();
+	pcl::PointXYZI pt;
+	pt.z = 0;
+	for(int i=0;i<image_h;i++){
+		for(int j=0;j<image_w;j++){
+			int ind = image_w * j + i; 
+			if(image.data[ind]>0){
+				pt.x = PicelyToMeterpoint_x(j);
+				pt.y = PicelxToMeterpoint_y(i);
+				grass_points->points.push_back(pt);
+			}
+		}
+	}
+	pcl::toROSMsg(*grass_points, grass_pc2);
+}
+
+void MakeImage::Precast(const int id,const int cx, const int cy)
 {
 	const int BEAM_ANGLE_NUM = 60;
 	precast.resize(BEAM_ANGLE_NUM);
@@ -100,58 +127,65 @@ void MakeImage::Precast(const int cx, const int cy)
 			int ind = j * image_h + i;
 			int dx = j - cx;
 			int dy = i - cy;
-    	    double distance = sqrt(dx*dx + dy*dy)*resolution;
-			double  grid_size_angle = atan2(distance, resolution*0.5);
+    	    double distance = sqrt(dx*dx + dy*dy);
+			double  grid_size_angle = atan2(distance, 0.5);
+			std::cout << "(dx, dy): " << dx <<", " << dy << std::endl;
+			std::cout << "grid_size_angle: " << grid_size_angle << std::endl;
 			int grid_beam_width = 0;
-			for(int k=1; grid_size_angle>=ANGLE_INCREMENT*i; k++){
-				grid_beam_width = i;
+			for(int k=1; grid_size_angle>=ANGLE_INCREMENT*k; k++){
+				grid_beam_width = k;
 			}
 			double angle = atan2(dx, -dy);
 			int index = (angle + M_PI) / ANGLE_INCREMENT;
 			for(int k=-grid_beam_width; k<=grid_beam_width ; k++){
-				precast[(index+k)%BEAM_ANGLE_NUM].push_back(ind);
+			// std::cout << "precast[" << (index+k)%BEAM_ANGLE_NUM << "].push_back(" << ind << ")" << std::endl;
+				precast[(index+k+BEAM_ANGLE_NUM)%BEAM_ANGLE_NUM].push_back(ind);
 			}
 		}
     }
 
 }
 
-void MakeImage::BEAM(const int cx, const int cy, cv::Mat& image)
+void MakeImage::BEAM(const int cx, const int cy, const cv::Mat& image, cv::Mat& image_edge)
 {
-	// Precast(cx,cy);
+	// Precast(0, cx, cy);
+	// cv::Mat tmp = image.clone();
 	// const int BEAM_ANGLE_NUM = 60;
 	// const double MAX_BEAM_RANGE = 1023;
-    // const double ANGLE_INCREMENT = 2.0 * M_PI / (double)BEAM_ANGLE_NUM;
     // for(int i=0;i<BEAM_ANGLE_NUM;i++){
 	// 	int angle_grid_num = precast[i].size();
 	// 	double min_dist = MAX_BEAM_RANGE;
-	// 	int min_dist_ind = 0;
+	// 	bool zero_flag = false;
+	// 	int min_dist_ind;
     // 	for(int j=0; j<angle_grid_num; j++){
 	// 		int ind = precast[i][j];
 	// 		if(image.data[ind]>0){
+	// 			if(!zero_flag){
+	// 				zero_flag = true;
+	// 				min_dist_ind = ind;
+	// 			}
 	// 			int pxx = ind % image_h;
 	// 			int pxy = (ind-pxx) / image_w;
 	// 			int dx = pxx - cx;
 	// 			int dy = pxy - cy;
 	// 			double distance = sqrt(dx*dx+dy*dy);
-    // 	    	double angle = atan2(dx, -dy);
-    // 	    	int index = (angle + M_PI) / ANGLE_INCREMENT;
+	// 			
 	// 			if(min_dist > distance){
-	// 				image.data[min_dist_ind] = 0; 
+	// 				tmp.data[min_dist_ind] = 0; 
 	// 				min_dist = distance;
 	// 				min_dist_ind = ind;
 	// 			}else{
-	// 				image.data[ind] = 0;
+	// 				tmp.data[ind] = 0;
 	// 			}
     //
 	// 		}
 	// 	}
     // }
 
+	
 
-
-
-	const int BEAM_ANGLE_NUM = 60;
+	cv::Mat tmp = image.clone();
+	const int BEAM_ANGLE_NUM = 120;
 	const double MAX_BEAM_RANGE = 1023;
     const double ANGLE_INCREMENT = 2.0 * M_PI / (double)BEAM_ANGLE_NUM;
     std::vector<double> beam_list(BEAM_ANGLE_NUM, MAX_BEAM_RANGE);
@@ -167,16 +201,25 @@ void MakeImage::BEAM(const int cx, const int cy, cv::Mat& image)
     	    	double angle = atan2(dx, -dy);
     	    	int index = (angle + M_PI) / ANGLE_INCREMENT;
     	    	if(beam_list[index] > distance){
-					if(ind_list_flag[index])image.data[ind_list[index]] = 0;
+					if(ind_list_flag[index]){
+						tmp.data[ind_list[index]] = 0;
+					}
 					ind_list_flag[index] = true;
 					ind_list[index] = ind;
     	    	    beam_list[index] = distance;
     	    	}else{
-					image.data[ind] = 0;
+					tmp.data[ind] = 0;
 				}
 			}
 		}
     }
+	
+	int lim = image_h * image_w;
+    for(int i=0;i<lim;i++){
+		if(tmp.data[i]){
+			image_edge.data[i]=tmp.data[i];
+		}
+	}
 }
 
 void MakeImage::AddPointData(const pcl::PointCloud<pcl::PointXYZI>::Ptr& pc, cv::Mat& image, int& max)
@@ -239,8 +282,8 @@ void MakeImage::HoughLineP(cv::Mat& image,cv::Mat& image_c)
 	std::vector<cv::Vec4i> lines;
 	// 入力画像，出力，距離分解能，角度分解能，閾値，線分の最小長さ，
 	// 2点が同一線分上にあると見なす場合に許容される最大距離
-	// cv::HoughLinesP(image, lines, 1, CV_PI/180*0.5, 80, 120, 15);
-	cv::HoughLinesP(image, lines, 1, CV_PI/180, 70, 100, 30);
+	// cv::HoughLinesP(image, lines, 1, CV_PI/180, 70, 100, 30);
+	cv::HoughLinesP(image, lines, 1, CV_PI/180, 40, 50, 20);
 	std::vector<cv::Vec4i>::iterator it = lines.begin();
 	std::cout << "number of lines: " << lines.size() << std::endl;
 	for(; it!=lines.end(); ++it) {
@@ -261,3 +304,13 @@ int MakeImage::MeterpointToPixel_y(const double x)
 	return y_;
 }
 
+double MakeImage::PicelyToMeterpoint_x(const int y)
+{
+	double x_ = -y*resolution + h * 0.5;
+	return x_;
+}
+double MakeImage::PicelxToMeterpoint_y(const int x)
+{
+	double y_ = -x*resolution + w *0.5;
+	return y_;
+}
