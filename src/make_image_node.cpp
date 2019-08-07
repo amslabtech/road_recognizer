@@ -25,6 +25,7 @@ class makeimage{
 		ros::Subscriber sub_rmground;
 		ros::Subscriber sub_grass;
 		ros::Publisher pub_image;
+		ros::Publisher pub_edge;
 		ros::Publisher pub_pcl;
 		std::string pub_frameid;
 		ros::Time pub_stamp;
@@ -61,7 +62,8 @@ makeimage::makeimage()
 	MI.set_param(IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_RESOLUTION);
 	sub_rmground = nh.subscribe("/rm_ground", 1, &makeimage::CallbackRmGround, this);
 	sub_grass = nh.subscribe("/grass", 1, &makeimage::CallbackGrass, this);
-	pub_image = nh.advertise<sensor_msgs::Image>("/image", 1);
+	pub_image = nh.advertise<sensor_msgs::Image>("/image/grass", 1);
+	pub_image = nh.advertise<sensor_msgs::Image>("/image/edge", 1);
 	pub_pcl = nh.advertise<sensor_msgs::PointCloud2>("/grass_points", 1);
 }
 void makeimage::CallbackRmGround(const sensor_msgs::PointCloud2ConstPtr &msg)
@@ -92,10 +94,13 @@ void makeimage::CallbackGrass(const sensor_msgs::PointCloud2ConstPtr &msg)
 void makeimage::Publication(void)
 {
 	MI.image_ros->header.frame_id = pub_frameid;
-	MI.image_ros->header.stamp = pub_stamp;
+	MI.image_ros->header.frame_id = pub_frameid;
+	MI.image_ros2->header.stamp = pub_stamp;
+	MI.image_ros2->header.stamp = pub_stamp;
 	MI.grass_pc2.header.frame_id = pub_frameid;
 	MI.grass_pc2.header.stamp = pub_stamp;
 	pub_image.publish(MI.image_ros);
+	pub_image.publish(MI.image_ros2);
 	pub_pcl.publish(MI.grass_pc2);
 }
 

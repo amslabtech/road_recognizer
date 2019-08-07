@@ -33,7 +33,7 @@
         <arg name="ransac_min_line_length_threshold" default="5.0"/>
 
 		
-		<node pkg="road_recognizer" type="make_image" name="make_image" output="screen">
+		<node pkg="road_recognizer" type="make_image_node" name="make_image_node" output="screen">
 			<remap from="/rm_ground" to="/cloud/static"/>
 			<remap from="/grass" to="/recognition/road_recognizer/cloud/road/stored"/>
 			<remap from="/image" to="/image/grass"/>

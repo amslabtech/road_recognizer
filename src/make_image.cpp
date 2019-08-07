@@ -128,9 +128,10 @@ void MakeImage::precasting(const int id, const int cx, const int cy)
 			int dx = j - cx;
 			int dy = i - cy;
     	    double distance = sqrt(dx*dx + dy*dy);
-			double  grid_size_angle = atan2(distance, 0.5);
-			std::cout << "(dx, dy): " << dx <<", " << dy << std::endl;
-			std::cout << "grid_size_angle: " << grid_size_angle << std::endl;
+			double  grid_size_angle = atan2(0.5, distance);
+			// std::cout << "(dx, dy):(" << dx <<", " << dy << ")" <<  std::endl;
+			// std::cout << "distance: " << distance << std::endl;
+			// std::cout << "grid_size_angle: " << grid_size_angle << std::endl;
 			int grid_beam_width = 0;
 			for(int k=1; grid_size_angle>=ANGLE_INCREMENT*k; k++){
 				grid_beam_width = k;
@@ -148,71 +149,71 @@ void MakeImage::precasting(const int id, const int cx, const int cy)
 
 void MakeImage::beam(const int cx, const int cy, const cv::Mat& image, cv::Mat& image_edge)
 {
-	// Precast(0, cx, cy);
-	// cv::Mat tmp = image.clone();
-	// const int BEAM_ANGLE_NUM = 60;
-	// const double MAX_BEAM_RANGE = 1023;
-    // for(int i=0;i<BEAM_ANGLE_NUM;i++){
-	// 	int angle_grid_num = precast[i].size();
-	// 	double min_dist = MAX_BEAM_RANGE;
-	// 	bool zero_flag = false;
-	// 	int min_dist_ind;
-    // 	for(int j=0; j<angle_grid_num; j++){
-	// 		int ind = precast[i][j];
-	// 		if(image.data[ind]>0){
-	// 			if(!zero_flag){
-	// 				zero_flag = true;
-	// 				min_dist_ind = ind;
-	// 			}
-	// 			int pxx = ind % image_h;
-	// 			int pxy = (ind-pxx) / image_w;
-	// 			int dx = pxx - cx;
-	// 			int dy = pxy - cy;
-	// 			double distance = sqrt(dx*dx+dy*dy);
-	// 			
-	// 			if(min_dist > distance){
-	// 				tmp.data[min_dist_ind] = 0; 
-	// 				min_dist = distance;
-	// 				min_dist_ind = ind;
-	// 			}else{
-	// 				tmp.data[ind] = 0;
-	// 			}
-    //
-	// 		}
-	// 	}
-    // }
-
-	
-
+	precasting(0, cx, cy);
 	cv::Mat tmp = image.clone();
-	const int BEAM_ANGLE_NUM = 120;
+	const int BEAM_ANGLE_NUM = 60;
 	const double MAX_BEAM_RANGE = 1023;
-    const double ANGLE_INCREMENT = 2.0 * M_PI / (double)BEAM_ANGLE_NUM;
-    std::vector<double> beam_list(BEAM_ANGLE_NUM, MAX_BEAM_RANGE);
-    std::vector<int> ind_list(BEAM_ANGLE_NUM, 0);
-    std::vector<bool> ind_list_flag(BEAM_ANGLE_NUM, false);
-    for(int i=0; i<image_h; i++){
-    	for(int j=0; j<image_w; j++){
-			int ind = j * image_h + i;
+    for(int i=0;i<BEAM_ANGLE_NUM;i++){
+		int angle_grid_num = precast[i].size();
+		double min_dist = MAX_BEAM_RANGE;
+		bool zero_flag = false;
+		int min_dist_ind;
+    	for(int j=0; j<angle_grid_num; j++){
+			int ind = precast[i][j];
 			if(image.data[ind]>0){
-				int dx = j - cx;
-				int dy = i - cy;
-    	    	double distance = sqrt(dx*dx + dy*dy) * resolution;
-    	    	double angle = atan2(dx, -dy);
-    	    	int index = (angle + M_PI) / ANGLE_INCREMENT;
-    	    	if(beam_list[index] > distance){
-					if(ind_list_flag[index]){
-						tmp.data[ind_list[index]] = 0;
-					}
-					ind_list_flag[index] = true;
-					ind_list[index] = ind;
-    	    	    beam_list[index] = distance;
-    	    	}else{
+				if(!zero_flag){
+					zero_flag = true;
+					min_dist_ind = ind;
+				}
+				int pxx = ind % image_h;
+				int pxy = (ind-pxx) / image_w;
+				int dx = pxx - cx;
+				int dy = pxy - cy;
+				double distance = sqrt(dx*dx+dy*dy);
+
+				if(min_dist > distance){
+					tmp.data[min_dist_ind] = 0; 
+					min_dist = distance;
+					min_dist_ind = ind;
+				}else{
 					tmp.data[ind] = 0;
 				}
+
 			}
 		}
     }
+
+	
+
+	// cv::Mat tmp = image.clone();
+	// const int BEAM_ANGLE_NUM = 120;
+	// const double MAX_BEAM_RANGE = 1023;
+    // const double ANGLE_INCREMENT = 2.0 * M_PI / (double)BEAM_ANGLE_NUM;
+    // std::vector<double> beam_list(BEAM_ANGLE_NUM, MAX_BEAM_RANGE);
+    // std::vector<int> ind_list(BEAM_ANGLE_NUM, 0);
+    // std::vector<bool> ind_list_flag(BEAM_ANGLE_NUM, false);
+    // for(int i=0; i<image_h; i++){
+    // 	for(int j=0; j<image_w; j++){
+	// 		int ind = j * image_h + i;
+	// 		if(image.data[ind]>0){
+	// 			int dx = j - cx;
+	// 			int dy = i - cy;
+    // 	    	double distance = sqrt(dx*dx + dy*dy) * resolution;
+    // 	    	double angle = atan2(dx, -dy);
+    // 	    	int index = (angle + M_PI) / ANGLE_INCREMENT;
+    // 	    	if(beam_list[index] > distance){
+	// 				if(ind_list_flag[index]){
+	// 					tmp.data[ind_list[index]] = 0;
+	// 				}
+	// 				ind_list_flag[index] = true;
+	// 				ind_list[index] = ind;
+    // 	    	    beam_list[index] = distance;
+    // 	    	}else{
+	// 				tmp.data[ind] = 0;
+	// 			}
+	// 		}
+	// 	}
+    // }
 	
 	int lim = image_h * image_w;
     for(int i=0; i<lim; i++){
