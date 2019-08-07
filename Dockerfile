@@ -8,6 +8,7 @@ RUN apt update
 
 RUN apt install -y ros-melodic-tf* \
                    ros-melodic-pcl-ros \
+				   ros-melodic-cv-bridge \ 
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /root
