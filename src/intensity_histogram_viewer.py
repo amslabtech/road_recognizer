@@ -38,7 +38,7 @@ def viewer(otsu_msg):
     plt.title("Intensity")
     plt.xlabel("Range[m]")
     plt.ylabel("Intensity")
-    plt.ylim(-1.0, 20.0)
+    plt.ylim(-1.0, 150.0)
     plt.legend()
         
     plt.subplot(2, 2, 2)
@@ -46,35 +46,35 @@ def viewer(otsu_msg):
     plt.title("Analisy (Separation))")
     plt.xlabel("Range[m]")
     plt.ylabel("Separation")
-    plt.ylim(0, 100)
+    # plt.ylim(0, 100)
 
     plt.subplot(2, 2, 4)
     plot_skewness = plt.plot(np.arange(len(otsu_msg.analysis)), skewness_list, label="skewness", color="b")
     plt.title("Analysis (Skewness)")
     plt.xlabel("Range[m]")
     plt.ylabel("Skewness")
-    plt.ylim(-0.0001, 0.0001)
+    # plt.ylim(-0.0001, 0.0001)
 
     plt.subplot(2, 2, 3)
-    # for r_g in range(otsu_msg.range_resolution):
-    #     len_distribution = len(otsu_msg.analysis[r_g].distribution)
-    #     distribution_intensity_list = np.empty((0, 1), float)
-    #     for idx_intensity in range(len_distribution):
-    #         distribution_intensity_list = np.append(distribution_intensity_list, np.array([[otsu_msg.analysis[r_g].distribution[idx_intensity].intensity]]), axis=0)
-    #     plot_distribution = plt.plot(np.arange(len_distribution), distribution_intensity_list, label=str(r_g))
+    for r_g in range(otsu_msg.range_resolution):
+        len_distribution = len(otsu_msg.analysis[r_g].distribution)
+        distribution_intensity_list = np.empty((0, 1), float)
+        for idx_intensity in range(len_distribution):
+            distribution_intensity_list = np.append(distribution_intensity_list, np.array([[otsu_msg.analysis[r_g].distribution[idx_intensity].intensity]]), axis=0)
+        plot_distribution = plt.plot(np.arange(len_distribution), distribution_intensity_list, label=str(r_g))
+
+    # distribution_intensity_list = np.empty((0, 1), float)
+    # RANGE = 2
+    # for idx_intensity in range(len(otsu_msg.analysis[RANGE].distribution)):
+    #     distribution_intensity_list = np.append(distribution_intensity_list, np.array([[otsu_msg.analysis[RANGE].distribution[idx_intensity].intensity]]), axis=0)
+    # plot_distribution = plt.plot(np.arange(len(otsu_msg.analysis[RANGE].distribution)), distribution_intensity_list)
     #
-    distribution_intensity_list = np.empty((0, 1), float)
-    RANGE = 2
-    for idx_intensity in range(len(otsu_msg.analysis[RANGE].distribution)):
-        distribution_intensity_list = np.append(distribution_intensity_list, np.array([[otsu_msg.analysis[RANGE].distribution[idx_intensity].intensity]]), axis=0)
-    plot_distribution = plt.plot(np.arange(len(otsu_msg.analysis[RANGE].distribution)), distribution_intensity_list)
 
-
-    # plt.title("Analysis (Distribution of Intensity)")
-    plt.title("Distribution of intensity (@Range=2[m])")
+    plt.title("Analysis (Distribution of Intensity)")
+    # plt.title("Distribution of intensity (@Range=2[m])")
     plt.xlabel("Intensity")
     plt.ylabel("Amount")
-    plt.xlim(-10, 255)
+    plt.xlim(0, 100)
     plt.legend()
 
     plt.pause(0.01)

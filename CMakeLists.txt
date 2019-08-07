@@ -172,6 +172,7 @@ add_executable(road_point_cloud_storer src/road_point_cloud_storer_node.cpp)
 add_executable(road_recognizer src/road_recognizer_node.cpp)
 add_executable(intensity_partition src/intensity_partition.cpp) # added by nagai
 add_executable(old_intensity_partition src/old_intensity_partition.cpp) # added by nagai
+add_executable(xmeans_clustering src/xmeans_clustering.cpp) # added by nagai
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -187,6 +188,7 @@ add_dependencies(road_point_cloud_storer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${c
 add_dependencies(road_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(intensity_partition ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}) # added by nagai
 add_dependencies(old_intensity_partition ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}) # added by nagai
+add_dependencies(xmeans_clustering ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}) # added by nagai
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
@@ -212,6 +214,10 @@ target_link_libraries(intensity_partition
   ${PCL_LIBRARIES}
 )
 target_link_libraries(old_intensity_partition
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+)
+target_link_libraries(xmeans_clustering
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
 )

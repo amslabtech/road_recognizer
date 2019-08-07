@@ -43,11 +43,13 @@ class IntensityPartition
 		
 		/* ---------- Tuning Params ---------- */
 		const static int RANGE_RESOLUTION = 20;
-		const static int THETA_RESOLUTION = 360;
-		const static int SEQ_DURATION = 10;
-		float OTSU_BINARY_TIME_STD_DEVIATION_THRESHOLD = 3.0;
-		float OTSU_BINARY_DIST_FROM_AVR_THRESHOLD = 3.0;
-		float OTSU_BINARY_SUM_OF_DIST_FROM_AVR_THRESHOLD = 58.0;
+		const static int THETA_RESOLUTION = 720;
+		const static int SEQ_DURATION = 5;
+		float OTSU_BINARY_TIME_STD_DEVIATION_THRESHOLD = 10.0;
+		float OTSU_BINARY_INTENSITY_STD_DEVIATION_THRESHOLD = 1.0;
+		float OTSU_BINARY_SEPARATION_THRESHOLD = 0.4;
+		float OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD = 3.0;
+		float OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD = 58.0;
 		float RANGE_MAX = 20.0;
 		bool PC_PUBLISH_FLAG = true; // true : publish grass points
 		//bool PC_PUBLISH_FLAG = false; // false : publish only otsu_binary_msg
@@ -55,21 +57,20 @@ class IntensityPartition
 
 		float dR = RANGE_MAX / (float)RANGE_RESOLUTION;
 		float dTheta = 2*M_PI / (float)THETA_RESOLUTION;
-		float sumAll[RANGE_RESOLUTION];
 		float intensity_max_all;
 		float intensity_max[RANGE_RESOLUTION];
 		float intensity_min[RANGE_RESOLUTION];
 		float avr_grass = 0.0, avr_asphalt = 0.0;
-		float sum_grass = 0.0, sum_asphalt = 0.0;
 
 		float s_max[RANGE_RESOLUTION];
 		float otsu_threshold_tmp[RANGE_RESOLUTION];
 
 		int polar_grid_pt_cnt[RANGE_RESOLUTION][THETA_RESOLUTION];
+		// float range_grid_sum_intensity[RANGE_RESOLUTION];
 		float polar_grid_avr_intensity[RANGE_RESOLUTION][THETA_RESOLUTION];
 		float polar_grid_sum_intensity[RANGE_RESOLUTION][THETA_RESOLUTION];
 		float time_sum_otsu[RANGE_RESOLUTION];	
-		float time_sum_otsu_distpow[RANGE_RESOLUTION];	
+		float time_sum_otsu_diffpow[RANGE_RESOLUTION];	
 		float time_mu_otsu[RANGE_RESOLUTION];	
 		float otsu_time_std_deviation[SEQ_DURATION][RANGE_RESOLUTION];	
 		float range_mu_otsu;	
@@ -108,10 +109,11 @@ class IntensityPartition
 		void execution(void);
 		void initialize(void);
 		void cartesian_pt_2_polar_grid(CloudIPtr);
-		float calc_variance(std::vector<std::array<int, RANGE_RESOLUTION> >, int, int, int);
+		//float calc_variance(std::vector<std::array<int, RANGE_RESOLUTION> >, int, int, int);
+		float calc_variance(const std::vector<std::vector<int> >&, int, int, int);
 		void calc_otsu_binary(void);
 		void calc_time_std_deviation(void);
-		void calc_dist_from_avr(void);
+		void calc_diff_from_avr(void);
 		void emergency_judge(void);
 		CloudIPtr otsu_pc_generator(void);
 };
@@ -139,8 +141,8 @@ IntensityPartition::IntensityPartition(void)
 	otsu_binary_msg.range_max = RANGE_MAX;
 	otsu_binary_msg.seq_duration = SEQ_DURATION;
 	otsu_binary_msg.otsubinary_time_std_deviation_threshold = OTSU_BINARY_TIME_STD_DEVIATION_THRESHOLD;
-	otsu_binary_msg.otsubinary_dist_from_avr_threshold = OTSU_BINARY_DIST_FROM_AVR_THRESHOLD;
-	otsu_binary_msg.otsubinary_sum_of_dist_from_avr_threshold = OTSU_BINARY_SUM_OF_DIST_FROM_AVR_THRESHOLD;
+	otsu_binary_msg.otsubinary_diff_from_avr_threshold = OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD;
+	otsu_binary_msg.otsubinary_sum_of_diff_from_avr_threshold = OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD;
 	otsu_binary_msg.intensity.resize(RANGE_RESOLUTION);
 	otsu_binary_msg.analysis.resize(RANGE_RESOLUTION);
 
@@ -187,14 +189,14 @@ void IntensityPartition::initialize(void)
 	for(int r_g = 0; r_g <RANGE_RESOLUTION; r_g++){
 		for(int theta_g = 0; theta_g <THETA_RESOLUTION; theta_g++){
 			polar_grid_pt_cnt[r_g][theta_g] = 0;
-			polar_grid_sum_intensity[r_g][theta_g] = 0;
-			polar_grid_avr_intensity[r_g][theta_g] = 0;
+			polar_grid_sum_intensity[r_g][theta_g] = 0.0;
+			polar_grid_avr_intensity[r_g][theta_g] = -1.0;
 		}
 		s_max[r_g] = 0.0;
 		otsu_threshold_tmp[r_g] = 0.0;
-		sumAll[r_g] = 0.0;
+		//range_grid_sum_intensity[r_g] = 0.0;
 		time_sum_otsu[r_g] = 0.0;
-		time_sum_otsu_distpow[r_g] = 0.0;
+		time_sum_otsu_diffpow[r_g] = 0.0;
 		intensity_max[r_g] = 0.0;
 		intensity_min[r_g] = 999.9;
 	}
@@ -223,7 +225,6 @@ void IntensityPartition::cartesian_pt_2_polar_grid(CloudIPtr cartesian_pc_)
 					polar_grid_pt_cnt[r_g][theta_g] += 1;
 					polar_grid_sum_intensity[r_g][theta_g] += pt.intensity;
 					polar_grid_avr_intensity[r_g][theta_g] = polar_grid_sum_intensity[r_g][theta_g] / (float)polar_grid_pt_cnt[r_g][theta_g]; 
-					sumAll[r_g] += 1.0;
 
 					if(PC_PUBLISH_FLAG){
 						z_tmp = polar_pc_->points[i].z;
@@ -260,49 +261,53 @@ void IntensityPartition::cartesian_pt_2_polar_grid(CloudIPtr cartesian_pc_)
 			otsu_binary_msg.intensity[r_g].min = intensity_min[r_g];
 			otsu_binary_msg.intensity[r_g].max = intensity_max[r_g];
 		}
+		/* for(int theta_g = 0; theta_g < THETA_RESOLUTION; theta_g++){ */
+		/* 	range_grid_sum_intensity[r_g] += polar_grid_avr_intensity[r_g][theta_g]; */
+		/* } */
 	}
 }
 
 
-float IntensityPartition::calc_variance(std::vector<std::array<int, RANGE_RESOLUTION> > histogram_list, int r_g, int threshold_tmp, int grass_or_asphalt)
+//float IntensityPartition::calc_variance(std::vector<std::array<int, RANGE_RESOLUTION> > histogram_list, int r_g, int threshold_tmp, int grass_or_asphalt)
+float IntensityPartition::calc_variance(const std::vector<std::vector<int> >& histogram_list, int r_g, int threshold_tmp, int grass_or_asphalt)
 {
-	float variance = 0, sum = 0, distpow_sum = 0, mu = 0;
+	float variance = 0, sum = 0, multi_sum = 0, diffpow_sum = 0, mu = 0;
 	int cnt = 0;
-	
+
 	switch(grass_or_asphalt){ 
 		case 1: // grass
 			for(int i = 0; i < threshold_tmp; i++){
-				sum += (float)(histogram_list.at(i)).at(r_g);
+				multi_sum += (float)histogram_list[i][r_g] * i;
+				sum += (float)histogram_list[i][r_g];
 				cnt++;
 			}
-			sum_grass = sum;
 			n_grass = cnt;
-			mu = sum / cnt;
+			mu = multi_sum / sum;
 			avr_grass = mu;
 			for(int i = 0; i < threshold_tmp; i++){
-				float dist = (float)(histogram_list.at(i)).at(r_g) - mu;
-				distpow_sum += dist * dist;
+				float diff = (float)histogram_list[i][r_g] - mu;
+				diffpow_sum += diff * diff;
 			}
-			variance = distpow_sum / cnt;
+			variance = diffpow_sum / cnt;
 			break;
 
 		case 2: //asphalt
 			for(int i = threshold_tmp; i < (int)intensity_max_all; i++){
-				sum += (float)(histogram_list.at(i)).at(r_g);
+				multi_sum += (float)histogram_list[i][r_g] * i;
+				sum += (float)histogram_list[i][r_g];
 				cnt++;
 			}
-			sum_asphalt = sum;
 			n_asphalt = cnt;
-			mu = sum / cnt;
+			mu = multi_sum / sum;
 			avr_asphalt = mu;
 			for(int i = threshold_tmp; i < (int)intensity_max_all; i++){
-				float dist = (float)(histogram_list.at(i)).at(r_g) - mu;
-				distpow_sum += dist * dist;
+				float diff = (float)histogram_list[i][r_g] - mu;
+				diffpow_sum += diff * diff;
 			}
-			variance = distpow_sum / cnt;
+			variance = diffpow_sum / cnt;
 			break;
 	}
-
+	
 	return variance;
 }
 
@@ -321,18 +326,18 @@ void IntensityPartition::calc_time_std_deviation(void)
 
 	for(int seq = 0; seq < SEQ_DURATION; seq++){
 		for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
-			float dist = (otsu_seq_list.at(seq)).intensity[r_g].threshold - time_mu_otsu[r_g];
-			time_sum_otsu_distpow[r_g] += dist * dist;
+			float diff = (otsu_seq_list.at(seq)).intensity[r_g].threshold - time_mu_otsu[r_g];
+			time_sum_otsu_diffpow[r_g] += diff * diff;
 		}
 	}
 
 	for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
-		otsu_binary_msg.analysis[r_g].otsubinary_time_std_deviation = sqrt(time_sum_otsu_distpow[r_g] / SEQ_DURATION);
+		otsu_binary_msg.analysis[r_g].otsubinary_time_std_deviation = sqrt(time_sum_otsu_diffpow[r_g] / SEQ_DURATION);
 	}
 }
 
 
-void IntensityPartition::calc_dist_from_avr(void)
+void IntensityPartition::calc_diff_from_avr(void)
 {
 	float range_sum_otsu = 0.0;
 	for(int r_g = 1; r_g < RANGE_RESOLUTION; r_g++){
@@ -341,19 +346,19 @@ void IntensityPartition::calc_dist_from_avr(void)
 	float range_mu_otsu = range_sum_otsu / (RANGE_RESOLUTION - 1);
 
 	for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
-		float dist = otsu_binary_msg.intensity[r_g].threshold - range_mu_otsu;
-		otsu_binary_msg.analysis[r_g].otsubinary_dist_from_thresholds_avr = sqrt(dist * dist);
+		float diff = otsu_binary_msg.intensity[r_g].threshold - range_mu_otsu;
+		otsu_binary_msg.analysis[r_g].otsubinary_diff_from_thresholds_avr = sqrt(diff * diff);
 	}
 }
 
 
 void IntensityPartition::emergency_judge(void)
 {
-	float sum_dist_from_avr = 0.0;
+	float sum_diff_from_avr = 0.0;
 	for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
-		sum_dist_from_avr += otsu_binary_msg.analysis[r_g].otsubinary_dist_from_thresholds_avr;
+		sum_diff_from_avr += otsu_binary_msg.analysis[r_g].otsubinary_diff_from_thresholds_avr;
 	}
-	if(sum_dist_from_avr > OTSU_BINARY_SUM_OF_DIST_FROM_AVR_THRESHOLD){
+	if(sum_diff_from_avr > OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD){
 		otsu_binary_msg.emergency = true;
 	}
 }
@@ -361,44 +366,61 @@ void IntensityPartition::emergency_judge(void)
 
 void IntensityPartition::calc_otsu_binary(void)
 {
-	const int histogram_size = (int)intensity_max_all;
-	int n_all = histogram_size;
-	float avr_all[RANGE_RESOLUTION], var_all[RANGE_RESOLUTION], dist_all[histogram_size], sum_tmp1[RANGE_RESOLUTION], sum_tmp2[RANGE_RESOLUTION];
-	std::array<int, RANGE_RESOLUTION> r_res_array;
-	std::vector<std::array<int, RANGE_RESOLUTION> > histogram;
+	//const int histogram_size = (int)intensity_max_all;
+	const int histogram_size = 256;
+	int n_all[RANGE_RESOLUTION], multi_sum_all[RANGE_RESOLUTION], sum_all[RANGE_RESOLUTION];
+	float avr_all[RANGE_RESOLUTION], var_all[RANGE_RESOLUTION], diff_all[histogram_size], sum_tmp1[RANGE_RESOLUTION], sum_tmp2[RANGE_RESOLUTION];
+	/* std::array<int, RANGE_RESOLUTION> r_res_array; */
+	std::vector<int> r_res_array;
+	//std::vector<std::array<int, RANGE_RESOLUTION> > histogram;
+	std::vector<std::vector<int> > histogram;
 
 	// initialize
-	for(int i = 0; i < RANGE_RESOLUTION; i++){
-		r_res_array[i] = 0;
-		sum_tmp1[i] = 0;
-		sum_tmp2[i] = 0;
+	for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
+		n_all[r_g] = fabs(intensity_max[r_g] - intensity_min[r_g]);
+		r_res_array.push_back((int)0);
+		multi_sum_all[r_g] = 0;
+		sum_all[r_g] = 0;
+		sum_tmp1[r_g] = 0;
+		sum_tmp2[r_g] = 0;
 	}
-	for(int j = 0; j < histogram_size; j++){
+	for(int i = 0; i < histogram_size; i++){
 		histogram.push_back(r_res_array);
 	}
-
+	
 	// make histogram
 	for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
 		for(int theta_g = 0; theta_g < THETA_RESOLUTION; theta_g++){
 			int intensity_tmp = (int)polar_grid_avr_intensity[r_g][theta_g];
-			histogram[r_g][intensity_tmp] += 1;
+			if(intensity_tmp > 0){
+				histogram.at(intensity_tmp).at(r_g) += 1;
+			}
 		}
 	}
+	
+	// for debag
 	for(int r_g=0; r_g < RANGE_RESOLUTION; r_g++){
 		otsu_binary_msg.analysis[r_g].distribution.resize(histogram_size);
 		for(int idx_intensity = 0; idx_intensity < histogram_size; idx_intensity++){
-			otsu_binary_msg.analysis[r_g].distribution[idx_intensity].intensity = (float)histogram[r_g][idx_intensity];
+			otsu_binary_msg.analysis[r_g].distribution[idx_intensity].intensity = (float)histogram[idx_intensity][r_g];
 		}
 	}
 
 	// calc whole variance
 	for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
-		avr_all[r_g] = sumAll[r_g] / (float)n_all;
-		for(int i_threshold = 0; i_threshold < histogram_size; i_threshold++){
-			dist_all[i_threshold] = (float)histogram[r_g][i_threshold] - avr_all[r_g];
-			sum_tmp1[r_g] += dist_all[i_threshold] * dist_all[i_threshold];
+		for(int idx_intensity = 0; idx_intensity < histogram_size; idx_intensity++){
+			multi_sum_all[r_g] += histogram[idx_intensity][r_g] * idx_intensity;
+			sum_all[r_g] += histogram[idx_intensity][r_g];
 		}
-		var_all[r_g] = sum_tmp1[r_g] / (float)n_all;
+		avr_all[r_g] = (float)multi_sum_all[r_g] / (float)sum_all[r_g];
+		for(int i_threshold = 0; i_threshold < histogram_size; i_threshold++){
+			diff_all[i_threshold] = (float)histogram[i_threshold][r_g] - avr_all[r_g];
+			sum_tmp1[r_g] += diff_all[i_threshold] * diff_all[i_threshold];
+		}
+		var_all[r_g] = sum_tmp1[r_g] / (float)n_all[r_g];
+		std::cout << "var_all[" << r_g << "] : " << var_all[r_g] << std::endl;
+		otsu_binary_msg.analysis[r_g].intensity_std_deviation = sqrt(var_all[r_g]);
+		std::cout << "intensity_std_deviation[" << r_g << "] : " << otsu_binary_msg.analysis[r_g].intensity_std_deviation << std::endl;
 	}
 
 	// calc separation
@@ -415,15 +437,15 @@ void IntensityPartition::calc_otsu_binary(void)
 			avr[r_g][i_threshold-1].asphalt = avr_asphalt;
 		}
 	}
-	struct WB var_wb;	
+	struct WB var_wb;
 	for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
 		for(int i_threshold = 1; i_threshold < histogram_size; i_threshold++){
 			float ng = (float)num[r_g][i_threshold-1].grass;
 			float na = (float)num[r_g][i_threshold-1].asphalt;
-			var_wb.within = (ng * var[r_g][i_threshold-1].grass + na * var[r_g][i_threshold-1].asphalt) / (float)n_all;
-			float dist_mg = avr[r_g][i_threshold-1].grass - avr_all[r_g];
-			float dist_ma = avr[r_g][i_threshold-1].asphalt - avr_all[r_g];
-			var_wb.between = (ng * dist_mg * dist_mg + na * dist_ma * dist_ma) / (float)n_all;
+			var_wb.within = (ng * var[r_g][i_threshold-1].grass + na * var[r_g][i_threshold-1].asphalt) / (float)n_all[r_g];
+			float diff_mg = avr[r_g][i_threshold-1].grass - avr_all[r_g];
+			float diff_ma = avr[r_g][i_threshold-1].asphalt - avr_all[r_g];
+			var_wb.between = (ng * diff_mg * diff_mg + na * diff_ma * diff_ma) / (float)n_all[r_g];
 			float s_tmp = var_wb.between / var_wb.within;
 			
 			if(s_max[r_g] < s_tmp){
@@ -445,20 +467,23 @@ void IntensityPartition::calc_otsu_binary(void)
 	// for debag
 
 	// calc skewness
-	for(int r_g=0; r_g < RANGE_RESOLUTION; r_g++){
+	for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
 		for(int idx_intensity = 1; idx_intensity < histogram_size; idx_intensity++){
-			float z_score = dist_all[idx_intensity-1] / var_all[r_g];
+			float z_score = diff_all[idx_intensity-1] / var_all[r_g];
 			sum_tmp2[r_g] += z_score * z_score * z_score;
 		}
-		if(r_g == 0){
-			otsu_binary_msg.analysis[r_g].skewness = 0.0;
-		}else{
-			otsu_binary_msg.analysis[r_g].skewness = sum_tmp2[r_g] / (float)n_all;
-		}
+		std::cout << "sum_tmp2[" << r_g << "] : " << sum_tmp2[r_g] << std::endl;
+		std::cout << "n_all[" << r_g << "] : " << n_all[r_g] << std::endl;
+		/* if(r_g == 0){ */
+		/* 	otsu_binary_msg.analysis[r_g].skewness = 0.0; */
+		/* }else{ */
+		otsu_binary_msg.analysis[r_g].skewness = sum_tmp2[r_g] / (float)n_all[r_g];
+		std::cout << "otsu_binary_msg.analysis[" << r_g << "].skewness : " << otsu_binary_msg.analysis[r_g].skewness << std::endl;
+		// }
 	}
 
 	// calc threshold histogram in range
-	calc_dist_from_avr();
+	calc_diff_from_avr();
 
 	// calc standard deviation in time
 	otsu_seq_list.push_back(otsu_binary_msg);
@@ -471,6 +496,7 @@ void IntensityPartition::calc_otsu_binary(void)
 	// judge emergency
 	emergency_judge();
 
+	r_res_array.clear();
 	histogram.clear();
 }
 
@@ -483,7 +509,10 @@ CloudIPtr IntensityPartition::otsu_pc_generator(void)
 			if(((float)r_g <= pt.z && pt.z < (float)r_g+1.0)
 				&& ((otsu_threshold_tmp[r_g] > pt.intensity)
 					//|| (otsu_seq_list_size > SEQ_DURATION && otsu_binary_msg.analysis[r_g].otsubinary_time_std_deviation > OTSU_BINARY_TIME_STD_DEVIATION_THRESHOLD)
-					|| (otsu_binary_msg.analysis[r_g].otsubinary_dist_from_thresholds_avr > OTSU_BINARY_DIST_FROM_AVR_THRESHOLD))){
+					//|| (otsu_binary_msg.analysis[r_g].otsubinary_diff_from_thresholds_avr > OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD)
+					//|| (otsu_binary_msg.analysis[r_g].intensity_std_deviation <  OTSU_BINARY_INTENSITY_STD_DEVIATION_THRESHOLD)
+					|| (otsu_binary_msg.analysis[r_g].separation < OTSU_BINARY_SEPARATION_THRESHOLD)
+					)){
 				pt.intensity = -1.0;
 			}
 		}
@@ -492,7 +521,7 @@ CloudIPtr IntensityPartition::otsu_pc_generator(void)
 	}
 	
 	if(otsu_binary_msg.emergency){
-		intensity_max_all = 0.0;
+		//intensity_max_all = 0.0;
 	}
 
 	pcl::PassThrough<PointI> pass;
