@@ -21,22 +21,17 @@ class MakeImage
 {
 	private:
 	public:
-		pcl::PointCloud<pcl::PointXYZI>::Ptr rmground {new pcl::PointCloud<pcl::PointXYZI>};
-		pcl::PointCloud<pcl::PointXYZI>::Ptr grass {new pcl::PointCloud<pcl::PointXYZI>};
-		pcl::PointCloud<pcl::PointXYZI>::Ptr grass_points {new pcl::PointCloud<pcl::PointXYZI>};
-		double w;	//x[m]
-		double h;	//y[m]
-		double resolution;	//[m]
-		double resolution_rec;	
-		int image_w;
-		int image_h;
-		bool houghline_flag;
-		vector<vector<int>> precast;
-		sensor_msgs::ImagePtr image_ros;
-		sensor_msgs::ImagePtr image_ros2;
-		sensor_msgs::PointCloud2 grass_pc2;
-
 		MakeImage();
+
+		class Precasting
+		{
+			public:
+				Precasting(int, double);
+				int index;
+				double distance;
+			private:
+		};
+
 		void set_param(const double, const double, const double);
 		void extract_pc_in_range(pcl::PointCloud<pcl::PointXYZI>::Ptr&);
 		void pcl_generater(pcl::PointCloud<pcl::PointXYZI>::Ptr&);
@@ -53,5 +48,22 @@ class MakeImage
 		double pixel_y_to_meter_point_x(const int);
 		double pixel_x_to_meter_point_y(const int);
 		void hough_line_p(cv::Mat& image,cv::Mat&);
+		
+		
+		pcl::PointCloud<pcl::PointXYZI>::Ptr rmground {new pcl::PointCloud<pcl::PointXYZI>};
+		pcl::PointCloud<pcl::PointXYZI>::Ptr grass {new pcl::PointCloud<pcl::PointXYZI>};
+		pcl::PointCloud<pcl::PointXYZI>::Ptr grass_points {new pcl::PointCloud<pcl::PointXYZI>};
+		double w;	//x[m]
+		double h;	//y[m]
+		double resolution;	//[m]
+		double resolution_rec;	
+		int image_w;
+		int image_h;
+		bool houghline_flag;
+		vector<vector<int>> precast;
+		vector<vector<Precasting>> precast_;
+		sensor_msgs::ImagePtr image_ros;
+		sensor_msgs::ImagePtr image_ros2;
+		sensor_msgs::PointCloud2 grass_pc2;
 };
 #endif //__MAKE_IMAGE_H
