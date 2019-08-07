@@ -15,7 +15,6 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   tf
   cv_bridge
-  image_transport
   amsl_navigation_msgs
 )
 
