@@ -78,7 +78,7 @@ void MakeImage::make_image(void)
     cv::erode(image, image, element, cv::Point(-1,-1), 4); 
     cv::dilate(image, image, element, cv::Point(-1,-1), 2); 
     
-    beam(image_w*0.5, image_h*0.5, image, image_edge);
+    // beam(image_w*0.5, image_h*0.5, image, image_edge);
 
 
     // normalize(image,max);
@@ -92,11 +92,12 @@ void MakeImage::make_image(void)
     // if(houghline_flag)hough_line_p(image, image_c);
     cv::circle(image_c, cv::Point(image_w * 0.5,image_h * 0.5), 3, cv::Scalar(100,255,0), -1, CV_AA);
     image_ros = cv_bridge::CvImage(std_msgs::Header(), "rgb8", image_c).toImageMsg();
-    
-    cvtColor(image_edge, image_c2, CV_GRAY2RGB);
-    if(houghline_flag)hough_line_p(image_edge, image_c2);
-    cv::circle(image_c2, cv::Point(image_w * 0.5, image_h * 0.5), 3, cv::Scalar(100,255,0), -1, CV_AA);
-    image_ros2 = cv_bridge::CvImage(std_msgs::Header(), "rgb8", image_c2).toImageMsg();
+   
+
+    // cvtColor(image_edge, image_c2, CV_GRAY2RGB);
+    // if(houghline_flag)hough_line_p(image_edge, image_c2);
+    // cv::circle(image_c2, cv::Point(image_w * 0.5, image_h * 0.5), 3, cv::Scalar(100,255,0), -1, CV_AA);
+    // image_ros2 = cv_bridge::CvImage(std_msgs::Header(), "rgb8", image_c2).toImageMsg();
 }
 
 void MakeImage::generate_pcl(const cv::Mat& image){
@@ -124,11 +125,11 @@ void MakeImage::precasting(const int id, const int cx, const int cy)
     const double ANGLE_INCREMENT = 2.0 * M_PI / (double)BEAM_ANGLE_NUM;
     for(int i=0; i<image_h; i++){
         for(int j=0; j<image_w; j++){
-            int ind = j * image_h + i;
+            int ind = i * image_h + j;
             int dx = j - cx;
             int dy = i - cy;
             double distance = sqrt(dx*dx + dy*dy);
-            double  grid_size_angle = atan2(0.5, distance);
+            double  grid_size_angle = atan2(distance, 0.5);
             // std::cout << "(dx, dy):(" << dx <<", " << dy << ")" <<  std::endl;
             // std::cout << "distance: " << distance << std::endl;
             // std::cout << "grid_size_angle: " << grid_size_angle << std::endl;
@@ -145,10 +146,16 @@ void MakeImage::precasting(const int id, const int cx, const int cy)
         }
     }
 
+
+    for(int i=0;i<BEAM_ANGLE_NUM;i++){
+        std::cout << precast[i].size() << std::endl;
+    }
+
 }
 
 void MakeImage::beam(const int cx, const int cy, const cv::Mat& image, cv::Mat& image_edge)
 {
+    precast.clear(); 
     precasting(0, cx, cy);
     cv::Mat tmp = image.clone();
     const int BEAM_ANGLE_NUM = 60;
@@ -156,29 +163,26 @@ void MakeImage::beam(const int cx, const int cy, const cv::Mat& image, cv::Mat& 
     for(int i=0;i<BEAM_ANGLE_NUM;i++){
         int angle_grid_num = precast[i].size();
         double min_dist = MAX_BEAM_RANGE;
-        bool zero_flag = false;
-        int min_dist_ind;
+        int min_dist_ind = 0;
+        bool flag = false;
         for(int j=0; j<angle_grid_num; j++){
             int ind = precast[i][j];
             if(image.data[ind]>0){
-                if(!zero_flag){
-                    zero_flag = true;
-                    min_dist_ind = ind;
-                }
                 int pxx = ind % image_h;
                 int pxy = (ind-pxx) / image_w;
                 int dx = pxx - cx;
                 int dy = pxy - cy;
-                double distance = sqrt(dx*dx+dy*dy);
-
+                double distance = sqrt(dx*dx + dy*dy);
                 if(min_dist > distance){
-                    tmp.data[min_dist_ind] = 0; 
-                    min_dist = distance;
+                    if(flag){
+                        // tmp.data[min_dist_ind] = 0;
+                    }
+                    flag = true;
                     min_dist_ind = ind;
+                    min_dist = distance;
                 }else{
                     tmp.data[ind] = 0;
                 }
-
             }
         }
     }
