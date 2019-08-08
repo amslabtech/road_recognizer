@@ -35,6 +35,8 @@ class makeimage{
 		double IMAGE_HEIGHT;
 		double IMAGE_RESOLUTION;
 		bool HOUGHLINE_FLAG;
+		int BEAM_ANGLE_NUM;
+		double MAX_BEAM_RANGE;
 		MakeImage MI;
 
 	public:
@@ -53,13 +55,17 @@ makeimage::makeimage()
 	private_nh.param("IMAGE_HEIGHT", IMAGE_HEIGHT, {40});
 	private_nh.param("IMAGE_RESOLUTION", IMAGE_RESOLUTION, {0.1});
 	private_nh.param("HOUGHLINE_FLAG", HOUGHLINE_FLAG, {true});
+	private_nh.param("BEAM_ANGLE_NUM", BEAM_ANGLE_NUM, {360});
+	private_nh.param("MAX_BEAM_RANGE", MAX_BEAM_RANGE, {1023});
 	std::cout << "IMAGE_WIDTH 		: " << IMAGE_WIDTH << std::endl;
 	std::cout << "IMAGE_HEIGHT 		: " << IMAGE_HEIGHT << std::endl;
 	std::cout << "IMAGE_RESOLUTION 	: " << IMAGE_RESOLUTION << std::endl;
 	std::cout << "HOUGHLINE_FLAG 	: " << HOUGHLINE_FLAG << std::endl;
+	std::cout << "BEAM_ANGLE_NUM 	: " << BEAM_ANGLE_NUM << std::endl;
+	std::cout << "MAX_BEAM_RANGE	: " << MAX_BEAM_RANGE << std::endl;
 	
 	MI.houghline_flag=HOUGHLINE_FLAG;
-	MI.set_param(IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_RESOLUTION);
+	MI.set_param(IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_RESOLUTION, BEAM_ANGLE_NUM, MAX_BEAM_RANGE);
 	sub_rmground = nh.subscribe("/rm_ground", 1, &makeimage::CallbackRmGround, this);
 	sub_grass = nh.subscribe("/grass", 1, &makeimage::CallbackGrass, this);
 	pub_image = nh.advertise<sensor_msgs::Image>("/image/grass", 1);

@@ -41,7 +41,8 @@
             <param name="IMAGE_WIDTH" type="double" value="40"/>
 			<param name="IMAGE_HEIGHT" type="double" value="40"/>
 			<param name="IMAGE_RESILUTION" type="double" value="0.1"/>
-			<param name="HOUGHLINE_FLAG" type="bool" value="false"/>
+			<param name="HOUGHLINE_FLAG" type="bool" value="true"/>
+			<param name="BEAM_ANGLE_NUM" type="int" value="360"/>
 		</node>
 
         <node pkg="road_recognizer" type="road_cloud_publisher" name="road_cloud_publisher">
