@@ -47,7 +47,7 @@ class IntensityPartition
 		const static int SEQ_DURATION = 5;
 		float OTSU_BINARY_TIME_STD_DEVIATION_THRESHOLD = 10.0;
 		float OTSU_BINARY_INTENSITY_STD_DEVIATION_THRESHOLD = 1.0;
-		float OTSU_BINARY_SEPARATION_THRESHOLD = 0.4;
+		float OTSU_BINARY_SEPARATION_THRESHOLD = 0.3;
 		float OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD = 3.0;
 		float OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD = 58.0;
 		float RANGE_MAX = 20.0;
@@ -140,6 +140,7 @@ IntensityPartition::IntensityPartition(void)
 	otsu_binary_msg.theta_resolution = THETA_RESOLUTION;
 	otsu_binary_msg.range_max = RANGE_MAX;
 	otsu_binary_msg.seq_duration = SEQ_DURATION;
+	otsu_binary_msg.otsubinary_separation_threshold = OTSU_BINARY_SEPARATION_THRESHOLD;
 	otsu_binary_msg.otsubinary_time_std_deviation_threshold = OTSU_BINARY_TIME_STD_DEVIATION_THRESHOLD;
 	otsu_binary_msg.otsubinary_diff_from_avr_threshold = OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD;
 	otsu_binary_msg.otsubinary_sum_of_diff_from_avr_threshold = OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD;

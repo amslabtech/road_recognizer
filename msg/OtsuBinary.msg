@@ -3,6 +3,7 @@ int32 range_resolution
 int32 theta_resolution
 int32 seq_duration
 float32 range_max
+float32 otsubinary_separation_threshold
 float32 otsubinary_time_std_deviation_threshold
 float32 otsubinary_diff_from_avr_threshold
 float32 otsubinary_sum_of_diff_from_avr_threshold
