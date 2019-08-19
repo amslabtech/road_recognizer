@@ -13,6 +13,10 @@ MakeImage::MakeImage()
     houghline_flag = true;
 	is_precasted = false;
 	BEAM_ANGLE_NUM = 360;
+	BEAM_NODE_ARM_LENGTH = 5;
+	BEAM_NODE_SCALE = 1;
+	BEAM_NODE_NUM = BEAM_NODE_ARM_LENGTH / BEAM_NODE_SCALE * 2 + 1;
+	BEAM_CENTER_ID = BEAM_NODE_ARM_LENGTH * BEAM_NODE_NUM + BEAM_NODE_ARM_LENGTH;
     ANGLE_INCREMENT = 2.0 * M_PI / (double)BEAM_ANGLE_NUM;
 	MAX_BEAM_RANGE = 1023;
 }
@@ -25,7 +29,7 @@ MakeImage::Precasting::Precasting(int _index, int _cx, int _cy, double _distance
 	distance = _distance;
 }
 
-void MakeImage::set_param(const double wid, const double hei, const double res, const int num, const double range)
+void MakeImage::set_param(const double wid, const double hei, const double res, const int num, const double range, const int beam_arm, const int beam_scale)
 {
     w = wid;
     h = hei;
@@ -34,6 +38,10 @@ void MakeImage::set_param(const double wid, const double hei, const double res, 
     image_w = int(w * resolution_rec);
     image_h = int(h * resolution_rec);
 	BEAM_ANGLE_NUM = num;
+	BEAM_NODE_ARM_LENGTH = beam_arm;
+	BEAM_NODE_SCALE = beam_scale;
+	BEAM_NODE_NUM = BEAM_NODE_ARM_LENGTH / BEAM_NODE_SCALE * 2 + 1;
+	BEAM_CENTER_ID = BEAM_NODE_ARM_LENGTH * BEAM_NODE_NUM + BEAM_NODE_ARM_LENGTH;
     ANGLE_INCREMENT = 2.0 * M_PI / (double)BEAM_ANGLE_NUM;
 	MAX_BEAM_RANGE = range;
 }
@@ -60,10 +68,10 @@ void MakeImage::make_image(void)
     cv::Mat image_edge(cv::Size(image_w,image_h), CV_8UC1, cv::Scalar(0));
     cv::Mat image_c(cv::Size(image_w,image_h), CV_8UC3, cv::Scalar(0));
     cv::Mat image_c2(cv::Size(image_w,image_h), CV_8UC3, cv::Scalar(0));
+    cv::Mat image_c3(cv::Size(image_w,image_h), CV_8UC3, cv::Scalar(0));
 
     int max = 0;
     add_point_data(grass,image,max);
-    add_point_data_obs(rmground,image);
 
     ////////////////////////////////////////////////////////////
     
@@ -78,8 +86,12 @@ void MakeImage::make_image(void)
     // cv::erode(image, image, cv::Mat(), cv::Point(-1,-1), 1); 
     // cv::dilate(image, image, cv::Mat(), cv::Point(-1,-1), 1); 
 
+    cvtColor(image, image_c3, CV_GRAY2RGB);
+    cv::circle(image_c3, cv::Point(image_w * 0.5,image_h * 0.5), 3, cv::Scalar(100,255,0), -1, CV_AA);
+    image_raw = cv_bridge::CvImage(std_msgs::Header(), "rgb8", image_c3).toImageMsg();
     
-    cv::Mat element = (cv::Mat_<uchar>(7,7)<< 0,0,1,1,1,0,0,
+	
+	cv::Mat element = (cv::Mat_<uchar>(7,7)<< 0,0,1,1,1,0,0,
                                               0,1,1,1,1,1,0,
                                               1,1,1,1,1,1,1,
                                               1,1,1,1,1,1,1,
@@ -92,6 +104,9 @@ void MakeImage::make_image(void)
     cv::dilate(image, image, element, cv::Point(-1,-1), 3); 
     cv::erode(image, image, element, cv::Point(-1,-1), 4); 
     cv::dilate(image, image, element, cv::Point(-1,-1), 2); 
+    
+	add_point_data_obs(rmground,image);
+
     
     beam(image, image_edge);
 
@@ -168,15 +183,12 @@ void MakeImage::precasting(const int id, const int cx, const int cy)
 void MakeImage::precast_manage(const cv::Mat& image)
 {
 	if(!is_precasted){
-		const int harf_side_length = 5;
-		const double scale = 1.0;
-		const int node_num = harf_side_length * 2 + 1;
-		precast.resize(node_num * node_num);
-		for(int i=-harf_side_length;i<=harf_side_length;i++){
-			for(int j=-harf_side_length;j<=harf_side_length;j++){
-				int id = (i + harf_side_length) * node_num + (j + harf_side_length);
-				int cx = image_w * 0.5 + j * resolution_rec * scale;
-				int cy = image_h * 0.5 + i * resolution_rec * scale;
+		precast.resize(BEAM_NODE_NUM * BEAM_NODE_NUM);
+		for(int i=-BEAM_NODE_ARM_LENGTH;i<=BEAM_NODE_ARM_LENGTH;i+=BEAM_NODE_SCALE){
+			for(int j=-BEAM_NODE_ARM_LENGTH;j<=BEAM_NODE_ARM_LENGTH;j+=BEAM_NODE_SCALE){
+				int id = (i + BEAM_NODE_ARM_LENGTH) * BEAM_NODE_NUM + (j + BEAM_NODE_ARM_LENGTH);
+				int cx = image_w * 0.5 + j * resolution_rec * BEAM_NODE_SCALE;
+				int cy = image_h * 0.5 + i * resolution_rec * BEAM_NODE_SCALE;
 				// std::cout << "(id, cx, cy): (" << id << ",r" << cx << ", " << cy << ")" << std::endl;
 				precasting(id, cx, cy);
 			}
@@ -191,14 +203,14 @@ void MakeImage::beam(const cv::Mat& image, cv::Mat& image_edge)
 {
 	precast_manage(image);
 	image_edge = cv::Scalar(0);
-    for(int id=0;id<121;id++){
+    for(int id=0;id<BEAM_NODE_NUM*BEAM_NODE_NUM;id++){
     	std::vector<int> ind_list(BEAM_ANGLE_NUM, 0);
-		std::cout << "=================-" << std::endl;
-		std::cout << precast[id][0][0].cx << std::endl;
-		std::cout << precast[id][0][0].cy << std::endl;
-		std::cout << image.at<uchar>(precast[id][0][0].cy, precast[id][0][0].cx) << std::endl;
+		// std::cout << "=================-" << std::endl;
+		// std::cout << precast[id][0][0].cx << std::endl;
+		// std::cout << precast[id][0][0].cy << std::endl;
+		// std::cout << image.at<uchar>(precast[id][0][0].cy, precast[id][0][0].cx) << std::endl;
 		if(image.at<uchar>(precast[id][0][0].cy, precast[id][0][0].cx)==0){
-    		for(int beam_angle=0;beam_angle<BEAM_ANGLE_NUM;beam_angle++){
+    		for(int beam_angle=0; beam_angle<BEAM_ANGLE_NUM; beam_angle++){
     		    int angle_grid_num = precast[id][beam_angle].size();
     		    double min_dist = MAX_BEAM_RANGE * resolution_rec * resolution_rec;
     		    for(int grid=0; grid<angle_grid_num; grid++){
@@ -276,12 +288,12 @@ void MakeImage::amp(cv::Mat& image,const double gain)
 void MakeImage::hough_line_p(cv::Mat& image,cv::Mat& image_c)
 {
     // std::cout<<"hough_line_p"<<std::endl;
-    cv::Canny(image, image, 50, 200, 3); 
+    // cv::Canny(image, image, 50, 200, 3); 
     std::vector<cv::Vec4i> lines;
     // 入力画像，出力，距離分解能，角度分解能，閾値，線分の最小長さ，
     // 2点が同一線分上にあると見なす場合に許容される最大距離
     // cv::HoughLinesP(image, lines, 1, CV_PI/180, 70, 100, 30);
-    cv::HoughLinesP(image, lines, 1, CV_PI/180, 40, 50, 20);
+    cv::HoughLinesP(image, lines, 1, CV_PI/180, 40, 40, 20);
     std::vector<cv::Vec4i>::iterator it = lines.begin();
     std::cout << "number of lines: " << lines.size() << std::endl;
     for(; it!=lines.end(); ++it) {

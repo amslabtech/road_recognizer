@@ -34,7 +34,7 @@ class MakeImage
 			private:
 		};
 
-		void set_param(const double, const double, const double, const int, const double);
+		void set_param(const double, const double, const double, const int, const double, const int, const int);
 		void extract_pc_in_range(pcl::PointCloud<pcl::PointXYZI>::Ptr&);
 		void pcl_generater(pcl::PointCloud<pcl::PointXYZI>::Ptr&);
 		void make_image(void);
@@ -64,11 +64,17 @@ class MakeImage
 		int image_h;
 		bool houghline_flag;
 		bool is_precasted;
+		int BEAM_NODE_ARM_LENGTH;
+		int BEAM_NODE_SCALE;
+		int BEAM_NODE_NUM;
+		int BEAM_CENTER_ID;
 		int BEAM_ANGLE_NUM;
 		double MAX_BEAM_RANGE;
 		double ANGLE_INCREMENT;
+
 		vector<vector<vector<Precasting>>> precast;
 		sensor_msgs::ImagePtr image_ros;
+		sensor_msgs::ImagePtr image_raw;
 		sensor_msgs::ImagePtr image_ros2;
 		sensor_msgs::PointCloud2 grass_pc2;
 };
