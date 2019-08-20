@@ -46,7 +46,7 @@ void MakeImage::set_param(const double wid, const double hei, const double res, 
 	MAX_BEAM_RANGE = range;
 }
 
-void MakeImage::extract_pc_in_range(pcl::PointCloud<pcl::PointXYZI>::Ptr& pc)
+void MakeImage::extract_pc_in_range(pcl::PointCloud<pcl::PointXYZI>::Ptr& pc)/*{{{*/
 {
     // std::cout<<"extractpcinrange"<<std::endl;
     pcl::PassThrough<pcl::PointXYZI> pass;
@@ -58,8 +58,7 @@ void MakeImage::extract_pc_in_range(pcl::PointCloud<pcl::PointXYZI>::Ptr& pc)
     pass.setFilterFieldName("y");
     pass.setFilterLimits(-h*0.5, h*0.5);
     pass.filter(*pc);
-}
-
+}/*}}}*/
 
 void MakeImage::make_image(void)
 {
@@ -74,17 +73,11 @@ void MakeImage::make_image(void)
     add_point_data(grass,image,max);
 
     ////////////////////////////////////////////////////////////
-    
-    // IplConvKernel* karnel = cvCreateStructuringElementEx(7,7,4,4,2); //  size_x,y,offset_x,y,shape
 
     // cv::medianBlur(image, image, 7);
     // cv::erode(image, image, cv::Mat(), cv::Point(-1,-1), 1); 
-    // AddPointData_obs(rmground,image);
-    // cv::GaussianBlur(image, image, cv::Size(7,7), 10, 10);// src_img, out_img，karnel_size，標準偏差x, y
-    // cv::erode(image, image, cv::Mat(), cv::Point(-1,-1), 1); 
-    // cv::medianBlur(image, image, 7);
-    // cv::erode(image, image, cv::Mat(), cv::Point(-1,-1), 1); 
     // cv::dilate(image, image, cv::Mat(), cv::Point(-1,-1), 1); 
+    // cv::GaussianBlur(image, image, cv::Size(7,7), 10, 10);// src_img, out_img，karnel_size，標準偏差x, y
 
     cvtColor(image, image_c3, CV_GRAY2RGB);
     cv::circle(image_c3, cv::Point(image_w * 0.5,image_h * 0.5), 3, cv::Scalar(100,255,0), -1, CV_AA);
@@ -105,6 +98,7 @@ void MakeImage::make_image(void)
     cv::erode(image, image, element, cv::Point(-1,-1), 4); 
     cv::dilate(image, image, element, cv::Point(-1,-1), 2); 
     
+    generate_pcl(image);
 	add_point_data_obs(rmground,image);
 
     
@@ -116,7 +110,6 @@ void MakeImage::make_image(void)
     /////////////////////////////////////////////////////////////
     // cv::Canny(image, image, 50, 200, 3); 
     
-    generate_pcl(image);
 
     cvtColor(image, image_c, CV_GRAY2RGB);
     // if(houghline_flag)hough_line_p(image, image_c);
@@ -130,7 +123,7 @@ void MakeImage::make_image(void)
     image_ros2 = cv_bridge::CvImage(std_msgs::Header(), "rgb8", image_c2).toImageMsg();
 }
 
-void MakeImage::generate_pcl(const cv::Mat& image){
+void MakeImage::generate_pcl(const cv::Mat& image){/*{{{*/
     grass_points->points.clear();
     pcl::PointXYZI pt;
     pt.z = 0;
@@ -145,7 +138,7 @@ void MakeImage::generate_pcl(const cv::Mat& image){
         }
     }
     pcl::toROSMsg(*grass_points, grass_pc2);
-}
+}/*}}}*/
 
 void MakeImage::precasting(const int id, const int cx, const int cy)
 {
@@ -209,7 +202,14 @@ void MakeImage::beam(const cv::Mat& image, cv::Mat& image_edge)
 		// std::cout << precast[id][0][0].cx << std::endl;
 		// std::cout << precast[id][0][0].cy << std::endl;
 		// std::cout << image.at<uchar>(precast[id][0][0].cy, precast[id][0][0].cx) << std::endl;
-		if(image.at<uchar>(precast[id][0][0].cy, precast[id][0][0].cx)==0){
+		int x = precast[id][0][0].cx;
+		int y = precast[id][0][0].cy;
+		if(image.at<uchar>(y, x) == 0 &&
+			image.at<uchar>((y+image_h*0.5)*0.5, (x+image_w*0.5)*0.5) == 0 &&
+			image.at<uchar>((y*3+image_h*0.5)*0.25, (x*3+image_w*0.5)*0.25) == 0 &&
+			image.at<uchar>((y+image_h*1.5)*0.25, (x+image_w*1.5)*0.25) == 0
+			)
+		{
     		for(int beam_angle=0; beam_angle<BEAM_ANGLE_NUM; beam_angle++){
     		    int angle_grid_num = precast[id][beam_angle].size();
     		    double min_dist = MAX_BEAM_RANGE * resolution_rec * resolution_rec;
@@ -230,9 +230,12 @@ void MakeImage::beam(const cv::Mat& image, cv::Mat& image_edge)
 			}
 		}
 	}
+    // cv::dilate(image_edge, image_edge, cv::Mat(), cv::Point(-1,-1), 1); 
+    // cv::Canny(image_edge, image_edge, 50, 200, 3); 
+
 }
 
-void MakeImage::add_point_data(const pcl::PointCloud<pcl::PointXYZI>::Ptr& pc, cv::Mat& image, int& max)
+void MakeImage::add_point_data(const pcl::PointCloud<pcl::PointXYZI>::Ptr& pc, cv::Mat& image, int& max)/*{{{*/
 {
     // std::cout<<"add_point_data"<<std::endl;
     if(size_t lim = pc->points.size()){
@@ -250,8 +253,9 @@ void MakeImage::add_point_data(const pcl::PointCloud<pcl::PointXYZI>::Ptr& pc, c
             }
         }
     }
-}
-void MakeImage::add_point_data_obs(const pcl::PointCloud<pcl::PointXYZI>::Ptr& pc, cv::Mat& image)
+}/*}}}*/
+
+void MakeImage::add_point_data_obs(const pcl::PointCloud<pcl::PointXYZI>::Ptr& pc, cv::Mat& image)/*{{{*/
 {
     // std::cout<<"AddPointData"<<std::endl;
     if(size_t lim = pc->points.size()){
@@ -262,9 +266,9 @@ void MakeImage::add_point_data_obs(const pcl::PointCloud<pcl::PointXYZI>::Ptr& p
             image.data[ind] = 255;
         }
     }
-}
+}/*}}}*/
 
-void MakeImage::normalize(cv::Mat& image,const int max)
+void MakeImage::normalize(cv::Mat& image,const int max)/*{{{*/
 {
     // std::cout<<"normalize"<<std::endl;
     size_t lim = image_w * image_h;
@@ -272,9 +276,9 @@ void MakeImage::normalize(cv::Mat& image,const int max)
     for(size_t i=0; i<lim; i++){
         image.data[i] *= normalize_n;
     }
-}
+}/*}}}*/
 
-void MakeImage::amp(cv::Mat& image,const double gain)
+void MakeImage::amp(cv::Mat& image,const double gain)/*{{{*/
 {
     // std::cout<<"amp"<<std::endl;
     size_t lim = image_w * image_h;
@@ -283,7 +287,7 @@ void MakeImage::amp(cv::Mat& image,const double gain)
         if(image.data[i] * gain < 256)image.data[i] *= gain;
         else image.data[i] = 255;
     }
-}
+}/*}}}*/
 
 void MakeImage::hough_line_p(cv::Mat& image,cv::Mat& image_c)
 {
@@ -292,8 +296,8 @@ void MakeImage::hough_line_p(cv::Mat& image,cv::Mat& image_c)
     std::vector<cv::Vec4i> lines;
     // 入力画像，出力，距離分解能，角度分解能，閾値，線分の最小長さ，
     // 2点が同一線分上にあると見なす場合に許容される最大距離
-    // cv::HoughLinesP(image, lines, 1, CV_PI/180, 70, 100, 30);
-    cv::HoughLinesP(image, lines, 1, CV_PI/180, 40, 40, 20);
+    // cv::HoughLinesP(image, lines, 1, CV_PI/180, 40, 40, 20);
+    cv::HoughLinesP(image, lines, 1, CV_PI/180, 30, 50, 15);
     std::vector<cv::Vec4i>::iterator it = lines.begin();
     std::cout << "number of lines: " << lines.size() << std::endl;
     for(; it!=lines.end(); ++it) {
@@ -302,25 +306,26 @@ void MakeImage::hough_line_p(cv::Mat& image,cv::Mat& image_c)
     }
 }
 
-int MakeImage::meter_point_to_pixel_x(const double y)
+int MakeImage::meter_point_to_pixel_x(const double y)/*{{{*/
 {
     int x_ = -y*resolution_rec + image_w*0.5 - 0.5;
     return x_;
-}
+}/*}}}*/
 
-int MakeImage::meter_point_to_pixel_y(const double x)
+int MakeImage::meter_point_to_pixel_y(const double x)/*{{{*/
 {
     int y_ = -x*resolution_rec + image_h*0.5 - 0.5;
     return y_;
-}
+}/*}}}*/
 
-double MakeImage::pixel_y_to_meter_point_x(const int y)
+double MakeImage::pixel_y_to_meter_point_x(const int y)/*{{{*/
 {
     double x_ = -y*resolution + h * 0.5;
     return x_;
-}
-double MakeImage::pixel_x_to_meter_point_y(const int x)
+}/*}}}*/
+
+double MakeImage::pixel_x_to_meter_point_y(const int x)/*{{{*/
 {
     double y_ = -x*resolution + w *0.5;
     return y_;
-}
+}/*}}}*/

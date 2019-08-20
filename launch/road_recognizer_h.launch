@@ -6,7 +6,8 @@
     <include file="$(find dynamic_cloud_detector)/launch/dynamic_cloud_detector.launch" />
 	<node pkg="complement" type="complement" name="complement"/>
 	<node pkg="rviz" type="rviz" name="rviz" args="-d /home/amsl/.rviz/road.rviz"/>
-	<node pkg="rosbag" type="play" name="play" args="--clock /home/amsl/bagfiles/tsukuba_full_left_start.bag -s 2140 -l" />
+	<node pkg="rosbag" type="play" name="play" args="--clock /home/amsl/bagfiles/tsukuba_full_left_start.bag -s 2135 -l" />
+	<!-- <node pkg="rosbag" type="play" name="play" args="&#45;&#45;clock /home/amsl/bagfiles/tsukuba_full_left_start.bag &#45;s 600 &#45;l" /> -->
    
 	
 	<group ns="recognition/road_recognizer">
@@ -44,6 +45,7 @@
 			<param name="IMAGE_RESILUTION" type="double" value="0.1"/>
 			<param name="HOUGHLINE_FLAG" type="bool" value="true"/>
 			<param name="BEAM_ANGLE_NUM" type="int" value="360"/>
+			<param name="BEAM_NODE_ARM_LENGTH" type="int" value="7"/>
 		</node>
 
         <node pkg="road_recognizer" type="road_cloud_publisher" name="road_cloud_publisher">
