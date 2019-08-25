@@ -20,7 +20,8 @@ RoadCloudPublisher::RoadCloudPublisher(void)
     downsampled_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/downsampled", 1);
     road_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("cloud/road", 1);
     obstacles_sub = nh.subscribe("/velodyne_obstacles", 1, &RoadCloudPublisher::obstacles_callback, this);
-    ground_sub = nh.subscribe("/velodyne_clear", 1, &RoadCloudPublisher::ground_callback, this);
+    //ground_sub = nh.subscribe("/velodyne_clear", 1, &RoadCloudPublisher::ground_callback, this);
+    ground_sub = nh.subscribe("/grass_pc", 1, &RoadCloudPublisher::ground_callback, this);
 
     obstacles_cloud = CloudXYZIPtr(new CloudXYZI);
     ground_cloud = CloudXYZIPtr(new CloudXYZI);
@@ -76,8 +77,10 @@ void RoadCloudPublisher::process(void)
             std::cout << "curvature cloud size: " << curvature_cloud->points.size() << std::endl;
             filter_intensity();
             std::cout << "intensity cloud size: " << intensity_cloud->points.size() << std::endl;
-            *road_cloud = *curvature_cloud + *intensity_cloud;
-            filter_height();
+            //*road_cloud = *curvature_cloud + *intensity_cloud;
+            *road_cloud = *intensity_cloud;
+            
+			filter_height();
             std::cout << "after passthrough filter cloud size: " << road_cloud->points.size() << std::endl;
 
             publish_clouds();
@@ -184,12 +187,12 @@ void RoadCloudPublisher::filter_curvature(void)
 
 void RoadCloudPublisher::filter_intensity(void)
 {
-    pcl::PassThrough<PointXYZIN> intensity_pass;
-    intensity_pass.setInputCloud(road_cloud);
-    intensity_pass.setFilterFieldName("intensity");
-    intensity_pass.setFilterLimits(INTENSITY_LOWER_THRESHOLD, INTENSITY_UPPER_THRESHOLD);
+    /* pcl::PassThrough<PointXYZIN> intensity_pass; */
+    /* intensity_pass.setInputCloud(road_cloud); */
+    /* intensity_pass.setFilterFieldName("intensity"); */
+    /* intensity_pass.setFilterLimits(INTENSITY_LOWER_THRESHOLD, INTENSITY_UPPER_THRESHOLD); */
     intensity_cloud->header = ground_cloud->header;
-    intensity_pass.filter(*intensity_cloud);
+    // intensity_pass.filter(*intensity_cloud);
 }
 
 void RoadCloudPublisher::filter_height(void)
