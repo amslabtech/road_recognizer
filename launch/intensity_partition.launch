@@ -5,7 +5,8 @@
 
 
 	<!-- <node pkg="road_recognizer" type="intensity_partition" name="intensity_partition"/> -->
-	<node pkg="road_recognizer" type="intensity_partition" name="intensity_partition" output="screen"/>
+	<!-- <node pkg="road_recognizer" type="intensity_partition" name="intensity_partition" output="screen"/> -->
+	<node pkg="road_recognizer" type="intensity_partition_node" name="intensity_partition_node" output="screen"/>
 	<node pkg="road_recognizer" type="old_intensity_partition" name="old_intensity_partition"/>
 	<!-- <node pkg="pcl_samples" type="pc_store" name="pc_store"/> -->
 	<!-- <node pkg="road_recognizer" type="intensity_histogram_viewer" name="intensity_histogram_viewer"/> -->
@@ -20,7 +21,7 @@
 	
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/left_start.bag"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/left_start.bag"/> -->
-	<node pkg="rosbag" name="player" type="play" args="--clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag -s 2475 -r 0.02"/>
+	<node pkg="rosbag" name="player" type="play" args="--clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag"/>
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 2200"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 2400"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 2270"/> -->
