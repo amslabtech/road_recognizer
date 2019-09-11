@@ -19,6 +19,8 @@
 #include <pcl/filters/passthrough.h>
 #include <pcl/filters/statistical_outlier_removal.h>
 
+#include "road_recognizer/intensity_partition.h"
+
 // OMP
 #include <omp.h>
 
@@ -74,6 +76,8 @@ private:
     ros::Subscriber obstacles_sub;
     ros::Subscriber ground_sub;
 
+	//IntensityPartition intensity_partition;
+
     CloudXYZIPtr obstacles_cloud;
     CloudXYZIPtr ground_cloud;
     CloudXYZINPtr curvature_cloud;
@@ -81,6 +85,14 @@ private:
     CloudXYZINPtr road_cloud;
     bool obstacles_cloud_updated;
     bool ground_cloud_updated;
+
+
+	int RANGE_DIVISION_NUM;//= 20
+	int THETA_DIVISION_NUM;//= 360;
+	float OTSU_BINARY_SEPARATION_THRESHOLD;// = 0.2;
+	float OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD;// = 3.0;
+	float OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD;// = 58.0;
+	float RANGE_MAX;// = 20.0;
 };
 
 #endif// __ROAD_CLOUD_PUBLISHER

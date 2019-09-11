@@ -11,6 +11,7 @@
         <arg name="height_threshold" default="0.0"/>
         <arg name="max_random_sample_size" default="8000"/>
         <arg name="random_sample_ratio" default="0.20"/>
+        <arg name="otsu_binary_separation_threshold" default="0.80"/>
 
         <arg name="store_num" default="50"/>
         <arg name="position_difference_threshold" default="0.1"/>
@@ -32,7 +33,7 @@
         <arg name="line_normal_mean_inner_product_threshold" default="0.5"/>
         <arg name="radius_for_2d_normal" default="1.0"/>
 
-        <node pkg="road_recognizer" type="road_cloud_publisher" name="road_cloud_publisher">
+        <node pkg="road_recognizer" type="road_cloud_publisher" name="road_cloud_publisher" output="screen">
             <param name="HZ" value="$(arg hz)"/>
             <param name="NORMAL_ESTIMATION_RADIUS" value="$(arg normal_estimation_radius)"/>
             <param name="LEAF_SIZE" value="$(arg leaf_size)"/>
@@ -42,6 +43,7 @@
             <param name="HEIGHT_THRESHOLD" value="$(arg height_threshold)"/>
             <param name="MAX_RANDOM_SAMPLE_SIZE" value="$(arg max_random_sample_size)"/>
             <param name="RANDOM_SAMPLE_RATIO" value="$(arg random_sample_ratio)"/>
+            <param name="OTSU_BINARY_SEPARATION_THRESHOLD" value="$(arg otsu_binary_separation_threshold)"/>
         </node>
 
         <node pkg="road_recognizer" type="road_point_cloud_storer" name="road_point_cloud_storer">
