@@ -7,10 +7,13 @@
 #include <ros/ros.h>
 
 #include <nav_msgs/Odometry.h>
+#include <std_msgs/Float64MultiArray.h>
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
 #include <tf/tf.h>
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 
 // Eigen
 #include <Eigen/Dense>
@@ -33,10 +36,13 @@
 #include <pcl/visualization/cloud_viewer.h>
 #include <pcl/sample_consensus/sac_model_line.h>
 #include <pcl/sample_consensus/ransac.h>
+#include <pcl/segmentation/extract_clusters.h>
 
 // OMP
 #include <omp.h>
 
+#include "amsl_navigation_msgs/Road.h"
+#include "amsl_navigation_msgs/RoadArray.h"
 
 class RoadRecognizer
 {
@@ -50,15 +56,28 @@ public:
     typedef pcl::PointXYZI PointXYZI;
     typedef pcl::PointCloud<PointXYZI> CloudXYZI;
     typedef pcl::PointCloud<PointXYZI>::Ptr CloudXYZIPtr;
+    typedef std::tuple<Eigen::Vector2d, Eigen::Vector2d, double, double, double, double, Eigen::Vector2d, int> LineInformation;
 
     RoadRecognizer(void);
 
     void process(void);
-    void road_cloud_callback(const sensor_msgs::PointCloud2ConstPtr&);
+    void callback(const sensor_msgs::PointCloud2ConstPtr&, const sensor_msgs::PointCloud2ConstPtr&);
     void visualize_cloud(void);
     void extract_lines(const CloudXYZPtr);
     template<typename PointT>
     double get_distance(const PointT&, const PointT&);
+    double get_length_from_linear_cloud(const CloudXYZPtr&);
+    double get_length_from_linear_cloud(const CloudXYZPtr&, Eigen::Vector2d&, Eigen::Vector2d&);
+    void publish_linear_clouds(const std::vector<CloudXYZPtr>&);
+    void get_linear_clouds(const CloudXYZINPtr, std::vector<CloudXYZPtr>&);
+    void make_and_publish_line_marker(const std::vector<pcl::PointIndices>&, const std::vector<LineInformation>&, const std_msgs::Header&);
+    void get_clustered_lines(const std::vector<LineInformation>&, std::vector<pcl::PointIndices>&);
+    void get_line_information_from_linear_clouds(const std::vector<CloudXYZPtr>&, std::vector<LineInformation>&);
+    void get_beam_cloud(const CloudXYZINPtr&, CloudXYZPtr&);
+    void apply_median_filter(const std::vector<double>&, std::vector<double>&);
+    void apply_mean_filter(const std::vector<double>&, std::vector<double>&);
+    void estimate_normal_2d(const CloudXYZPtr&, CloudXYZINPtr&);
+    bool check_line_with_normal(const CloudXYZINPtr&, std::vector<int>&);
 
 private:
     double HZ;
@@ -70,8 +89,16 @@ private:
     bool ENABLE_VISUALIZATION;
     int BEAM_ANGLE_NUM;
     double MAX_BEAM_RANGE;
+    double MIN_BEAM_RANGE;
     double RANSAC_DISTANCE_THRESHOLD;
     double RANSAC_MIN_LINE_LENGTH_THRESHOLD;
+    double RANSAC_MIN_LINE_DENSITY_THRESHOLD;
+    double EUCLIDEAN_CLUSTERING_TOLERANCE;
+    double MAX_ROAD_EDGE_DIRECTION_DIFFERENCE;
+    double MIN_ROAD_WIDTH;
+    int BEAM_MEDIAN_N;
+    double LINE_NORMAL_MEAN_INNER_PRODUCT_THRESHOLD;
+    double RADIUS_FOR_2D_NORMAL;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;
@@ -80,7 +107,13 @@ private:
     ros::Publisher filtered_pub;
     ros::Publisher beam_cloud_pub;
     ros::Publisher linear_cloud_pub;
-    ros::Subscriber road_stored_cloud_sub;
+    ros::Publisher beam_array_pub;
+    ros::Publisher line_markers_pub;
+    ros::Publisher road_pub;
+    typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::PointCloud2, sensor_msgs::PointCloud2> sync_subs;
+    message_filters::Subscriber<sensor_msgs::PointCloud2> road_stored_cloud_sub;
+    message_filters::Subscriber<sensor_msgs::PointCloud2> obstacles_cloud_sub;
+    message_filters::Synchronizer<sync_subs> sync;
 
     CloudXYZINPtr filtered_cloud;
 
