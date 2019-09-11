@@ -10,11 +10,11 @@ IntensityPartition::IntensityPartition(int range_division_num, int theta_divisio
 	OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD_ = otsu_binary_sum_of_diff_from_avr_threshold;
 	OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD_ = otsu_binary_diff_from_avr_threshold;
 
-	otsu_binary_msg.range_resolution = RANGE_DIVISION_NUM_;
-	otsu_binary_msg.theta_resolution = THETA_DIVISION_NUM_;
+	otsu_binary_msg.range_division_num = RANGE_DIVISION_NUM_;
+	otsu_binary_msg.theta_division_num = THETA_DIVISION_NUM_;
 	otsu_binary_msg.range_max = RANGE_MAX_;
 	otsu_binary_msg.otsubinary_separation_threshold = OTSU_BINARY_SEPARATION_THRESHOLD_;
-	otsu_binary_msg.otsubinary_sum_of_diff_from_avr_threshold = OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD_;
+	otsu_binary_sum_of_diff_from_avr_threshold = OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD_;
 	otsu_binary_msg.intensity.resize(RANGE_DIVISION_NUM_);
 	otsu_binary_msg.analysis.resize(RANGE_DIVISION_NUM_);
 
@@ -386,7 +386,7 @@ pcl::PointCloud<pcl::PointXYZI>::Ptr IntensityPartition::otsu_pc_generator(void)
 	}
 	
 	if(otsu_binary_msg.emergency){
-		//intensity_max_all = 0.0;
+		intensity_max_all = 0.0;
 	}
 
 	pcl::PassThrough<PointI> pass;

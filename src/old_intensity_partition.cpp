@@ -34,7 +34,6 @@ class OldIntensityPartition
 		bool pc_callback_flag = false;
 		bool first_flag = false;
 
-		size_t otsu_seq_list_size = 0;
 		
 		int n_grass = 0, n_asphalt = 0;
 
@@ -44,11 +43,8 @@ class OldIntensityPartition
 		/* ---------- Tuning Params ---------- */
 		const static int RANGE_RESOLUTION = 20;
 		const static int THETA_RESOLUTION = 360;
-		const static int SEQ_DURATION = 5;
-		float OTSU_BINARY_TIME_STD_DEVIATION_THRESHOLD = 10.0;
 		float OTSU_BINARY_INTENSITY_STD_DEVIATION_THRESHOLD = 1.0;
 		float OTSU_BINARY_SEPARATION_THRESHOLD = 0.2;
-		float OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD = 3.0;
 		float OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD = 58.0;
 		float RANGE_MAX = 20.0;
 		bool PC_PUBLISH_FLAG = true; // true : publish grass points
@@ -69,10 +65,6 @@ class OldIntensityPartition
 		// float range_grid_sum_intensity[RANGE_RESOLUTION];
 		float polar_grid_avr_intensity[RANGE_RESOLUTION][THETA_RESOLUTION];
 		float polar_grid_sum_intensity[RANGE_RESOLUTION][THETA_RESOLUTION];
-		float time_sum_otsu[RANGE_RESOLUTION];	
-		float time_sum_otsu_diffpow[RANGE_RESOLUTION];	
-		float time_mu_otsu[RANGE_RESOLUTION];	
-		float otsu_time_std_deviation[SEQ_DURATION][RANGE_RESOLUTION];	
 		float range_mu_otsu;	
 		float otsu_range_std_deviation;	
 
@@ -89,7 +81,6 @@ class OldIntensityPartition
 		CloudIPtr polar_pc_ {new CloudI};
 
 		std::vector<float> ptz_list;
-		std::vector<road_recognizer::OtsuBinary> otsu_seq_list;
 
 		road_recognizer::OtsuBinary otsu_binary_msg; 
 
@@ -112,7 +103,6 @@ class OldIntensityPartition
 		//float calc_variance(std::vector<std::array<int, RANGE_RESOLUTION> >, int, int, int);
 		float calc_variance(const std::vector<std::vector<int> >&, int, int, int);
 		void calc_otsu_binary(void);
-		void calc_time_std_deviation(void);
 		void calc_diff_from_avr(void);
 		void emergency_judge(void);
 		CloudIPtr otsu_pc_generator(void);
@@ -136,12 +126,9 @@ OldIntensityPartition::OldIntensityPartition(void)
 :local_nh("~")
 {
 
-	otsu_binary_msg.range_resolution = RANGE_RESOLUTION;
-	otsu_binary_msg.theta_resolution = THETA_RESOLUTION;
+	otsu_binary_msg.range_division_num = RANGE_RESOLUTION;
+	otsu_binary_msg.theta_division_num = THETA_RESOLUTION;
 	otsu_binary_msg.range_max = RANGE_MAX;
-	otsu_binary_msg.seq_duration = SEQ_DURATION;
-	otsu_binary_msg.otsubinary_time_std_deviation_threshold = OTSU_BINARY_TIME_STD_DEVIATION_THRESHOLD;
-	otsu_binary_msg.otsubinary_diff_from_avr_threshold = OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD;
 	otsu_binary_msg.otsubinary_sum_of_diff_from_avr_threshold = OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD;
 	otsu_binary_msg.intensity.resize(RANGE_RESOLUTION);
 	otsu_binary_msg.analysis.resize(RANGE_RESOLUTION);
@@ -195,8 +182,6 @@ void OldIntensityPartition::initialize(void)
 		s_max[r_g] = 0.0;
 		otsu_threshold_tmp[r_g] = 0.0;
 		//range_grid_sum_intensity[r_g] = 0.0;
-		time_sum_otsu[r_g] = 0.0;
-		time_sum_otsu_diffpow[r_g] = 0.0;
 		intensity_max[r_g] = 0.0;
 		intensity_min[r_g] = 999.9;
 	}
@@ -311,31 +296,6 @@ float OldIntensityPartition::calc_variance(const std::vector<std::vector<int> >&
 	}
 	
 	return variance;
-}
-
-
-void OldIntensityPartition::calc_time_std_deviation(void)
-{
-	for(int seq = 0; seq < SEQ_DURATION; seq++){
-		for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
-			time_sum_otsu[r_g] += (otsu_seq_list.at(seq)).intensity[r_g].threshold;
-		}
-	}
-	
-	for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
-		time_mu_otsu[r_g] = time_sum_otsu[r_g] / SEQ_DURATION;
-	}
-
-	for(int seq = 0; seq < SEQ_DURATION; seq++){
-		for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
-			float diff = (otsu_seq_list.at(seq)).intensity[r_g].threshold - time_mu_otsu[r_g];
-			time_sum_otsu_diffpow[r_g] += diff * diff;
-		}
-	}
-
-	for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
-		otsu_binary_msg.analysis[r_g].otsubinary_time_std_deviation = sqrt(time_sum_otsu_diffpow[r_g] / SEQ_DURATION);
-	}
 }
 
 
@@ -487,14 +447,6 @@ void OldIntensityPartition::calc_otsu_binary(void)
 	// calc threshold histogram in range
 	calc_diff_from_avr();
 
-	// calc standard deviation in time
-	otsu_seq_list.push_back(otsu_binary_msg);
-	otsu_seq_list_size = otsu_seq_list.size();
-	if(otsu_seq_list_size > SEQ_DURATION){
-		otsu_seq_list.erase(otsu_seq_list.begin());
-		calc_time_std_deviation();
-	}
-
 	// judge emergency
 	emergency_judge();
 
@@ -510,8 +462,6 @@ CloudIPtr OldIntensityPartition::otsu_pc_generator(void)
 		for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
 			if(((float)r_g <= pt.z && pt.z < (float)r_g+1.0)
 				&& ((otsu_threshold_tmp[r_g] > pt.intensity)
-					//|| (otsu_seq_list_size > SEQ_DURATION && otsu_binary_msg.analysis[r_g].otsubinary_time_std_deviation > OTSU_BINARY_TIME_STD_DEVIATION_THRESHOLD)
-					//|| (otsu_binary_msg.analysis[r_g].otsubinary_diff_from_thresholds_avr > OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD)
 					//|| (otsu_binary_msg.analysis[r_g].intensity_std_deviation <  OTSU_BINARY_INTENSITY_STD_DEVIATION_THRESHOLD)
 					//|| (otsu_binary_msg.analysis[r_g].separation < OTSU_BINARY_SEPARATION_THRESHOLD)
 					)){
