@@ -36,6 +36,6 @@
   - the value of difference between ".intensity.threshold" and "range_mu_otsu"(refer to intensity_partition_node.cpp)
 - road_recognizer/Distribution[] distribution
   - the message about histogram of intensity
-####
+#### Distribution.msg
 - float32 intensity
   - the frequency of each intensity
