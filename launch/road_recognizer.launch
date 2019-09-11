@@ -23,7 +23,7 @@
         <arg name="ransac_distance_threshold" default="0.20"/>
         <arg name="ransac_min_line_length_threshold" default="5.0"/>
 
-        <node pkg="road_recognizer" type="road_cloud_publisher" name="road_cloud_publisher">
+        <node pkg="road_recognizer" type="road_cloud_publisher" name="road_cloud_publisher" output="screen">
             <param name="HZ" value="$(arg hz)"/>
             <param name="NORMAL_ESTIMATION_RADIUS" value="$(arg normal_estimation_radius)"/>
             <param name="LEAF_SIZE" value="$(arg leaf_size)"/>

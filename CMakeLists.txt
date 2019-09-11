@@ -144,6 +144,7 @@ add_definitions(${PCL_DEFINITIONS})
 # )
 add_library(libroad_cloud_publisher
   src/road_cloud_publisher.cpp
+  src/intensity_partition_node.cpp
 )
 add_library(libroad_point_cloud_storer
   src/road_point_cloud_storer.cpp
@@ -151,7 +152,6 @@ add_library(libroad_point_cloud_storer
 add_library(libroad_recognizer
   src/road_recognizer.cpp
 )
-
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -171,7 +171,6 @@ add_executable(road_cloud_publisher src/road_cloud_publisher_node.cpp)
 add_executable(road_point_cloud_storer src/road_point_cloud_storer_node.cpp)
 add_executable(road_recognizer src/road_recognizer_node.cpp)
 add_executable(intensity_partition src/intensity_partition.cpp) # added by nagai
-add_executable(intensity_partition_node src/intensity_partition_node.cpp) # added by nagai
 add_executable(old_intensity_partition src/old_intensity_partition.cpp) # added by nagai
 
 ## Rename C++ executable without prefix
@@ -187,7 +186,6 @@ add_dependencies(road_cloud_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 add_dependencies(road_point_cloud_storer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(road_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(intensity_partition ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}) # added by nagai
-add_dependencies(intensity_partition_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}) # added by nagai
 add_dependencies(old_intensity_partition ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}) # added by nagai
 
 ## Specify libraries to link a library or executable target against
@@ -210,10 +208,6 @@ target_link_libraries(road_recognizer
   libroad_recognizer
 )
 target_link_libraries(intensity_partition
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
-)
-target_link_libraries(intensity_partition_node
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
 )

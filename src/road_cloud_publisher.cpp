@@ -14,14 +14,20 @@ RoadCloudPublisher::RoadCloudPublisher(void)
     local_nh.param("HEIGHT_THRESHOLD", HEIGHT_THRESHOLD, {0});
     local_nh.param("MAX_RANDOM_SAMPLE_SIZE", MAX_RANDOM_SAMPLE_SIZE, {5000});
     local_nh.param("RANDOM_SAMPLE_RATIO", RANDOM_SAMPLE_RATIO, {0.25});
+	
+	local_nh.param("RANGE_MAX", RANGE_MAX, {20.0});
+	local_nh.param("RANGE_DIVISION_NUM", RANGE_DIVISION_NUM, {20});
+	local_nh.param("THETA_DIVISION_NUM", THETA_DIVISION_NUM, {360});
+	local_nh.param("OTSU_BINARY_SEPARATION_THRESHOLD", OTSU_BINARY_SEPARATION_THRESHOLD, {0.7});
+	local_nh.param("OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD", OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD, {3.0});
+	local_nh.param("OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD", OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD, {58.0});
 
     curvature_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/curvature", 1);
     intensity_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/intensity", 1);
     downsampled_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/downsampled", 1);
     road_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("cloud/road", 1);
     obstacles_sub = nh.subscribe("/velodyne_obstacles", 1, &RoadCloudPublisher::obstacles_callback, this);
-    //ground_sub = nh.subscribe("/velodyne_clear", 1, &RoadCloudPublisher::ground_callback, this);
-    ground_sub = nh.subscribe("/grass_pc", 1, &RoadCloudPublisher::ground_callback, this);
+    ground_sub = nh.subscribe("/velodyne_clear", 1, &RoadCloudPublisher::ground_callback, this);
 
     obstacles_cloud = CloudXYZIPtr(new CloudXYZI);
     ground_cloud = CloudXYZIPtr(new CloudXYZI);
@@ -44,6 +50,9 @@ RoadCloudPublisher::RoadCloudPublisher(void)
     std::cout << "MAX_RANDOM_SAMPLE_SIZE: " << MAX_RANDOM_SAMPLE_SIZE << std::endl;
     std::cout << "RANDOM_SAMPLE_RATIO: " << RANDOM_SAMPLE_RATIO << std::endl;
 }
+
+
+
 
 void RoadCloudPublisher::obstacles_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
@@ -187,12 +196,10 @@ void RoadCloudPublisher::filter_curvature(void)
 
 void RoadCloudPublisher::filter_intensity(void)
 {
-    /* pcl::PassThrough<PointXYZIN> intensity_pass; */
-    /* intensity_pass.setInputCloud(road_cloud); */
-    /* intensity_pass.setFilterFieldName("intensity"); */
-    /* intensity_pass.setFilterLimits(INTENSITY_LOWER_THRESHOLD, INTENSITY_UPPER_THRESHOLD); */
-    intensity_cloud->header = ground_cloud->header;
-    // intensity_pass.filter(*intensity_cloud);
+	IntensityPartition intensity_partition(RANGE_DIVISION_NUM, THETA_DIVISION_NUM, RANGE_MAX, OTSU_BINARY_SEPARATION_THRESHOLD, OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD, OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD);
+	
+	intensity_cloud = intensity_partition.execution(ground_cloud);
+	intensity_cloud->header = ground_cloud->header;
 }
 
 void RoadCloudPublisher::filter_height(void)
