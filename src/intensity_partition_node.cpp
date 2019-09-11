@@ -393,7 +393,7 @@ pcl::PointCloud<pcl::PointXYZI>::Ptr IntensityPartition::otsu_pc_generator(void)
 	CloudIPtr filtered_pc_ {new CloudI};
 	pass.setInputCloud(polar_pc_);
 	pass.setFilterFieldName ("intensity");
-	pass.setFilterLimits(4.9, intensity_max_all);
+	pass.setFilterLimits(7.9, intensity_max_all);
 	//pass.setFilterLimitsNegative (true);
 	pass.filter(*filtered_pc_);
 

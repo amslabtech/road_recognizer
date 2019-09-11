@@ -14,7 +14,7 @@
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/left_start.bag"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 2200"/> -->
-	<node pkg="rosbag" name="player" type="play" args="--clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag -s 2400"/>
+	<node pkg="rosbag" name="player" type="play" args="--clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag -s 2730"/>
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 2270"/> -->
 	<node pkg="rviz" name="rviz" type="rviz" args="-d /home/amsl/.rviz/otsu.rviz"/>
 </launch>
