@@ -110,7 +110,11 @@ void IntersectionDetector::beam_callback(const std_msgs::Float64MultiArrayConstP
             int j = (i + 1) % peak_num;
             int i1 = peak_list[i].index;
             int i2 = peak_list[j].index;
-            if(abs(i1 - i2) < EPSILON2){
+            int dist = i2 - i1;
+            if(i1 > i2){
+                dist = i2 - i1 + N;
+            }
+            if(dist < EPSILON2){
                 // std::cout << i1 << " and " << i2 << std::endl;
                 // std::cout << "merged: " << i1 << " & " << i2 << std::endl;
                 if(peak_list[i].width > peak_list[j].width){
