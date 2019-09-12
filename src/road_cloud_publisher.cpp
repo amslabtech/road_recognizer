@@ -20,7 +20,7 @@ RoadCloudPublisher::RoadCloudPublisher(void)
 	local_nh.param("THETA_DIVISION_NUM", THETA_DIVISION_NUM, {360});
 	local_nh.param("OTSU_BINARY_SEPARATION_THRESHOLD", OTSU_BINARY_SEPARATION_THRESHOLD, {0.8});
 	local_nh.param("OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD", OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD, {3.0});
-	local_nh.param("OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD", OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD, {999.9});
+	local_nh.param("OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD", OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD, {999});
 
     curvature_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/curvature", 1);
     intensity_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/intensity", 1);

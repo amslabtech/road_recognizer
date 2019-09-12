@@ -191,8 +191,8 @@ void IntensityPartition::calc_diff_from_avr(void)
 	for(int r_g = 1; r_g < RANGE_DIVISION_NUM_; r_g++){
 		range_sum_otsu += otsu_binary_msg.intensity[r_g].threshold;
 	}
-	float range_mu_otsu = range_sum_otsu / (RANGE_DIVISION_NUM_ - 1);
-
+	float range_mu_otsu = range_sum_otsu / (RANGE_DIVISION_NUM_);
+	std::cout << "range_mu_otsu : " << range_mu_otsu <<std::endl;
 	for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
 		float diff = otsu_binary_msg.intensity[r_g].threshold - range_mu_otsu;
 		otsu_binary_msg.analysis[r_g].otsubinary_diff_from_thresholds_avr = sqrt(diff * diff);
@@ -263,6 +263,7 @@ void IntensityPartition::calc_otsu_binary(void)
 	
 	// calc separation
 	for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
+		std::cout << "----r_g = " << r_g << "----" << std::endl;
 		for(int i_threshold = 1; i_threshold < (int)intensity_max[r_g]; i_threshold++){
 			/* var.grass[r_g][i_threshold-1] = calc_variance(histogram, r_g, i_threshold, GRASS); */
 			/* var.asphalt[r_g][i_threshold-1] = calc_variance(histogram, r_g, i_threshold, ASPHALT); */
@@ -277,7 +278,14 @@ void IntensityPartition::calc_otsu_binary(void)
 			num.asphalt[i_threshold-1][r_g] = (float)n_asphalt;
 			avr.grass[i_threshold-1][r_g] = avr_grass;
 			avr.asphalt[i_threshold-1][r_g] = avr_asphalt;
-
+			
+			printf("%d", i_threshold);
+			int i = 0;
+			while(i < histogram[i_threshold][r_g]){
+				printf("*");
+				i++;
+			}
+			printf("\n");
 		}
 	}	
 		// calc whole variance
@@ -296,12 +304,12 @@ void IntensityPartition::calc_otsu_binary(void)
 	// calc variance between and within
 	struct WB var_wb;
 	for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
-		for(int i_threshold = 1; i_threshold < (int)intensity_max[r_g]; i_threshold++){
-			float ng = (float)num.grass[i_threshold-1][r_g];
-			float na = (float)num.asphalt[i_threshold-1][r_g];
-			var_wb.within = (ng * var.grass[i_threshold-1][r_g] + na * var.asphalt[i_threshold-1][r_g]) / (ng + na);
-			float diff_mg = avr.grass[i_threshold-1][r_g] - avr_all[r_g];
-			float diff_ma = avr.asphalt[i_threshold-1][r_g] - avr_all[r_g];
+		for(int i_threshold = 1; i_threshold < (int)intensity_max[r_g] - 1 ; i_threshold++){
+			float ng = (float)num.grass[i_threshold][r_g];
+			float na = (float)num.asphalt[i_threshold][r_g];
+			var_wb.within = (ng * var.grass[i_threshold][r_g] + na * var.asphalt[i_threshold][r_g]) / (ng + na);
+			float diff_mg = avr.grass[i_threshold][r_g] - avr_all[r_g];
+			float diff_ma = avr.asphalt[i_threshold][r_g] - avr_all[r_g];
 			var_wb.between = (ng * diff_mg * diff_mg + na * diff_ma * diff_ma) / (ng + na);
 			float s_tmp = var_wb.between / var_wb.within;
 			
@@ -317,6 +325,7 @@ void IntensityPartition::calc_otsu_binary(void)
 		}else{
 			otsu_binary_msg.intensity[r_g].threshold = otsu_threshold_tmp[r_g];
 			otsu_binary_msg.analysis[r_g].separation = s_max[r_g];
+			std::cout << "threshold[" << r_g << "] = " << otsu_binary_msg.intensity[r_g].threshold << std::endl;
 			std::cout << "separation[" << r_g << "] = " << otsu_binary_msg.analysis[r_g].separation << std::endl;
 		}
 				
@@ -367,7 +376,7 @@ pcl::PointCloud<pcl::PointXYZI>::Ptr IntensityPartition::otsu_pc_generator(void)
 					/* && ((otsu_threshold_tmp[r_g] - 1.0 > polar_grid_avr_intensity[RG][THETAG]) */
 					&& ((otsu_threshold_tmp[r_g] > pt.intensity)
 						//|| (otsu_binary_msg.analysis[r_g].otsubinary_diff_from_thresholds_avr > OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD_)
-						|| (otsu_binary_msg.analysis[r_g].separation < OTSU_BINARY_SEPARATION_THRESHOLD_)
+						|| (otsu_binary_msg.analysis[r_g].separation < OTSU_BINARY_SEPARATION_THRESHOLD_ && 1 < otsu_binary_msg.analysis[r_g].separation)
 						)){
 					pt.intensity = -1.0;
 				}
@@ -385,7 +394,7 @@ pcl::PointCloud<pcl::PointXYZI>::Ptr IntensityPartition::otsu_pc_generator(void)
 	CloudIPtr filtered_pc_ {new CloudI};
 	pass.setInputCloud(polar_pc_);
 	pass.setFilterFieldName ("intensity");
-	pass.setFilterLimits(7.9, intensity_max_all);
+	pass.setFilterLimits(16.0, intensity_max_all);
 	//pass.setFilterLimitsNegative (true);
 	pass.filter(*filtered_pc_);
 
