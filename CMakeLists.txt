@@ -158,6 +158,9 @@ add_library(libroad_recognizer
 add_library(make_image
   src/make_image.cpp
 )
+add_library(libintersection_detector
+  src/intersection_detector.cpp
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -167,6 +170,7 @@ add_dependencies(libroad_cloud_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${c
 add_dependencies(libroad_point_cloud_storer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(libroad_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(make_image ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(libintersection_detector ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 # add_dependencies(intensity_partition ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}) # added by nagai
 
@@ -180,6 +184,7 @@ add_executable(road_recognizer src/road_recognizer_node.cpp)
 add_executable(intensity_partition src/intensity_partition.cpp) # added by nagai
 add_executable(old_intensity_partition src/old_intensity_partition.cpp) # added by nagai
 add_executable(make_image_node src/make_image_node.cpp)
+add_executable(intersection_detector src/intersection_detector_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -196,6 +201,7 @@ add_dependencies(road_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 add_dependencies(intensity_partition ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}) # added by nagai
 add_dependencies(old_intensity_partition ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}) # added by nagai
 add_dependencies(make_image_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(intersection_detector ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
@@ -229,6 +235,11 @@ target_link_libraries(make_image_node
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
   ${OpenCV_LIBRARIES}
+)
+target_link_libraries(intersection_detector
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+  libintersection_detector
 )
 
 #############
