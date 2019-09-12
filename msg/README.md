@@ -18,11 +18,11 @@
   - the messages about analysis of otsu binarization
 
 ### Intensity.msg
-- threshold
+- float32 threshold
   - the threshold for classifing point cloud on the grass
-- min
+- float32 min
   - the value of minimum intensity of obtained points
-- max
+- float32 max
   - the value of maximum intensity of obtained points
 
 ### Analysis.msg
