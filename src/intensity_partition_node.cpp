@@ -1,11 +1,12 @@
 #include "road_recognizer/intensity_partition.h"
 
-IntensityPartition::IntensityPartition(int range_division_num, int theta_division_num, float range_max
+IntensityPartition::IntensityPartition(int range_division_num, int theta_division_num, float range_max, float peak_diff_threshold
 									, float otsu_binary_separation_threshold, float otsu_binary_diff_from_avr_threshold, float otsu_binary_sum_of_diff_from_avr_threshold)
 {
 	RANGE_DIVISION_NUM_ = range_division_num;
 	THETA_DIVISION_NUM_ = theta_division_num;
 	RANGE_MAX_ = range_max;
+	PEAK_DIFF_THRESHOLD_ = peak_diff_threshold;
 	OTSU_BINARY_SEPARATION_THRESHOLD_ = otsu_binary_separation_threshold;
 	OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD_ = otsu_binary_sum_of_diff_from_avr_threshold;
 	OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD_ = otsu_binary_diff_from_avr_threshold;
@@ -39,7 +40,8 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::execution(CloudIP
 		pt.normal_y = 0.0;
 		pt.normal_z = 0.0;
 	}
-	
+
+	peak_filter.clear();
 	ptz_list.clear();
 	intensity_max.clear();
 	intensity_min.clear();
@@ -68,6 +70,7 @@ void IntensityPartition::initialize(void)
 		polar_grid_sum_intensity_row.push_back(0.0);
 	}
 	for(int j = 0; j < RANGE_DIVISION_NUM_; j++){
+		peak_filter.push_back(false);
 		polar_grid_pt_cnt.push_back(polar_grid_pt_cnt_row);
 		polar_grid_avr_intensity.push_back(polar_grid_avr_intensity_row);
 		polar_grid_sum_intensity.push_back(polar_grid_sum_intensity_row);
@@ -192,7 +195,7 @@ void IntensityPartition::calc_diff_from_avr(void)
 		range_sum_otsu += otsu_binary_msg.intensity[r_g].threshold;
 	}
 	float range_mu_otsu = range_sum_otsu / (RANGE_DIVISION_NUM_);
-	std::cout << "range_mu_otsu : " << range_mu_otsu <<std::endl;
+	/* std::cout << "range_mu_otsu : " << range_mu_otsu <<std::endl; */
 	for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
 		float diff = otsu_binary_msg.intensity[r_g].threshold - range_mu_otsu;
 		otsu_binary_msg.analysis[r_g].otsubinary_diff_from_thresholds_avr = sqrt(diff * diff);
@@ -208,9 +211,20 @@ void IntensityPartition::emergency_judge(void)
 	for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
 		sum_diff_from_avr += otsu_binary_msg.analysis[r_g].otsubinary_diff_from_thresholds_avr;
 	}
-	if(sum_diff_from_avr > OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD_){
+	if(sum_diff_from_avr < OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD_){
 		otsu_binary_msg.emergency = true;
 	}
+}
+
+void IntensityPartition::separated_histogram_peak_filter(float avr_grass, float avr_asphalt, int r_g){
+	/* std::cout << "r_g : " << r_g << std::endl; */
+	/* std::cout << "fabs(avr_grass - avr_asphalt) = " << fabs(avr_grass - avr_asphalt) << std::endl; */
+	if(fabs(avr_grass - avr_asphalt) <= PEAK_DIFF_THRESHOLD_){
+		peak_filter[r_g] = true;
+	}else{
+		peak_filter[r_g] = false;
+	}
+	/* std::cout << "peak_filter:" << peak_filter[r_g] << std::endl; */
 }
 
 
@@ -260,25 +274,28 @@ void IntensityPartition::calc_otsu_binary(void)
 		}
 	}
 	
-	
+	/* //delete outlier */
+	/* for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){ */
+	/* 	for(int intensity = 0; intensity < (int)intensity_max[r_g]; intensity++){ */
+	/* 		if(histogram[intensity][r_g] <= 1){ */
+	/* 			histogram[intensity][r_g] = 0; */
+	/* 		} */
+	/* 	} */
+	/* } */
+
+
 	// calc separation
 	for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
-		std::cout << "----r_g = " << r_g << "----" << std::endl;
+		/* std::cout << "----r_g = " << r_g << "----" << std::endl; */
 		for(int i_threshold = 1; i_threshold < (int)intensity_max[r_g]; i_threshold++){
-			/* var.grass[r_g][i_threshold-1] = calc_variance(histogram, r_g, i_threshold, GRASS); */
-			/* var.asphalt[r_g][i_threshold-1] = calc_variance(histogram, r_g, i_threshold, ASPHALT); */
-			/* num.grass[r_g][i_threshold-1] = (float)n_grass; */
-			/* num.asphalt[r_g][i_threshold-1] = (float)n_asphalt; */
-			/* avr.grass[r_g][i_threshold-1] = avr_grass; */
-			/* avr.asphalt[r_g][i_threshold-1] = avr_asphalt; */
-			
 			var.grass[i_threshold-1][r_g] = calc_variance(histogram, r_g, i_threshold, GRASS);
 			var.asphalt[i_threshold-1][r_g] = calc_variance(histogram, r_g, i_threshold, ASPHALT);
 			num.grass[i_threshold-1][r_g] = (float)n_grass;
 			num.asphalt[i_threshold-1][r_g] = (float)n_asphalt;
 			avr.grass[i_threshold-1][r_g] = avr_grass;
 			avr.asphalt[i_threshold-1][r_g] = avr_asphalt;
-			
+		
+			/*
 			printf("%d", i_threshold);
 			int i = 0;
 			while(i < histogram[i_threshold][r_g]){
@@ -286,6 +303,7 @@ void IntensityPartition::calc_otsu_binary(void)
 				i++;
 			}
 			printf("\n");
+			*/
 		}
 	}	
 		// calc whole variance
@@ -304,7 +322,7 @@ void IntensityPartition::calc_otsu_binary(void)
 	// calc variance between and within
 	struct WB var_wb;
 	for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
-		for(int i_threshold = 1; i_threshold < (int)intensity_max[r_g] - 1 ; i_threshold++){
+		for(int i_threshold = 0; i_threshold < (int)intensity_max[r_g]; i_threshold++){
 			float ng = (float)num.grass[i_threshold][r_g];
 			float na = (float)num.asphalt[i_threshold][r_g];
 			var_wb.within = (ng * var.grass[i_threshold][r_g] + na * var.asphalt[i_threshold][r_g]) / (ng + na);
@@ -325,10 +343,10 @@ void IntensityPartition::calc_otsu_binary(void)
 		}else{
 			otsu_binary_msg.intensity[r_g].threshold = otsu_threshold_tmp[r_g];
 			otsu_binary_msg.analysis[r_g].separation = s_max[r_g];
-			std::cout << "threshold[" << r_g << "] = " << otsu_binary_msg.intensity[r_g].threshold << std::endl;
-			std::cout << "separation[" << r_g << "] = " << otsu_binary_msg.analysis[r_g].separation << std::endl;
+			/* std::cout << "threshold[" << r_g << "] = " << otsu_binary_msg.intensity[r_g].threshold << std::endl; */
+			/* std::cout << "separation[" << r_g << "] = " << otsu_binary_msg.analysis[r_g].separation << std::endl; */
 		}
-				
+		separated_histogram_peak_filter(avr.grass[otsu_binary_msg.intensity[r_g].threshold][r_g], avr.asphalt[otsu_binary_msg.intensity[r_g].threshold][r_g], r_g);
 	}
 	
 	// calc threshold histogram in range
@@ -337,64 +355,41 @@ void IntensityPartition::calc_otsu_binary(void)
 	// judge emergency
 	emergency_judge();
 	
-	//sum_all.clear();
-	//avr_all.clear();
-	//diff_all.clear();
-	//sum_tmp1.clear();
-	//multi_sum_all.clear();
 	r_res_array.clear();
 	var_num_avr_row.clear();
-	//var.grass.clear();
-	//num.grass.clear();
-	//avr.grass.clear();
-	//var.asphalt.clear();
-	//num.asphalt.clear();
-	//avr.asphalt.clear();
 	histogram.clear();
 }
 
 
 
-//CloudIPtr IntensityPartition::otsu_pc_generator(void)
 pcl::PointCloud<pcl::PointXYZI>::Ptr IntensityPartition::otsu_pc_generator(void)
 {
 	size_t iz = 0;
 	for(auto& pt : polar_pc_->points){
-		/*
-		int RG = sqrt(pt.x * pt.x + pt.y * pt.y) / dR;
-		int thetag = atan2(pt.y,pt.x);
-		if(thetag < 0){
-			thetag = 2 * M_PI + thetag;
-		}
-		int THETAG = thetag / dTheta;
-		*/
-
 		for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
-			//for(int theta_g = 0; theta_g < THETA_DIVISION_NUM; theta_g++){
-				//if(((float)r_g <= pt.z && pt.z < (float)r_g+dR) && ((float)theta_g <= thetag && thetag < (float)theta_g + dTheta)
-				if(((float)r_g <= pt.z && pt.z < (float)r_g+dR)
-					/* && ((otsu_threshold_tmp[r_g] - 1.0 > polar_grid_avr_intensity[RG][THETAG]) */
-					&& ((otsu_threshold_tmp[r_g] > pt.intensity)
-						//|| (otsu_binary_msg.analysis[r_g].otsubinary_diff_from_thresholds_avr > OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD_)
-						|| (otsu_binary_msg.analysis[r_g].separation < OTSU_BINARY_SEPARATION_THRESHOLD_ && 1 < otsu_binary_msg.analysis[r_g].separation)
-						)){
-					pt.intensity = -1.0;
-				}
-			//}
+			if(((float)r_g <= pt.z && pt.z < (float)r_g+dR)
+				&& (otsu_threshold_tmp[r_g] > pt.intensity
+					//|| (otsu_binary_msg.analysis[r_g].otsubinary_diff_from_thresholds_avr > OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD_)
+					|| (otsu_binary_msg.analysis[r_g].separation < OTSU_BINARY_SEPARATION_THRESHOLD_ && 1 < otsu_binary_msg.analysis[r_g].separation)
+					|| peak_filter[r_g]
+			   		)
+				){
+				pt.intensity = -1.0;
+			}
 		}
 		pt.z = ptz_list.at(iz);
 		iz++;
 	}
 	
 	if(otsu_binary_msg.emergency){
-		intensity_max_all = 0.0;
+		//intensity_max_all = 0.0;
 	}
 
 	pcl::PassThrough<PointI> pass;
 	CloudIPtr filtered_pc_ {new CloudI};
 	pass.setInputCloud(polar_pc_);
 	pass.setFilterFieldName ("intensity");
-	pass.setFilterLimits(16.0, intensity_max_all);
+	pass.setFilterLimits(10.0, intensity_max_all);
 	//pass.setFilterLimitsNegative (true);
 	pass.filter(*filtered_pc_);
 
