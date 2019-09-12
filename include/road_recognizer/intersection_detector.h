@@ -24,7 +24,6 @@ public:
     double width;
     double angle;
     double angle_diff;
-    bool erase_flag;
 
 private:
 };
@@ -38,13 +37,15 @@ public:
     void search_peaks(const std::vector<double>&, double, std::vector<Peak>&);
     void set_peak_attribute(const std::vector<double>&, std::vector<Peak>&);
     void visualize_beam(const std::vector<double>&, const std::vector<Peak>&);
-    void clean_peaks(std::vector<Peak>&);
+    void clean_peaks(std::vector<int>&, std::vector<Peak>&);
     void process(void);
 
 private:
     double EPSILON1;
     double EPSILON2_DIV;
     double EPSILON3;
+    double MIN_RANGE;
+    double MIN_WIDTH;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

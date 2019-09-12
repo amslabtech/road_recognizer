@@ -6,7 +6,6 @@ Peak::Peak(void)
     width = 0;
     angle = 0;
     angle_diff = 0;
-    erase_flag = false;
 }
 
 Peak::Peak(int index_)
@@ -15,7 +14,6 @@ Peak::Peak(int index_)
     width = 0;
     angle = 0;
     angle_diff = 0;
-    erase_flag = false;
 }
 
 bool Peak::operator==(const Peak& p) const
@@ -36,11 +34,16 @@ IntersectionDetector::IntersectionDetector(void)
 
     local_nh.param("EPSILON1", EPSILON1, {0.25});
     local_nh.param("EPSILON2_DIV", EPSILON2_DIV, {8});
-    local_nh.param("EPSILON3", EPSILON3, {0.8});
+    local_nh.param("EPSILON3", EPSILON3, {0.95});
+    local_nh.param("MIN_RANGE", MIN_RANGE, {10.0});
+    local_nh.param("MIN_WIDTH", MIN_WIDTH, {0.8});
+
     std::cout << "=== intersection_detector ===" << std::endl;
     std::cout << "EPSILON1: " << EPSILON1 << std::endl;
     std::cout << "EPSILON2_DIV: " << EPSILON2_DIV << std::endl;
     std::cout << "EPSILON3: " << EPSILON3 << std::endl;
+    std::cout << "MIN_RANGE: " << MIN_RANGE << std::endl;
+    std::cout << "MIN_WIDTH: " << MIN_WIDTH << std::endl;
 }
 
 void IntersectionDetector::beam_callback(const std_msgs::Float64MultiArrayConstPtr& msg)
@@ -59,14 +62,14 @@ void IntersectionDetector::beam_callback(const std_msgs::Float64MultiArrayConstP
         const double MAX_RANGE = *(std::max_element(beam_ranges.begin(), beam_ranges.end()));
         std::cout << "max beam range: " << MAX_RANGE << std::endl;
 
-        // int start_index = 0;
-        // for(;start_index<N;start_index++){
-        //     if(beam_ranges[start_index] < AVG_RANGE){
-        //         break;
-        //     }
-        // }
-        // std::rotate(beam_ranges.begin(), beam_ranges.begin() + start_index, beam_ranges.end());
-        // std::cout << "start index: " << start_index << std::endl;
+        int start_index = 0;
+        for(;start_index<N;start_index++){
+            if(beam_ranges[start_index] < AVG_RANGE){
+                break;
+            }
+        }
+        std::rotate(beam_ranges.begin(), beam_ranges.begin() + start_index, beam_ranges.end());
+        std::cout << "start index: " << start_index << std::endl;
 
         std::vector<Peak> peak_list;
         search_peaks(beam_ranges, AVG_RANGE, peak_list);
@@ -108,53 +111,41 @@ void IntersectionDetector::beam_callback(const std_msgs::Float64MultiArrayConstP
             int i1 = peak_list[i].index;
             int i2 = peak_list[j].index;
             if(abs(i1 - i2) < EPSILON2){
-                std::cout << i1 << " and " << i2 << std::endl;
+                // std::cout << i1 << " and " << i2 << std::endl;
                 // std::cout << "merged: " << i1 << " & " << i2 << std::endl;
                 if(peak_list[i].width > peak_list[j].width){
                     peak_list[j] = peak_list[i];
-                    peak_list[j].erase_flag = true;
-                    std::cout << "merge into " << i1 << " :width" << std::endl;
+                    // std::cout << "merge into " << i1 << " :width" << std::endl;
                     erase_list.push_back(i2);
                 }else if(peak_list[i].width < peak_list[j].width){
                     peak_list[i] = peak_list[j];
-                    peak_list[i].erase_flag = true;
-                    std::cout << "merge into " << i2 << " :width" << std::endl;
+                    // std::cout << "merge into " << i2 << " :width" << std::endl;
                     erase_list.push_back(i1);
                 }else{
                     if(beam_ranges[peak_list[i].index] > beam_ranges[peak_list[j].index]){
                         peak_list[j] = peak_list[i];
-                        peak_list[j].erase_flag = true;
-                        std::cout << "merge into " << i1 << " :range" << std::endl;
+                        // std::cout << "merge into " << i1 << " :range" << std::endl;
                         erase_list.push_back(i2);
                     }else if(beam_ranges[peak_list[i].index] < beam_ranges[peak_list[j].index]){
                         peak_list[i] = peak_list[j];
-                        peak_list[i].erase_flag = true;
-                        std::cout << "merge into " << i2 << " :range" << std::endl;
+                        // std::cout << "merge into " << i2 << " :range" << std::endl;
                         erase_list.push_back(i1);
                     }else{
                         if(peak_list[i].angle_diff > peak_list[j].angle_diff){
                             peak_list[i] = peak_list[j];
-                            peak_list[i].erase_flag = true;
-                            std::cout << "merge into " << i2 << " :angle_diff" << std::endl;
+                            // std::cout << "merge into " << i2 << " :angle_diff" << std::endl;
                             erase_list.push_back(i1);
                         }else{
                             peak_list[j] = peak_list[i];
-                            peak_list[j].erase_flag = true;
-                            std::cout << "merge into " << i1 << " :angle_diff" << std::endl;
+                            // std::cout << "merge into " << i1 << " :angle_diff" << std::endl;
                             erase_list.push_back(i2);
                         }
                     }
                 }
             }
         }
-        clean_peaks(peak_list);
-        // for(auto it=peak_list.begin();it!=peak_list.end();){
-        //     if(std::find(erase_list.begin(), erase_list.end(), it->index) == erase_list.end()){
-        //         it = peak_list.erase(it);
-        //     }else{
-        //         ++it;
-        //     }
-        // }
+        clean_peaks(erase_list, peak_list);
+
         std::cout << "peak candidates: " << std::endl;;
         for(auto it=peak_list.begin();it!=peak_list.end();++it){
             std::cout << it->index << ", " << it->width << ", " << it->angle << ", " << it->angle_diff << ", " << beam_ranges[it->index] << std::endl;;
@@ -175,14 +166,33 @@ void IntersectionDetector::beam_callback(const std_msgs::Float64MultiArrayConstP
             double d_avg = d_sum / (double)(i2 - i1 + 1);
             double depth = 2 * d_avg / (double)(beam_ranges[i1] + beam_ranges[i2%N]);
             if(depth > EPSILON3){
-                peak_list[i].erase_flag = true;
+                erase_list.push_back(i1);
+                erase_list.push_back(i2);
             }
         }
-        clean_peaks(peak_list);
+        clean_peaks(erase_list, peak_list);
+
+        //remove peak having width smaller than MIN_WIDTH
+        std::cout << "erase not wide peak" << std::endl;
+        for(int i=0;i<peak_num;i++){
+            if(peak_list[i].width < MIN_WIDTH){
+                // std::cout << "beam " << peak_list[i].index << " will be erased" << std::endl;
+                erase_list.push_back(peak_list[i].index);
+            }
+        }
+        clean_peaks(erase_list, peak_list);
+
         std::cout << "result peaks: " << std::endl;
         for(auto it=peak_list.begin();it!=peak_list.end();++it){
             std::cout << it->index << ", " << it->width << ", " << it->angle << ", " << it->angle_diff << ", " << beam_ranges[it->index] << std::endl;;
         }
+
+        // restore indices
+        std::rotate(beam_ranges.rbegin(), beam_ranges.rbegin() + start_index, beam_ranges.rend());
+        for(auto it=peak_list.begin();it!=peak_list.end();++it){
+            it->index = (it->index + start_index) % N;
+        }
+
         visualize_beam(beam_ranges, peak_list);
     }else{
         std::cout << "\033[31mbeam_ranges is empty\033[0m" << std::endl;
@@ -195,7 +205,7 @@ void IntersectionDetector::search_peaks(const std::vector<double>& beam_ranges, 
     peak_list.clear();
     const int N = beam_ranges.size();
     for(int i=0;i<N;i++){
-        if(beam_ranges[i] > avg){
+        if(beam_ranges[i] > avg && beam_ranges[i] > MIN_RANGE){
             // std::cout << "i=" << i << std::endl;
             // std::cout << (i - 1 + N) % N << ": " << beam_ranges[(i - 1 + N) % N] << std::endl;
             // std::cout << i << ": " << beam_ranges[i] << std::endl;
@@ -239,7 +249,7 @@ void IntersectionDetector::set_peak_attribute(const std::vector<double>& beam_ra
         double dr = beam_ranges[br];
         it->angle = abs(bl - br) * D_THETA;
         it->angle = fabs(atan2(sin(it->angle), cos(it->angle)));
-        std::cout << bl << " -> " << it->index << " -> " << br << std::endl;
+        // std::cout << bl << " -> " << it->index << " -> " << br << std::endl;
         it->width = 0.5 * (dl + dr) * it->angle;
         if(bl >= br){
             it->angle_diff = D_THETA * abs((bl + br) * 0.5 - it->index);
@@ -292,17 +302,19 @@ void IntersectionDetector::visualize_beam(const std::vector<double>& beam_ranges
     beam_pub.publish(beam_marker);
 }
 
-void IntersectionDetector::clean_peaks(std::vector<Peak>& peak_list)
+void IntersectionDetector::clean_peaks(std::vector<int>& erase_list, std::vector<Peak>& peak_list)
 {
     std::cout << "cleaning" << std::endl;
     for(auto it=peak_list.begin();it!=peak_list.end();){
-        std::cout << it->index << ", " << it->width << ", " << it->angle << ", " << it->angle_diff << ", " << it->erase_flag << std::endl;;
-        if(it->erase_flag == true){
+        // if index is found
+        if(std::find(erase_list.begin(), erase_list.end(), it->index) != erase_list.end()){
             it = peak_list.erase(it);
         }else{
             ++it;
         }
     }
+    erase_list.clear();
+    peak_list.erase(std::unique(peak_list.begin(), peak_list.end()), peak_list.end());
 }
 
 void IntersectionDetector::process(void)
