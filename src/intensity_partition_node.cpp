@@ -240,25 +240,16 @@ void IntensityPartition::calc_otsu_binary(void)
 		var_num_avr_row.push_back(0.0);
 	}
 		
-	
 	for(int i = 0; i < histogram_size; i++){
 		histogram.push_back(r_res_array);
-		// var.grass[i].push_back(var_num_avr_row);
-		// num.grass[i].push_back(var_num_avr_row);
-		// avr.grass[i].push_back(var_num_avr_row);
-		// var.asphalt[i].push_back(var_num_avr_row);
-		// num.asphalt[i].push_back(var_num_avr_row);
-		// avr.asphalt[i].push_back(var_num_avr_row);
-		
 		var.grass[i] = var_num_avr_row;
 		num.grass[i] = var_num_avr_row;
 		avr.grass[i] = var_num_avr_row;
 		var.asphalt[i] = var_num_avr_row;
 		num.asphalt[i] = var_num_avr_row;
 		avr.asphalt[i] = var_num_avr_row;
-
 	}
-	
+
 	// make histogram
 	for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
 		for(int theta_g = 0; theta_g < THETA_DIVISION_NUM_; theta_g++){
@@ -306,11 +297,11 @@ void IntensityPartition::calc_otsu_binary(void)
 	struct WB var_wb;
 	for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
 		for(int i_threshold = 1; i_threshold < (int)intensity_max[r_g]; i_threshold++){
-			float ng = (float)num.grass[r_g][i_threshold-1];
-			float na = (float)num.asphalt[r_g][i_threshold-1];
-			var_wb.within = (ng * var.grass[r_g][i_threshold-1] + na * var.asphalt[r_g][i_threshold-1]) / (ng + na);
-			float diff_mg = avr.grass[r_g][i_threshold-1] - avr_all[r_g];
-			float diff_ma = avr.asphalt[r_g][i_threshold-1] - avr_all[r_g];
+			float ng = (float)num.grass[i_threshold-1][r_g];
+			float na = (float)num.asphalt[i_threshold-1][r_g];
+			var_wb.within = (ng * var.grass[i_threshold-1][r_g] + na * var.asphalt[i_threshold-1][r_g]) / (ng + na);
+			float diff_mg = avr.grass[i_threshold-1][r_g] - avr_all[r_g];
+			float diff_ma = avr.asphalt[i_threshold-1][r_g] - avr_all[r_g];
 			var_wb.between = (ng * diff_mg * diff_mg + na * diff_ma * diff_ma) / (ng + na);
 			float s_tmp = var_wb.between / var_wb.within;
 			
@@ -326,6 +317,7 @@ void IntensityPartition::calc_otsu_binary(void)
 		}else{
 			otsu_binary_msg.intensity[r_g].threshold = otsu_threshold_tmp[r_g];
 			otsu_binary_msg.analysis[r_g].separation = s_max[r_g];
+			std::cout << "separation[" << r_g << "] = " << otsu_binary_msg.analysis[r_g].separation << std::endl;
 		}
 				
 	}
