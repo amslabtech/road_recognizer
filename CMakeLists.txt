@@ -14,6 +14,9 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   sensor_msgs
   tf
+  message_generation
+  cv_bridge
+  amsl_navigation_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -26,6 +29,7 @@ endif()
 
 find_package(Eigen3 REQUIRED COMPONENTS system)
 find_package(PCL 1.8 REQUIRED)
+find_package(OpenCV REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -57,11 +61,13 @@ find_package(PCL 1.8 REQUIRED)
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files(
+	FILES
+	OtsuBinary.msg
+	Analysis.msg
+	Intensity.msg
+	Distribution.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -78,10 +84,10 @@ find_package(PCL 1.8 REQUIRED)
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+generate_messages(
+	DEPENDENCIES
+	std_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -115,7 +121,7 @@ find_package(PCL 1.8 REQUIRED)
 catkin_package(
    INCLUDE_DIRS include
 #  LIBRARIES road_recognizer
-#  CATKIN_DEPENDS pcl_ros roscpp rospy std_msgs
+	CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -129,6 +135,7 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 link_directories(${PCL_LIBRARY_DIRS})
@@ -140,12 +147,19 @@ add_definitions(${PCL_DEFINITIONS})
 # )
 add_library(libroad_cloud_publisher
   src/road_cloud_publisher.cpp
+  src/intensity_partition_node.cpp
 )
 add_library(libroad_point_cloud_storer
   src/road_point_cloud_storer.cpp
 )
 add_library(libroad_recognizer
   src/road_recognizer.cpp
+)
+add_library(make_image
+  src/make_image.cpp
+)
+add_library(libintersection_detector
+  src/intersection_detector.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -155,6 +169,10 @@ add_library(libroad_recognizer
 add_dependencies(libroad_cloud_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(libroad_point_cloud_storer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(libroad_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(make_image ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(libintersection_detector ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+# add_dependencies(intensity_partition ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}) # added by nagai
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
@@ -163,6 +181,10 @@ add_dependencies(libroad_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin
 add_executable(road_cloud_publisher src/road_cloud_publisher_node.cpp)
 add_executable(road_point_cloud_storer src/road_point_cloud_storer_node.cpp)
 add_executable(road_recognizer src/road_recognizer_node.cpp)
+add_executable(intensity_partition src/intensity_partition.cpp) # added by nagai
+add_executable(old_intensity_partition src/old_intensity_partition.cpp) # added by nagai
+add_executable(make_image_node src/make_image_node.cpp)
+add_executable(intersection_detector src/intersection_detector_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -176,6 +198,10 @@ add_executable(road_recognizer src/road_recognizer_node.cpp)
 add_dependencies(road_cloud_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(road_point_cloud_storer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(road_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(intensity_partition ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}) # added by nagai
+add_dependencies(old_intensity_partition ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}) # added by nagai
+add_dependencies(make_image_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(intersection_detector ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
@@ -195,6 +221,25 @@ target_link_libraries(road_recognizer
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
   libroad_recognizer
+)
+target_link_libraries(intensity_partition
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+)
+target_link_libraries(old_intensity_partition
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+)
+target_link_libraries(make_image_node
+  make_image
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+)
+target_link_libraries(intersection_detector
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+  libintersection_detector
 )
 
 #############
@@ -252,3 +297,4 @@ if(CATKIN_ENABLE_TESTING)
   )
   target_link_libraries(road_recognizer_test ${catkin_LIBRARIES})
 endif()
+

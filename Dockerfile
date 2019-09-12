@@ -8,6 +8,7 @@ RUN apt update
 
 RUN apt install -y ros-melodic-tf* \
                    ros-melodic-pcl-ros \
+				   ros-melodic-cv-bridge \ 
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /root
@@ -29,3 +30,5 @@ RUN ln -sf /usr/include/eigen3/Eigen /usr/include/Eigen
 
 # clone repository
 WORKDIR /root
+
+RUN cd catkin_ws/src && git clone https://github.com/amslabtech/amsl_navigation_managers --depth=1
