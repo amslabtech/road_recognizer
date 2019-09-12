@@ -11,14 +11,34 @@
 #include <std_msgs/Float64MultiArray.h>
 #include <visualization_msgs/Marker.h>
 
+class Peak
+{
+public:
+    Peak(void);
+    Peak(int);
+
+    bool operator==(const Peak&) const;
+    bool operator!=(const Peak&) const;
+
+    int index;
+    double width;
+    double angle;
+    double angle_diff;
+    bool erase_flag;
+
+private:
+};
+
 class IntersectionDetector
 {
 public:
     IntersectionDetector(void);
 
     void beam_callback(const std_msgs::Float64MultiArrayConstPtr&);
-    void search_peaks(const std::vector<double>&, double, std::vector<int>&);
-    void visualize_beam(const std::vector<double>&, const std::vector<int>&);
+    void search_peaks(const std::vector<double>&, double, std::vector<Peak>&);
+    void set_peak_attribute(const std::vector<double>&, std::vector<Peak>&);
+    void visualize_beam(const std::vector<double>&, const std::vector<Peak>&);
+    void clean_peaks(std::vector<Peak>&);
     void process(void);
 
 private:
