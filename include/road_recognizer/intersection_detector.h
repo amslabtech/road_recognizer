@@ -9,6 +9,7 @@
 
 #include <ros/ros.h>
 #include <std_msgs/Float64MultiArray.h>
+#include <std_msgs/Bool.h>
 #include <visualization_msgs/Marker.h>
 
 class Peak
@@ -51,6 +52,7 @@ private:
     ros::NodeHandle local_nh;
     ros::Subscriber beam_sub;
     ros::Publisher beam_pub;
+    ros::Publisher intersection_flag_pub;
 };
 
 #endif// __INTERSECTION_DETECTOR_H
