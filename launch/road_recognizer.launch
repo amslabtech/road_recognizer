@@ -35,7 +35,7 @@
         <arg name="line_normal_mean_inner_product_threshold" default="0.5"/>
         <arg name="radius_for_2d_normal" default="1.0"/>
 
-        <node pkg="road_recognizer" type="road_cloud_publisher" name="road_cloud_publisher" output="screen">
+        <node pkg="road_recognizer" type="road_cloud_publisher" name="road_cloud_publisher">
             <param name="HZ" value="$(arg hz)"/>
             <param name="NORMAL_ESTIMATION_RADIUS" value="$(arg normal_estimation_radius)"/>
             <param name="LEAF_SIZE" value="$(arg leaf_size)"/>
@@ -57,7 +57,7 @@
             <param name="YAW_DIFFERENCE_THRESHOLD" value="$(arg yaw_difference_threshold)"/>
         </node>
 
-        <node pkg="road_recognizer" type="road_recognizer" name="road_recognizer" output="screen">
+        <node pkg="road_recognizer" type="road_recognizer" name="road_recognizer">
             <param name="HZ" value="$(arg hz)"/>
             <param name="LEAF_SIZE" value="$(arg leaf_size)"/>
             <param name="MAX_RANDOM_SAMPLE_SIZE" value="$(arg max_random_sample_size)"/>
@@ -78,6 +78,9 @@
             <param name="LINE_NORMAL_MEAN_INNER_PRODUCT_THRESHOLD" value="$(arg line_normal_mean_inner_product_threshold)"/>
             <param name="RADIUS_FOR_2D_NORMAL" value="$(arg radius_for_2d_normal)"/>
             <remap from="/velodyne_obstacles" to="/cloud/static"/>
+        </node>
+
+        <node pkg="road_recognizer" type="intersection_detector" name="intersection_detector">
         </node>
 
     </group>
