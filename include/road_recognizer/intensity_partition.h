@@ -30,8 +30,7 @@ public:
 	typedef pcl::PointCloud<PointINormal> CloudINormal;
 	typedef pcl::PointCloud<PointINormal>::Ptr CloudINormalPtr;
 
-
-	IntensityPartition(int, int, float, float, float, float);
+	IntensityPartition(int, int, float, float, float, float, float);
 
 	CloudINormalPtr execution(CloudIPtr);
 	void initialize(void);
@@ -40,6 +39,7 @@ public:
 	void calc_otsu_binary(void);
 	void calc_diff_from_avr(void);
 	void emergency_judge(void);
+	void separated_histogram_peak_filter(float, float, int);
 	CloudIPtr otsu_pc_generator(void);
 
 private:
@@ -49,17 +49,18 @@ private:
 	int	n_asphalt;// = 0;
 	int RANGE_DIVISION_NUM_;//= 20
 	int THETA_DIVISION_NUM_;//= 360;
+	float PEAK_DIFF_THRESHOLD_;
 	float OTSU_BINARY_SEPARATION_THRESHOLD_;// = 0.2;
 	float OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD_;// = 3.0;
 	float OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD_;// = 58.0;
 	float RANGE_MAX_;// = 20.0;
-
 	float avr_grass = 0.0, avr_asphalt = 0.0;
 	float dR;// = RANGE_MAX / (float)RANGE_DIVISION_NUM;
 	float dTheta;// = 2*M_PI / (float)THETA_DIVISION_NUM;
 	float intensity_max_all;
 	float range_mu_otsu;	
 	float otsu_range_std_deviation;	
+	std::vector<bool> peak_filter;
 	std::vector<float> intensity_max;
 	std::vector<float> intensity_min;
 	std::vector<float> s_max;//[RANGE_DIVISION_NUM]
@@ -69,7 +70,6 @@ private:
 	std::vector<float> polar_grid_sum_intensity_row;
 	std::vector<float> time_mu_otsu;//[RANGE_DIVISION_NUM];	
 	std::vector<float> ptz_list;
-	
 	std::vector<std::vector<float> > polar_grid_pt_cnt;//[RANGE_DIVISION_NUM][THETA_DIVISION_NUM];
 	std::vector<std::vector<float> > polar_grid_avr_intensity;//[RANGE_DIVISION_NUM][THETA_DIVISION_NUM];
 	std::vector<std::vector<float> > polar_grid_sum_intensity;//[RANGE_DIVISION_NUM][THETA_DIVISION_NUM];
@@ -85,7 +85,6 @@ private:
 		float within;
 		float between;
 	};
-
 	road_recognizer::OtsuBinary otsu_binary_msg; 
 };
 
