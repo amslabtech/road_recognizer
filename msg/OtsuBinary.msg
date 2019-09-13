@@ -1,0 +1,8 @@
+bool emergency
+int32 range_division_num
+int32 theta_division_num
+float32 range_max
+float32 otsubinary_separation_threshold
+float32 otsubinary_sum_of_diff_from_avr_threshold
+road_recognizer/Intensity[] intensity
+road_recognizer/Analysis[] analysis

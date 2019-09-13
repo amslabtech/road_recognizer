@@ -11,6 +11,9 @@
         <arg name="height_threshold" default="0.0"/>
         <arg name="max_random_sample_size" default="8000"/>
         <arg name="random_sample_ratio" default="0.20"/>
+        <arg name="otsu_binary_separation_threshold" default="0.5"/>
+        <arg name="otsu_binary_sum_of_diff_from_avr_threshold" default="999.9"/>
+        <arg name="peak_diff_threshold" default="12.0"/>
 
         <arg name="store_num" default="50"/>
         <arg name="position_difference_threshold" default="0.1"/>
@@ -42,6 +45,9 @@
             <param name="HEIGHT_THRESHOLD" value="$(arg height_threshold)"/>
             <param name="MAX_RANDOM_SAMPLE_SIZE" value="$(arg max_random_sample_size)"/>
             <param name="RANDOM_SAMPLE_RATIO" value="$(arg random_sample_ratio)"/>
+            <param name="OTSU_BINARY_SEPARATION_THRESHOLD" value="$(arg otsu_binary_separation_threshold)"/>
+            <param name="OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD" value="$(arg otsu_binary_sum_of_diff_from_avr_threshold)"/>
+            <param name="PEAK_DIFF_THRESHOLD" value="$(arg peak_diff_threshold)"/>
         </node>
 
         <node pkg="road_recognizer" type="road_point_cloud_storer" name="road_point_cloud_storer">
@@ -51,7 +57,7 @@
             <param name="YAW_DIFFERENCE_THRESHOLD" value="$(arg yaw_difference_threshold)"/>
         </node>
 
-        <node pkg="road_recognizer" type="road_recognizer" name="road_recognizer" output="screen">
+        <node pkg="road_recognizer" type="road_recognizer" name="road_recognizer">
             <param name="HZ" value="$(arg hz)"/>
             <param name="LEAF_SIZE" value="$(arg leaf_size)"/>
             <param name="MAX_RANDOM_SAMPLE_SIZE" value="$(arg max_random_sample_size)"/>
@@ -72,6 +78,9 @@
             <param name="LINE_NORMAL_MEAN_INNER_PRODUCT_THRESHOLD" value="$(arg line_normal_mean_inner_product_threshold)"/>
             <param name="RADIUS_FOR_2D_NORMAL" value="$(arg radius_for_2d_normal)"/>
             <remap from="/velodyne_obstacles" to="/cloud/static"/>
+        </node>
+
+        <node pkg="road_recognizer" type="intersection_detector" name="intersection_detector">
         </node>
 
     </group>

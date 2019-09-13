@@ -1,0 +1,5 @@
+float32 separation
+float32 skewness
+float32 intensity_std_deviation
+float32 otsubinary_diff_from_thresholds_avr
+road_recognizer/Distribution[] distribution
