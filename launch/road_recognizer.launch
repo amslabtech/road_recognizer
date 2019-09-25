@@ -2,10 +2,10 @@
 	
 
 <launch>
-	<!-- <node pkg="pcl_samples" name="pc_intensity2z" type="pc_intensity2z"> -->
-	<!-- 	<param name="alpha" type="double" value="0.1"/> -->
-	<!-- 	<param name="sigmoid_mode" type="bool" value="false"/> -->
-	<!-- </node> -->
+	<node pkg="pcl_samples" name="pc_intensity2z" type="pc_intensity2z">
+		<param name="alpha" type="double" value="0.1"/>
+		<param name="sigmoid_mode" type="bool" value="false"/>
+	</node>
 	
 	<group ns="recognition/road_recognizer">
         <arg name="hz" default="10"/>
