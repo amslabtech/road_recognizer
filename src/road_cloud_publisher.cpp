@@ -29,6 +29,7 @@ RoadCloudPublisher::RoadCloudPublisher(void)
     road_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("cloud/road", 1);
     obstacles_sub = nh.subscribe("/velodyne_obstacles", 1, &RoadCloudPublisher::obstacles_callback, this);
     ground_sub = nh.subscribe("/velodyne_clear", 1, &RoadCloudPublisher::ground_callback, this);
+    /* intensity2z_sub = nh.subscribe("/height_maped_intensity2z_pc", 1, &RoadCloudPublisher::height_maped_intensity2z_pc_callback, this); */
 
     obstacles_cloud = CloudXYZIPtr(new CloudXYZI);
     ground_cloud = CloudXYZIPtr(new CloudXYZI);
@@ -67,11 +68,20 @@ void RoadCloudPublisher::ground_callback(const sensor_msgs::PointCloud2ConstPtr&
     ground_cloud_updated = true;
 }
 
+
+/* void RoadCloudPublisher::height_maped_intensity2z_pc_callback(const sensor_msgs::PointCloud2ConstPtr& msg) */
+/* { */
+/* 	std::cout << "height_maped_intensity2z_pc_callback" << std::endl; */
+/*     pcl::fromROSMsg(*msg, *intensity_heightmaped_cloud_); */
+/*     intensity_heightmaped_cloud_updated = true; */
+/* } */
+
 void RoadCloudPublisher::process(void)
 {
     ros::Rate loop_rate(HZ);
 
     while(ros::ok()){
+        /* if(obstacles_cloud_updated && ground_cloud_updated && intensity_heightmaped_cloud_updated){ */
         if(obstacles_cloud_updated && ground_cloud_updated){
             double start = ros::Time::now().toSec();
             std::cout << "=== road cloud publisher ===" << std::endl;
@@ -97,6 +107,7 @@ void RoadCloudPublisher::process(void)
 
             obstacles_cloud_updated = false;
             ground_cloud_updated = false;
+			intensity_heightmaped_cloud_updated = false;
 
             std::cout << "time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
         }
@@ -198,8 +209,21 @@ void RoadCloudPublisher::filter_curvature(void)
 void RoadCloudPublisher::filter_intensity(void)
 {
 	IntensityPartition intensity_partition(RANGE_DIVISION_NUM, THETA_DIVISION_NUM, RANGE_MAX, PEAK_DIFF_THRESHOLD, OTSU_BINARY_SEPARATION_THRESHOLD, OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD, OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD);
-	
 	intensity_cloud = intensity_partition.execution(ground_cloud);
+	
+    // CloudXYZINPtr intensity_heightmaped_cloud(new CloudXYZIN);
+	// pcl::copyPointCloud(*intensity_heightmaped_cloud_, *intensity_heightmaped_cloud);
+	// for(auto& pt : intensity_heightmaped_cloud->points){
+	// 	pt.normal_x = 0;
+	// 	pt.normal_y = 0;
+	// 	pt.normal_z = 0;
+	// 	pt.curvature = 0;
+	// }
+	// std::cout << "filter_intensity" << std::endl;
+	// intensity_cloud = intensity_heightmaped_cloud;
+	// intensity_cloud->header = ground_cloud->header;
+	// intensity_heightmaped_cloud->points.clear();
+	// intensity_heightmaped_cloud_->points.clear();
 	intensity_cloud->header = ground_cloud->header;
 }
 

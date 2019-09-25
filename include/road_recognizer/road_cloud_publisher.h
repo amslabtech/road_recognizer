@@ -46,6 +46,7 @@ public:
     void process(void);
     void obstacles_callback(const sensor_msgs::PointCloud2ConstPtr&);
     void ground_callback(const sensor_msgs::PointCloud2ConstPtr&);
+    void height_maped_intensity2z_pc_callback(const sensor_msgs::PointCloud2ConstPtr&);
     void publish_clouds(void);
     void downsample(void);
     void estimate_normal(void);
@@ -75,16 +76,19 @@ private:
     ros::Publisher road_cloud_pub;
     ros::Subscriber obstacles_sub;
     ros::Subscriber ground_sub;
+    ros::Subscriber intensity2z_sub;
 
 	//IntensityPartition intensity_partition;
 
     CloudXYZIPtr obstacles_cloud;
     CloudXYZIPtr ground_cloud;
+    CloudXYZIPtr intensity_heightmaped_cloud_;
     CloudXYZINPtr curvature_cloud;
     CloudXYZINPtr intensity_cloud;
     CloudXYZINPtr road_cloud;
     bool obstacles_cloud_updated;
     bool ground_cloud_updated;
+	bool intensity_heightmaped_cloud_updated;
 
 
 	int RANGE_DIVISION_NUM;//= 20
