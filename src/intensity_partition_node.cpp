@@ -76,10 +76,6 @@ void IntensityPartition::initialize(void)
 		polar_grid_sum_intensity.push_back(polar_grid_sum_intensity_row);
 	}
 	intensity_max_all = 0.0;
-	for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
-		for(int theta_g = 0; theta_g < THETA_DIVISION_NUM_; theta_g++){
-		}
-	}
 }
 
 

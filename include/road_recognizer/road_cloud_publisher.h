@@ -20,6 +20,7 @@
 #include <pcl/filters/statistical_outlier_removal.h>
 
 #include "road_recognizer/intensity_partition.h"
+#include "road_recognizer/xmeans_clustering.h"
 
 // OMP
 #include <omp.h>

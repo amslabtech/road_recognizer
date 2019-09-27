@@ -148,6 +148,7 @@ add_definitions(${PCL_DEFINITIONS})
 add_library(libroad_cloud_publisher
   src/road_cloud_publisher.cpp
   src/intensity_partition_node.cpp
+  src/xmeans_clustering.cpp
 )
 add_library(libroad_point_cloud_storer
   src/road_point_cloud_storer.cpp
