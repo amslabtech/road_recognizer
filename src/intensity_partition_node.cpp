@@ -282,7 +282,7 @@ void IntensityPartition::calc_otsu_binary(void)
 
 	// calc separation
 	for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
-		/* std::cout << "----r_g = " << r_g << "----" << std::endl; */
+		std::cout << "----r_g = " << r_g << "----" << std::endl;
 		for(int i_threshold = 1; i_threshold < (int)intensity_max[r_g]; i_threshold++){
 			var.grass[i_threshold-1][r_g] = calc_variance(histogram, r_g, i_threshold, GRASS);
 			var.asphalt[i_threshold-1][r_g] = calc_variance(histogram, r_g, i_threshold, ASPHALT);
@@ -291,7 +291,6 @@ void IntensityPartition::calc_otsu_binary(void)
 			avr.grass[i_threshold-1][r_g] = avr_grass;
 			avr.asphalt[i_threshold-1][r_g] = avr_asphalt;
 		
-			/*
 			printf("%d", i_threshold);
 			int i = 0;
 			while(i < histogram[i_threshold][r_g]){
@@ -299,7 +298,6 @@ void IntensityPartition::calc_otsu_binary(void)
 				i++;
 			}
 			printf("\n");
-			*/
 		}
 	}	
 		// calc whole variance
@@ -339,8 +337,8 @@ void IntensityPartition::calc_otsu_binary(void)
 		}else{
 			otsu_binary_msg.intensity[r_g].threshold = otsu_threshold_tmp[r_g];
 			otsu_binary_msg.analysis[r_g].separation = s_max[r_g];
-			/* std::cout << "threshold[" << r_g << "] = " << otsu_binary_msg.intensity[r_g].threshold << std::endl; */
-			/* std::cout << "separation[" << r_g << "] = " << otsu_binary_msg.analysis[r_g].separation << std::endl; */
+			std::cout << "threshold[" << r_g << "] = " << otsu_binary_msg.intensity[r_g].threshold << std::endl;
+			std::cout << "separation[" << r_g << "] = " << otsu_binary_msg.analysis[r_g].separation << std::endl;
 		}
 		separated_histogram_peak_filter(avr.grass[otsu_binary_msg.intensity[r_g].threshold][r_g], avr.asphalt[otsu_binary_msg.intensity[r_g].threshold][r_g], r_g);
 	}
@@ -385,7 +383,7 @@ pcl::PointCloud<pcl::PointXYZI>::Ptr IntensityPartition::otsu_pc_generator(void)
 	CloudIPtr filtered_pc_ {new CloudI};
 	pass.setInputCloud(polar_pc_);
 	pass.setFilterFieldName ("intensity");
-	pass.setFilterLimits(10.0, intensity_max_all);
+	pass.setFilterLimits(0.0, intensity_max_all);
 	//pass.setFilterLimitsNegative (true);
 	pass.filter(*filtered_pc_);
 
