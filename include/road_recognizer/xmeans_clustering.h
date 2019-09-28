@@ -18,14 +18,12 @@
 #include "Eigen/Core"
 #include "Eigen/Dense"
 #include "Eigen/LU"
+#include "Eigen/Eigenvalues"
 
 
 class XmeansClustering
 {
 public:
-	typedef pcl::PointXYZ Point;
-	typedef pcl::PointCloud<Point> Cloud;
-	typedef pcl::PointCloud<Point>::Ptr CloudPtr;
 	typedef pcl::PointXYZI PointI;
 	typedef pcl::PointCloud<PointI> CloudI;
 	typedef pcl::PointCloud<PointI>::Ptr CloudIPtr;
@@ -63,11 +61,17 @@ private:
 	};
 	struct grid cells;
 
-	std::vector<CloudPtr> grid_points;
+	std::vector<int> class_counter;
+	std::vector<CloudIPtr> i_j_std_class_list;
+	std::vector<Eigen::Vector3f> centers;
+	std::vector<Eigen::Vector3f> pre_centers;
+	std::vector<Eigen::Vector3f> coordinate_sums;
 	std::vector<std::vector<int> > point_counter;
 	std::vector<std::vector<float> > intensity_sum;
 	std::vector<std::vector<float> > sum_diff_pow;
 
+	CloudIPtr i_j_std_solo_class {new CloudI};
+	CloudIPtr i_j_std_class {new CloudI};
 	CloudINormalPtr xmeans_pc {new CloudINormal};
 };
 
