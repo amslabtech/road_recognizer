@@ -19,7 +19,7 @@
 	
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/ohdanhodo.bag"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 1730"/> -->
-	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag"/> -->
+	<node pkg="rosbag" name="player" type="play" args="--clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag"/>
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 2200"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 2900"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 2733"/> -->
@@ -36,7 +36,7 @@
 
 
 
-	<node pkg="rosbag" name="player" type="play" args="--clock /home/amsl/bagfiles/cats/2018/second/2018-08-04-12-58-48.bag -s 1140"/>
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/second/2018&#45;08&#45;04&#45;12&#45;58&#45;48.bag &#45;s 1140"/> -->
 	
 	
 	

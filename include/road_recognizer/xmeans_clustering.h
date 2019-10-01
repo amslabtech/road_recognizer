@@ -14,11 +14,14 @@
 #include <pcl/filters/passthrough.h>
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
+#include <pcl/search/kdtree.h>
+#include <pcl/common/pca.h>
 
 #include "Eigen/Core"
 #include "Eigen/Dense"
 #include "Eigen/LU"
 #include "Eigen/Eigenvalues"
+#include "Eigen/Geometry"
 
 
 class XmeansClustering
@@ -36,10 +39,14 @@ public:
 	CloudINormalPtr execution(CloudIPtr);
 	void initialization(void);
 	void grid_partition(CloudIPtr not_partitioned_pc);
-	int randomization(bool, int);
-	void partitional_optimization(int, int);
-	void xmeans_clustering(int);
-	float density_function(int);
+	CloudIPtr partitional_optimization(CloudIPtr, int);
+	void xmeans_clustering(void);
+	CloudINormalPtr points_extraction(void);
+	CloudIPtr virtual_class_partition(CloudIPtr, int);
+	int randomization(int);
+	float density_function(CloudIPtr, Eigen::Vector3f, Eigen::Vector3f);
+	Eigen::Matrix3f covariance_matrix(int, CloudIPtr);
+	float bic_calculation(bool, CloudIPtr);
 	float my_pow(float);
 
 private:
@@ -61,18 +68,9 @@ private:
 	};
 	struct grid cells;
 
-	std::vector<int> class_counter;
-	std::vector<CloudIPtr> i_j_std_class_list;
-	std::vector<Eigen::Vector3f> centers;
-	std::vector<Eigen::Vector3f> pre_centers;
-	std::vector<Eigen::Vector3f> coordinate_sums;
 	std::vector<std::vector<int> > point_counter;
 	std::vector<std::vector<float> > intensity_sum;
 	std::vector<std::vector<float> > sum_diff_pow;
-
-	CloudIPtr i_j_std_solo_class {new CloudI};
-	CloudIPtr i_j_std_class {new CloudI};
-	CloudINormalPtr xmeans_pc {new CloudINormal};
 };
 
 
