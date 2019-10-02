@@ -307,6 +307,12 @@ pcl::PointCloud<pcl::PointXYZI>::Ptr XmeansClustering::virtual_class_partition(C
 }
 
 
+float XmeansClustering::maximaum_likelihood_estimation()
+{
+
+}
+
+
 float XmeansClustering::density_function(CloudIPtr i_j_std_class_ex, Eigen::Vector3f pos_data, Eigen::Vector3f mu)
 {
 	/* std::cout << "density_function" << std::endl; */
@@ -347,6 +353,7 @@ float XmeansClustering::bic_calculation(bool dash, CloudIPtr i_j_std_class_ex)
 {
 	/* std::cout << "bic_calculation" << std::endl; */
 
+	int ci_num;
 	float likelihood = 1.0;
 	float bic;
 	float alpha;
@@ -355,8 +362,14 @@ float XmeansClustering::bic_calculation(bool dash, CloudIPtr i_j_std_class_ex)
 	std::vector<Eigen::Vector3f> sum_list;
 	std::vector<CloudIPtr> ci_class_list;
 	std::vector<Eigen::Matrix3f> cov_list;
+	
+	if(!dash){
+		ci_num = 1;
+	}else{
+		ci_num = 2;
+	}
 
-	for(int ci = 0; ci < 2; ci++){
+	for(int ci = 0; ci < ci_num; ci++){
 		Eigen::Vector3f mu;
 		Eigen::Vector3f sum;
 		Eigen::Matrix3f cov;
@@ -391,23 +404,21 @@ float XmeansClustering::bic_calculation(bool dash, CloudIPtr i_j_std_class_ex)
 		cov_list.push_back(cov);
 	}
 
-	float mu_diff_norm = (mu_list[0] - mu_list[1]).norm();
-	float mu_diff_norm_pow = my_pow(mu_diff_norm);
-	beta = sqrt(mu_diff_norm_pow / cov_list[0].determinant() + cov_list[1].determinant());
-	float lower_probability = std_normal_distribution_integral(beta);
-	alpha = 0.5 / lower_probability;
-
-
 	if(!dash){
 		for(auto& position : i_j_std_class_ex->points){
 			Eigen::Vector3f pos_data;
 			pos_data << position.x, position.y, position.z;
-			likelihood *= density_function(i_j_std_class_ex, pos_data, mu);
+			likelihood *= density_function(i_j_std_class_ex, pos_data, mu_list[0]);
 		}
 		bic = -2 * log(likelihood) + 4.5 * log(i_j_std_class_ex->points.size());
 	}else{
-
-		bic = -2 * log(likelihood) + 18.0 * log(i_j_std_class_ex->points.size());
+		float mu_diff_norm = (mu_list[0] - mu_list[1]).norm();
+		float mu_diff_norm_pow = my_pow(mu_diff_norm);
+		beta = sqrt(mu_diff_norm_pow / cov_list[0].determinant() + cov_list[1].determinant());
+		float lower_probability = std_normal_distribution_integral(beta);
+		alpha = 0.5 / lower_probability;
+		
+		bic = -2 * log(likelihood) + 18.0 * log();
 	}
 
 	return bic;

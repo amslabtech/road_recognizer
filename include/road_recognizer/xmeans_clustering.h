@@ -43,6 +43,7 @@ public:
 	void xmeans_clustering(void);
 	CloudINormalPtr points_extraction(void);
 	CloudIPtr virtual_class_partition(CloudIPtr, int);
+	float log_likelihood_function();
 	float density_function(CloudIPtr, Eigen::Vector3f, Eigen::Vector3f);
 	Eigen::Matrix3f covariance_matrix(int, CloudIPtr);
 	float bic_calculation(bool, CloudIPtr);
