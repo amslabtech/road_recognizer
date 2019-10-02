@@ -1,10 +1,11 @@
 #include "road_recognizer/xmeans_clustering.h"
 
 
-XmeansClustering::XmeansClustering(bool clustering_method, int width_division_num, int height_division_num, double max_width, double max_height, double eps)
+XmeansClustering::XmeansClustering(bool clustering_method, int n, int width_division_num, int height_division_num, double max_width, double max_height, double eps)
 {
 	kmeans = false;
 	kmeans_pp = true;
+	N_ = n;
 	CLUSTERING_METHOD_ = clustering_method;
 	WIDTH_DIVISION_NUM_ = width_division_num;
 	HEIGHT_DIVISION_NUM_ = height_division_num;
@@ -392,20 +393,23 @@ float XmeansClustering::bic_calculation(bool dash, CloudIPtr i_j_std_class_ex)
 
 	float mu_diff_norm = (mu_list[0] - mu_list[1]).norm();
 	float mu_diff_norm_pow = my_pow(mu_diff_norm);
-	beta = sqrt(mu_diff_norm_pow / );
+	beta = sqrt(mu_diff_norm_pow / cov_list[0].determinant() + cov_list[1].determinant());
+	float lower_probability = std_normal_distribution_integral(beta);
+	alpha = 0.5 / lower_probability;
 
-
-	for(auto& position : i_j_std_class_ex->points){
-		Eigen::Vector3f pos_data;
-		pos_data << position.x, position.y, position.z;
-		likelihood *= density_function(i_j_std_class_ex, pos_data, mu);
-	}
 
 	if(!dash){
+		for(auto& position : i_j_std_class_ex->points){
+			Eigen::Vector3f pos_data;
+			pos_data << position.x, position.y, position.z;
+			likelihood *= density_function(i_j_std_class_ex, pos_data, mu);
+		}
 		bic = -2 * log(likelihood) + 4.5 * log(i_j_std_class_ex->points.size());
 	}else{
+
 		bic = -2 * log(likelihood) + 18.0 * log(i_j_std_class_ex->points.size());
 	}
+
 	return bic;
 }
 
@@ -419,6 +423,34 @@ int XmeansClustering::randomization(int num)
 	std::uniform_int_distribution<> rand_kpp(0, num);
 
 	return rand_kpp(mt);
+}
+
+
+float XmeansClustering::std_normal_distribution_integral(float beta)
+{
+	td::random_device rnd;
+	std::mt19937 mt(rnd());
+	std::normal_distribution<> norm(0.0, 1.0);
+	float answer = 0.0;
+	float min = 99.9
+	int n_counter = 0;
+
+	for(int n = 0; n < N_; n++){
+		float result = norm(mt);
+		float result_pow = my_pow(result);
+		if(result < beta){
+			answer += exp(-0.5 * result_pow) / sqrt(2 * M_PI);
+			n_counter++;
+		}
+		
+		if(min > result){
+			min = result;
+		}
+	}
+	
+	answer *= (beta - min) / n_counter;
+
+	return answer;
 }
 
 

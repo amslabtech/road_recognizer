@@ -34,7 +34,7 @@ public:
 	typedef pcl::PointCloud<PointINormal> CloudINormal;
 	typedef pcl::PointCloud<PointINormal>::Ptr CloudINormalPtr;
 
-	XmeansClustering(bool, int, int, double, double, double);
+	XmeansClustering(bool, int, int, int, double, double, double);
 
 	CloudINormalPtr execution(CloudIPtr);
 	void initialization(void);
@@ -43,10 +43,11 @@ public:
 	void xmeans_clustering(void);
 	CloudINormalPtr points_extraction(void);
 	CloudIPtr virtual_class_partition(CloudIPtr, int);
-	int randomization(int);
 	float density_function(CloudIPtr, Eigen::Vector3f, Eigen::Vector3f);
 	Eigen::Matrix3f covariance_matrix(int, CloudIPtr);
 	float bic_calculation(bool, CloudIPtr);
+	int randomization(int);
+	float std_normal_distribution_integral(float);
 	float my_pow(float);
 
 private:
@@ -57,6 +58,7 @@ private:
 	int HEIGHT_DIVISION_NUM_;
 	int MAX_WIDTH_;
 	int MAX_HEIGHT_;
+	int N_;
 	double dX;
 	double dY;
 	double EPS_;
