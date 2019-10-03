@@ -302,7 +302,9 @@ void MakeImage::hough_line_p(cv::Mat& image,cv::Mat& image_c)
     std::cout << "number of lines: " << lines.size() << std::endl;
     for(; it!=lines.end(); ++it) {
         cv::Vec4i l = *it;
+		std::cout << "(x, y, theta): (" << (l[0]+l[2])*0.5 << ", " << (l[1]+l[3])*0.5 << ", " << atan2(l[1]-l[3],l[0]-l[2]) << ")" << std::endl;
         cv::line(image_c, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(255,0,0), 2, CV_AA);
+    cv::circle(image_c, cv::Point(int((l[0]+l[2])*0.5),int((l[1]+l[3])*0.5)), 1, cv::Scalar(255,255,0), -1, CV_AA);
     }
 }
 
