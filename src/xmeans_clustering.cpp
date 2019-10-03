@@ -313,6 +313,7 @@ float XmeansClustering::density_function(CloudIPtr i_j_std_class_ex, Eigen::Vect
 
 	Eigen::Matrix3f cov_matrix = covariance_matrix(i_j_std_class_ex);
 	float cov_matrix_determinant = cov_matrix.determinant();
+	std::cout << "cov_matrix_determinant = " << cov_matrix_determinant << std::endl;
 	Eigen::Matrix3f cov_matrix_inverse = cov_matrix.inverse();
 	Eigen::MatrixXf cov_matrix_inverse_x(3,3);
 	cov_matrix_inverse_x << cov_matrix_inverse(0,0), cov_matrix_inverse(0,1), cov_matrix_inverse(0,2),
@@ -326,7 +327,9 @@ float XmeansClustering::density_function(CloudIPtr i_j_std_class_ex, Eigen::Vect
 	Eigen::MatrixXf eigen_dot_value(1,1);
 	eigen_dot_value << diff_from_mu_t * cov_matrix_inverse_x * diff_from_mu;
 	float dot_value = eigen_dot_value(0,0);
+	std::cout << "dot_value = " << dot_value << std::endl;
 	float distribution_density = pow(2*M_PI, -1.5) * pow(cov_matrix_determinant, -0.5) * exp(-0.5 * dot_value);
+	std::cout << "distribution_density = " << distribution_density << std::endl;
 
 	return distribution_density;
 }
@@ -339,6 +342,8 @@ Eigen::Matrix3f XmeansClustering::covariance_matrix(CloudIPtr ci_class)
 	pca.setInputCloud(ci_class);
 	Eigen::Matrix3f eigen_vectors = pca.getEigenVectors();
 	
+	std::cout << "eigen_vectors : " << std::endl;
+	std::cout << eigen_vectors << std::endl;
 	return eigen_vectors;
 }
 
@@ -404,6 +409,7 @@ float XmeansClustering::bic_calculation(bool dash, CloudIPtr i_j_std_class_ex)
 			Eigen::Vector3f pos_data;
 			pos_data << position.x, position.y, position.z;
 			likelihood *= density_function(i_j_std_class_ex, pos_data, mu_list[0]);
+			/* std::cout << "solo likelihood = " << likelihood << std::endl; */
 		}
 		bic = -2 * log(likelihood) + 4.5 * log(i_j_std_class_ex->points.size());
 	}else{
@@ -422,6 +428,7 @@ float XmeansClustering::bic_calculation(bool dash, CloudIPtr i_j_std_class_ex)
 				pos_data << position.x, position.y, position.z;
 				likelihood *= density_function(i_j_std_class_ex, pos_data, mu_list[0]);
 			}
+			/* std::cout << "likelihood[" << ci << "] = " << likelihood << std::endl; */
 			likelihood_list.push_back(likelihood);
 		}
 
