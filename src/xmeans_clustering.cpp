@@ -436,7 +436,7 @@ float XmeansClustering::bic_calculation(bool dash, CloudIPtr i_j_std_class_ex)
 			likelihood *= density_function(i_j_std_class_ex, pos_data, mu_list[0]);
 			/* std::cout << "solo likelihood = " << likelihood << std::endl; */
 		}
-		bic = -2 * log(likelihood) + 4.5 * log(i_j_std_class_ex->points.size());
+		bic = -2 * log(likelihood) + 6 * log(i_j_std_class_ex->points.size());
 	}else{
 		float mu_diff_norm = (mu_list[0] - mu_list[1]).norm();
 		float mu_diff_norm_pow = my_pow(mu_diff_norm);
@@ -459,7 +459,7 @@ float XmeansClustering::bic_calculation(bool dash, CloudIPtr i_j_std_class_ex)
 			likelihood_list.push_back(likelihood);
 		}
 
-		bic = -2 * (i_j_std_class_ex->points.size() * log(alpha) + log(likelihood_list[0]) +  log(likelihood_list[1])) + 18.0 * log(ci_class_list[0]->points.size());
+		bic = -2 * (i_j_std_class_ex->points.size() * log(alpha) + log(likelihood_list[0]) +  log(likelihood_list[1])) + 12.0 * log(ci_class_list[0]->points.size());
 	}
 
 	return bic;
