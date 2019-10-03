@@ -396,9 +396,8 @@ float XmeansClustering::bic_calculation(bool dash, CloudIPtr i_j_std_class_ex)
 
 	for(int ci = 0; ci < ci_num; ci++){
 		Eigen::Vector3f mu;
-		Eigen::Vector3f sum;
+		Eigen::Vector3f sum = Eigen::Vector3f::Zero();
 		Eigen::Matrix3f cov;
-		sum << 0.0, 0.0, 0.0;
 
 		CloudIPtr ci_class {new CloudI};
 		ci_class->points.resize(0);
