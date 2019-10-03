@@ -307,12 +307,6 @@ pcl::PointCloud<pcl::PointXYZI>::Ptr XmeansClustering::virtual_class_partition(C
 }
 
 
-float XmeansClustering::maximaum_likelihood_estimation()
-{
-
-}
-
-
 float XmeansClustering::density_function(CloudIPtr i_j_std_class_ex, Eigen::Vector3f pos_data, Eigen::Vector3f mu)
 {
 	/* std::cout << "density_function" << std::endl; */
@@ -338,7 +332,7 @@ float XmeansClustering::density_function(CloudIPtr i_j_std_class_ex, Eigen::Vect
 }
 
 
-Eigen::Matrix3f XmeansClustering::covariance_matrix(int ci, CloudIPtr ci_class)
+Eigen::Matrix3f XmeansClustering::covariance_matrix(CloudIPtr ci_class)
 {
 	/* std::cout << "covariance_matrix" << std::endl; */
 	pcl::PCA<PointI> pca;
@@ -354,7 +348,6 @@ float XmeansClustering::bic_calculation(bool dash, CloudIPtr i_j_std_class_ex)
 	/* std::cout << "bic_calculation" << std::endl; */
 
 	int ci_num;
-	float likelihood = 1.0;
 	float bic;
 	float alpha;
 	float beta;
@@ -362,7 +355,8 @@ float XmeansClustering::bic_calculation(bool dash, CloudIPtr i_j_std_class_ex)
 	std::vector<Eigen::Vector3f> sum_list;
 	std::vector<CloudIPtr> ci_class_list;
 	std::vector<Eigen::Matrix3f> cov_list;
-	
+	std::vector<float> likelihood_list;
+
 	if(!dash){
 		ci_num = 1;
 	}else{
@@ -380,12 +374,12 @@ float XmeansClustering::bic_calculation(bool dash, CloudIPtr i_j_std_class_ex)
 		for(auto& position : i_j_std_class_ex->points){
 			if((int)position.intensity == ci){
 				CloudIPtr tmp_pt {new CloudI};
-				tmp_pc->points.resize(1);
-				tmp_pc->points[0].x = position.x;
-				tmp_pc->points[0].y = position.y;
-				tmp_pc->points[0].z = position.z;
-				tmp_pc->points[0].intensity = position.intensity;
-				*ci_class += tmp_pc;
+				tmp_pt->points.resize(1);
+				tmp_pt->points[0].x = position.x;
+				tmp_pt->points[0].y = position.y;
+				tmp_pt->points[0].z = position.z;
+				tmp_pt->points[0].intensity = position.intensity;
+				*ci_class += *tmp_pt;
 			}
 		}
 		ci_class_list.push_back(ci_class);
@@ -400,11 +394,12 @@ float XmeansClustering::bic_calculation(bool dash, CloudIPtr i_j_std_class_ex)
 		mu = sum / (float)i_j_std_class_ex->points.size();
 		mu_list.push_back(mu);
 
-		cov = covariance_matrix(ci, ci_class);
+		cov = covariance_matrix(ci_class);
 		cov_list.push_back(cov);
 	}
 
 	if(!dash){
+		float likelihood = 1.0;
 		for(auto& position : i_j_std_class_ex->points){
 			Eigen::Vector3f pos_data;
 			pos_data << position.x, position.y, position.z;
@@ -418,7 +413,19 @@ float XmeansClustering::bic_calculation(bool dash, CloudIPtr i_j_std_class_ex)
 		float lower_probability = std_normal_distribution_integral(beta);
 		alpha = 0.5 / lower_probability;
 		
-		bic = -2 * log(likelihood) + 18.0 * log();
+		for(int ci = 0; ci < 2; ci++){
+			float likelihood = 1.0;
+			CloudIPtr tmp_pos {new CloudI};
+			tmp_pos = ci_class_list[ci];
+			for(auto& position : tmp_pos->points){
+				Eigen::Vector3f pos_data;
+				pos_data << position.x, position.y, position.z;
+				likelihood *= density_function(i_j_std_class_ex, pos_data, mu_list[0]);
+			}
+			likelihood_list.push_back(likelihood);
+		}
+
+		bic = -2 * (i_j_std_class_ex->points.size() * log(alpha) + log(likelihood_list[0]) +  log(likelihood_list[1])) + 18.0 * log(ci_class_list[0]->points.size());
 	}
 
 	return bic;
@@ -439,11 +446,11 @@ int XmeansClustering::randomization(int num)
 
 float XmeansClustering::std_normal_distribution_integral(float beta)
 {
-	td::random_device rnd;
+	std::random_device rnd;
 	std::mt19937 mt(rnd());
 	std::normal_distribution<> norm(0.0, 1.0);
 	float answer = 0.0;
-	float min = 99.9
+	float min = 99.9;
 	int n_counter = 0;
 
 	for(int n = 0; n < N_; n++){

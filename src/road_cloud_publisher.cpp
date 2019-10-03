@@ -202,7 +202,7 @@ void RoadCloudPublisher::filter_intensity(void)
 	// IntensityPartition intensity_partition(RANGE_DIVISION_NUM, THETA_DIVISION_NUM, RANGE_MAX, PEAK_DIFF_THRESHOLD, OTSU_BINARY_SEPARATION_THRESHOLD, OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD, OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD);
 	// intensity_cloud = intensity_partition.execution(ground_cloud);
 
-	XmeansClustering xmeans_clustering(true, 100000 40, 40, 20, 20, 0.01);
+	XmeansClustering xmeans_clustering(true, 100000, 40, 40, 20, 20, 0.01);
 	intensity_cloud = xmeans_clustering.execution(ground_cloud);
 
     /* pcl::PassThrough<PointXYZIN> pass; */
