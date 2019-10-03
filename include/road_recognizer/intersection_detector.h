@@ -53,6 +53,7 @@ private:
     ros::Subscriber beam_sub;
     ros::Publisher beam_pub;
     ros::Publisher intersection_flag_pub;
+    ros::Publisher intersection_directions_pub;
 };
 
 #endif// __INTERSECTION_DETECTOR_H

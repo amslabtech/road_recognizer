@@ -32,6 +32,7 @@ IntersectionDetector::IntersectionDetector(void)
     beam_sub = nh.subscribe("beam_array", 1, &IntersectionDetector::beam_callback, this);
     beam_pub = local_nh.advertise<visualization_msgs::Marker>("beam", 1);
     intersection_flag_pub = nh.advertise<std_msgs::Bool>("/intersection_flag", 1);
+    intersection_directions_pub = nh.advertise<std_msgs::Float64MultiArray>("/intersection_directions", 1);
 
     local_nh.param("EPSILON1", EPSILON1, {0.25});
     local_nh.param("EPSILON2_DIV", EPSILON2_DIV, {8});
@@ -205,7 +206,11 @@ void IntersectionDetector::beam_callback(const std_msgs::Float64MultiArrayConstP
         intersection_flag.data = (peak_list.size() > 3);
         intersection_flag_pub.publish(intersection_flag);
         ////////////////////////////////////////
-
+        std_msgs::Float64MultiArray directions;
+        for(auto it=peak_list.begin();it!=peak_list.end();++it){
+            directions.data.push_back(it->index * 2 * M_PI / (double)N - M_PI);
+        }
+        intersection_directions_pub.publish(directions);
     }else{
         std::cout << "\033[31mbeam_ranges is empty\033[0m" << std::endl;
     }
