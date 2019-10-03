@@ -65,6 +65,7 @@ private:
     double HEIGHT_THRESHOLD;
     int MAX_RANDOM_SAMPLE_SIZE;
     double RANDOM_SAMPLE_RATIO;
+	bool IS_OTSU;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;
