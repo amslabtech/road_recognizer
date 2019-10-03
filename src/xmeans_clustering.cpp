@@ -313,7 +313,6 @@ float XmeansClustering::density_function(CloudIPtr i_j_std_class_ex, Eigen::Vect
 
 	Eigen::Matrix3f cov_matrix = covariance_matrix(i_j_std_class_ex);
 	float cov_matrix_determinant = cov_matrix.determinant();
-	std::cout << "cov_matrix_determinant = " << cov_matrix_determinant << std::endl;
 	Eigen::Matrix3f cov_matrix_inverse = cov_matrix.inverse();
 	Eigen::MatrixXf cov_matrix_inverse_x(3,3);
 	cov_matrix_inverse_x << cov_matrix_inverse(0,0), cov_matrix_inverse(0,1), cov_matrix_inverse(0,2),
@@ -327,9 +326,8 @@ float XmeansClustering::density_function(CloudIPtr i_j_std_class_ex, Eigen::Vect
 	Eigen::MatrixXf eigen_dot_value(1,1);
 	eigen_dot_value << diff_from_mu_t * cov_matrix_inverse_x * diff_from_mu;
 	float dot_value = eigen_dot_value(0,0);
-	std::cout << "dot_value = " << dot_value << std::endl;
 	float distribution_density = pow(2*M_PI, -1.5) * pow(cov_matrix_determinant, -0.5) * exp(-0.5 * dot_value);
-	std::cout << "distribution_density = " << distribution_density << std::endl;
+	/* std::cout << "distribution_density = " << distribution_density << std::endl; */
 
 	return distribution_density;
 }
@@ -337,14 +335,42 @@ float XmeansClustering::density_function(CloudIPtr i_j_std_class_ex, Eigen::Vect
 
 Eigen::Matrix3f XmeansClustering::covariance_matrix(CloudIPtr ci_class)
 {
-	/* std::cout << "covariance_matrix" << std::endl; */
-	pcl::PCA<PointI> pca;
-	pca.setInputCloud(ci_class);
-	Eigen::Matrix3f eigen_vectors = pca.getEigenVectors();
+	int ci_size = ci_class->points.size();
+	Eigen::Vector3f sum = Eigen::Vector3f::Zero();
+	for(auto& position : ci_class->points){
+		sum[0] += position.x;
+		sum[1] += position.y;
+		sum[2] += position.z;
+	}
+	Eigen::Vector3f mu = sum / ci_size;
 	
-	std::cout << "eigen_vectors : " << std::endl;
-	std::cout << eigen_vectors << std::endl;
-	return eigen_vectors;
+	float sigma_xx = 0.0;
+	float sigma_yy = 0.0;
+	float sigma_zz = 0.0;
+	float sigma_xy = 0.0;
+	float sigma_xz = 0.0;
+	float sigma_yz = 0.0;
+	for(auto& position : ci_class->points){
+		sigma_xx += my_pow(position.x - mu[0]);
+		sigma_yy += my_pow(position.y - mu[1]);
+		sigma_zz += my_pow(position.z - mu[2]);
+		sigma_xy += (position.x - mu[0]) * (position.y - mu[1]);
+		sigma_xz += (position.x - mu[0]) * (position.z - mu[2]);
+		sigma_yz += (position.y - mu[1]) * (position.z - mu[2]);
+	}
+	sigma_xx /= ci_size;
+	sigma_yy /= ci_size;
+	sigma_zz /= ci_size;
+	sigma_xy /= ci_size;
+	sigma_xz /= ci_size;
+	sigma_yz /= ci_size;
+
+	Eigen::Matrix3f cov_matrix;
+	cov_matrix << sigma_xx, sigma_xy, sigma_xz
+				, sigma_xy, sigma_yy, sigma_yz
+				, sigma_xz, sigma_yz, sigma_zz;
+
+	return cov_matrix;
 }
 
 
@@ -415,10 +441,12 @@ float XmeansClustering::bic_calculation(bool dash, CloudIPtr i_j_std_class_ex)
 	}else{
 		float mu_diff_norm = (mu_list[0] - mu_list[1]).norm();
 		float mu_diff_norm_pow = my_pow(mu_diff_norm);
-		beta = sqrt(mu_diff_norm_pow / cov_list[0].determinant() + cov_list[1].determinant());
+		beta = sqrt(mu_diff_norm_pow / (cov_list[0].determinant() + cov_list[1].determinant()) );
+		std::cout << "beta = " << beta << std::endl;
 		float lower_probability = std_normal_distribution_integral(beta);
 		alpha = 0.5 / lower_probability;
-		
+		std::cout << "alpha = " << alpha << std::endl;
+
 		for(int ci = 0; ci < 2; ci++){
 			float likelihood = 1.0;
 			CloudIPtr tmp_pos {new CloudI};
