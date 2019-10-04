@@ -14,6 +14,7 @@ RoadCloudPublisher::RoadCloudPublisher(void)
     local_nh.param("HEIGHT_THRESHOLD", HEIGHT_THRESHOLD, {0});
     local_nh.param("MAX_RANDOM_SAMPLE_SIZE", MAX_RANDOM_SAMPLE_SIZE, {5000});
     local_nh.param("RANDOM_SAMPLE_RATIO", RANDOM_SAMPLE_RATIO, {0.25});
+    local_nh.param("IS_OTSU", IS_OTSU , {true});
 	
 	local_nh.param("RANGE_MAX", RANGE_MAX, {20.0});
 	local_nh.param("RANGE_DIVISION_NUM", RANGE_DIVISION_NUM, {20});
@@ -50,6 +51,7 @@ RoadCloudPublisher::RoadCloudPublisher(void)
     std::cout << "HEIGHT_THRESHOLD: " << HEIGHT_THRESHOLD << std::endl;
     std::cout << "MAX_RANDOM_SAMPLE_SIZE: " << MAX_RANDOM_SAMPLE_SIZE << std::endl;
     std::cout << "RANDOM_SAMPLE_RATIO: " << RANDOM_SAMPLE_RATIO << std::endl;
+    std::cout << "IS_OTSU: " << IS_OTSU << std::endl;
 }
 
 
@@ -197,10 +199,19 @@ void RoadCloudPublisher::filter_curvature(void)
 
 void RoadCloudPublisher::filter_intensity(void)
 {
-	IntensityPartition intensity_partition(RANGE_DIVISION_NUM, THETA_DIVISION_NUM, RANGE_MAX, PEAK_DIFF_THRESHOLD, OTSU_BINARY_SEPARATION_THRESHOLD, OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD, OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD);
-	
-	intensity_cloud = intensity_partition.execution(ground_cloud);
-	intensity_cloud->header = ground_cloud->header;
+	if(IS_OTSU){
+		IntensityPartition intensity_partition(RANGE_DIVISION_NUM, THETA_DIVISION_NUM, RANGE_MAX, PEAK_DIFF_THRESHOLD, OTSU_BINARY_SEPARATION_THRESHOLD, OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD, OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD);
+
+		intensity_cloud = intensity_partition.execution(ground_cloud);
+		intensity_cloud->header = ground_cloud->header;
+	}else{
+		pcl::PassThrough<PointXYZIN> intensity_pass;
+		intensity_pass.setInputCloud(road_cloud);
+		intensity_pass.setFilterFieldName("intensity");
+		intensity_pass.setFilterLimits(INTENSITY_LOWER_THRESHOLD, INTENSITY_UPPER_THRESHOLD);
+		intensity_cloud->header = ground_cloud->header;
+		intensity_pass.filter(*intensity_cloud);
+	}
 }
 
 void RoadCloudPublisher::filter_height(void)

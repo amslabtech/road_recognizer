@@ -25,6 +25,7 @@ class makeimage{
 		ros::Subscriber sub_rmground;
 		ros::Subscriber sub_grass;
 		ros::Publisher pub_image;
+		ros::Publisher pub_raw_image;
 		ros::Publisher pub_edge;
 		ros::Publisher pub_pcl;
 		std::string pub_frameid;
@@ -35,6 +36,10 @@ class makeimage{
 		double IMAGE_HEIGHT;
 		double IMAGE_RESOLUTION;
 		bool HOUGHLINE_FLAG;
+		int BEAM_ANGLE_NUM;
+		int BEAM_NODE_ARM_LENGTH;
+		int BEAM_NODE_SCALE;
+		double MAX_BEAM_RANGE;
 		MakeImage MI;
 
 	public:
@@ -53,16 +58,23 @@ makeimage::makeimage()
 	private_nh.param("IMAGE_HEIGHT", IMAGE_HEIGHT, {40});
 	private_nh.param("IMAGE_RESOLUTION", IMAGE_RESOLUTION, {0.1});
 	private_nh.param("HOUGHLINE_FLAG", HOUGHLINE_FLAG, {true});
+	private_nh.param("BEAM_ANGLE_NUM", BEAM_ANGLE_NUM, {360});
+	private_nh.param("BEAM_NODE_ARM_LENGTH", BEAM_NODE_ARM_LENGTH, {5});
+	private_nh.param("BEAM_NODE_SCALE", BEAM_NODE_SCALE, {1});
+	private_nh.param("MAX_BEAM_RANGE", MAX_BEAM_RANGE, {1023});
 	std::cout << "IMAGE_WIDTH 		: " << IMAGE_WIDTH << std::endl;
 	std::cout << "IMAGE_HEIGHT 		: " << IMAGE_HEIGHT << std::endl;
 	std::cout << "IMAGE_RESOLUTION 	: " << IMAGE_RESOLUTION << std::endl;
 	std::cout << "HOUGHLINE_FLAG 	: " << HOUGHLINE_FLAG << std::endl;
+	std::cout << "BEAM_ANGLE_NUM 	: " << BEAM_ANGLE_NUM << std::endl;
+	std::cout << "MAX_BEAM_RANGE	: " << MAX_BEAM_RANGE << std::endl;
 	
 	MI.houghline_flag=HOUGHLINE_FLAG;
-	MI.set_param(IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_RESOLUTION);
+	MI.set_param(IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_RESOLUTION, BEAM_ANGLE_NUM, MAX_BEAM_RANGE, BEAM_NODE_ARM_LENGTH, BEAM_NODE_SCALE);
 	sub_rmground = nh.subscribe("/rm_ground", 1, &makeimage::CallbackRmGround, this);
 	sub_grass = nh.subscribe("/grass", 1, &makeimage::CallbackGrass, this);
 	pub_image = nh.advertise<sensor_msgs::Image>("/image/grass", 1);
+	pub_raw_image = nh.advertise<sensor_msgs::Image>("/image/raw", 1);
 	pub_edge = nh.advertise<sensor_msgs::Image>("/image/edge", 1);
 	pub_pcl = nh.advertise<sensor_msgs::PointCloud2>("/grass_points", 1);
 }
@@ -94,12 +106,15 @@ void makeimage::CallbackGrass(const sensor_msgs::PointCloud2ConstPtr &msg)
 void makeimage::Publication(void)
 {
 	MI.image_ros->header.frame_id = pub_frameid;
-	MI.image_ros->header.frame_id = pub_frameid;
+	MI.image_ros->header.stamp = pub_stamp;
+	MI.image_ros2->header.frame_id = pub_frameid;
 	MI.image_ros2->header.stamp = pub_stamp;
-	MI.image_ros2->header.stamp = pub_stamp;
+	MI.image_raw->header.frame_id = pub_frameid;
+	MI.image_raw->header.stamp = pub_stamp;
 	MI.grass_pc2.header.frame_id = pub_frameid;
 	MI.grass_pc2.header.stamp = pub_stamp;
 	pub_image.publish(MI.image_ros);
+	pub_raw_image.publish(MI.image_raw);
 	pub_edge.publish(MI.image_ros2);
 	pub_pcl.publish(MI.grass_pc2);
 }
