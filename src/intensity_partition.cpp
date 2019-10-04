@@ -35,12 +35,12 @@ class IntensityPartition
 		bool pc_callback_flag = false;
 		bool first_flag = false;
 
-		
+
 		int n_grass = 0, n_asphalt = 0;
 
 		const int GRASS = 1;
 		const int ASPHALT = 2;
-		
+
 		/* ---------- Tuning Params ---------- */
 		const static int RANGE_RESOLUTION = 20;
 		const static int THETA_RESOLUTION = 360;
@@ -68,11 +68,11 @@ class IntensityPartition
 		// float range_grid_sum_intensity[RANGE_RESOLUTION];
 		float polar_grid_avr_intensity[RANGE_RESOLUTION][THETA_RESOLUTION];
 		float polar_grid_sum_intensity[RANGE_RESOLUTION][THETA_RESOLUTION];
-		float time_sum_otsu[RANGE_RESOLUTION];	
-		float time_sum_otsu_diffpow[RANGE_RESOLUTION];	
-		float time_mu_otsu[RANGE_RESOLUTION];	
-		float range_mu_otsu;	
-		float otsu_range_std_deviation;	
+		float time_sum_otsu[RANGE_RESOLUTION];
+		float time_sum_otsu_diffpow[RANGE_RESOLUTION];
+		float time_mu_otsu[RANGE_RESOLUTION];
+		float range_mu_otsu;
+		float otsu_range_std_deviation;
 
 		ros::NodeHandle nh;
 		ros::NodeHandle local_nh;
@@ -93,7 +93,7 @@ class IntensityPartition
 		std::vector<float> ptz_list;
 		std::vector<float> ptz_list_tail;
 
-		road_recognizer::OtsuBinary otsu_binary_msg; 
+		road_recognizer::OtsuBinary otsu_binary_msg;
 
 		struct WB{
 			float within;
@@ -122,7 +122,7 @@ class IntensityPartition
 		void calc_otsu_binary(void);
 		void calc_diff_from_avr(void);
 		void emergency_judge(void);
-		
+
 		CloudIPtr otsu_pc_generator(void);
 		CloudIPtr otsu_pc_generator_tail(void);
 };
@@ -133,7 +133,7 @@ int main(int argc, char** argv)
 {
 	ros::init(argc, argv, "intensity_partition");
 
-	
+
 	IntensityPartition intensity_partition;
 	intensity_partition.execution();
 
@@ -193,7 +193,7 @@ void IntensityPartition::pc_callback(const sensor_msgs::PointCloud2ConstPtr &msg
 
 	CloudIPtr otsu_binary_pc_ {new CloudI};
 	CloudIPtr otsu_binary_pc_tail_ {new CloudI};
-	
+
 	cartesian_pt_2_polar_grid(input_pc_);
 	calc_otsu_binary();
 
@@ -210,7 +210,7 @@ void IntensityPartition::pc_callback(const sensor_msgs::PointCloud2ConstPtr &msg
 	}
 
 	otsu_binary_publisher.publish(otsu_binary_msg);
-	
+
 	first_flag = true;
 
 	ptz_list.clear();
@@ -219,7 +219,7 @@ void IntensityPartition::pc_callback(const sensor_msgs::PointCloud2ConstPtr &msg
 
 
 void IntensityPartition::execution(void)
-{	
+{
 	ros::spin();
 }
 
@@ -251,14 +251,14 @@ void IntensityPartition::cartesian_pt_2_polar_grid(CloudIPtr cartesian_pc_)
 	float r_tmp, theta_tmp, z_tmp;
 	size_t i = 0;
 	initialize();
-	
+
 	for(auto& pt : cartesian_pc_->points){
 		r_tmp = sqrt(pt.x * pt.x + pt.y * pt.y);
 		theta_tmp = atan2(pt.y,pt.x);
 		if(theta_tmp < 0){
 			theta_tmp = 2 * M_PI + theta_tmp;
 		}
-		
+
 		// create polar grid informations
 		bool r_flag = false, theta_flag = false;
 		for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
@@ -266,7 +266,7 @@ void IntensityPartition::cartesian_pt_2_polar_grid(CloudIPtr cartesian_pc_)
 				if((r_g == (int)(r_tmp / dR)) && (theta_g == (int)(theta_tmp / dTheta))){
 					polar_grid_pt_cnt[r_g][theta_g] += 1;
 					polar_grid_sum_intensity[r_g][theta_g] += pt.intensity;
-					polar_grid_avr_intensity[r_g][theta_g] = polar_grid_sum_intensity[r_g][theta_g] / (float)polar_grid_pt_cnt[r_g][theta_g]; 
+					polar_grid_avr_intensity[r_g][theta_g] = polar_grid_sum_intensity[r_g][theta_g] / (float)polar_grid_pt_cnt[r_g][theta_g];
 
 					if(PC_PUBLISH_FLAG){
 						z_tmp = polar_pc_->points[i].z;
@@ -278,7 +278,7 @@ void IntensityPartition::cartesian_pt_2_polar_grid(CloudIPtr cartesian_pc_)
 					r_flag = true;
 					theta_flag = true;
 				}
-				
+
 				if(intensity_min[r_g] > polar_grid_avr_intensity[r_g][theta_g] || !first_flag){
 					intensity_min[r_g] = polar_grid_avr_intensity[r_g][theta_g];
 				}
@@ -288,9 +288,9 @@ void IntensityPartition::cartesian_pt_2_polar_grid(CloudIPtr cartesian_pc_)
 
 				if(theta_flag) break;
 			}
-			
+
 		}
-		
+
 		if(intensity_max_all < pt.intensity){
 			intensity_max_all = pt.intensity;
 		}
@@ -319,7 +319,7 @@ float IntensityPartition::calc_variance(const std::vector<std::vector<int> >& hi
 	float variance = 0, sum = 0, multi_sum = 0, diffpow_sum = 0, mu = 0;
 	int cnt = 0;
 
-	switch(grass_or_asphalt){ 
+	switch(grass_or_asphalt){
 		case 1: // grass
 			for(int i = 0; i < threshold_tmp; i++){
 				multi_sum += (float)histogram_list[i][r_g] * i;
@@ -352,7 +352,7 @@ float IntensityPartition::calc_variance(const std::vector<std::vector<int> >& hi
 			variance = diffpow_sum / cnt;
 			break;
 	}
-	
+
 	return variance;
 }
 
@@ -388,8 +388,8 @@ void IntensityPartition::calc_otsu_binary(void)
 {
 	//const int histogram_size = (int)intensity_max_all;
 	const int histogram_size = 256;
-	float sum_all[RANGE_RESOLUTION], avr_all[RANGE_RESOLUTION], var_all[RANGE_RESOLUTION], diff_all[histogram_size], 
-		  sum_tmp1[RANGE_RESOLUTION], sum_tmp2[RANGE_RESOLUTION], 
+	float sum_all[RANGE_RESOLUTION], avr_all[RANGE_RESOLUTION], var_all[RANGE_RESOLUTION], diff_all[histogram_size],
+		  sum_tmp1[RANGE_RESOLUTION], sum_tmp2[RANGE_RESOLUTION],
 		  multi_sum_all[RANGE_RESOLUTION];
 	/* std::array<int, RANGE_RESOLUTION> r_res_array; */
 	std::vector<int> r_res_array;
@@ -407,7 +407,7 @@ void IntensityPartition::calc_otsu_binary(void)
 	for(int i = 0; i < histogram_size; i++){
 		histogram.push_back(r_res_array);
 	}
-	
+
 	// make histogram
 	for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
 		for(int theta_g = 0; theta_g < THETA_RESOLUTION; theta_g++){
@@ -417,7 +417,7 @@ void IntensityPartition::calc_otsu_binary(void)
 			}
 		}
 	}
-	
+
 	// for debag
 	for(int r_g=0; r_g < RANGE_RESOLUTION; r_g++){
 		otsu_binary_msg.analysis[r_g].distribution.resize(histogram_size);
@@ -426,7 +426,7 @@ void IntensityPartition::calc_otsu_binary(void)
 		}
 	}
 
-	
+
 	// calc separation
 	struct GA var[RANGE_RESOLUTION][histogram_size-1];
 	struct GA num[RANGE_RESOLUTION][histogram_size-1];
@@ -441,7 +441,7 @@ void IntensityPartition::calc_otsu_binary(void)
 			avr[r_g][i_threshold-1].asphalt = avr_asphalt;
 		}
 	}
-	
+
 	// calc whole variance
 	for(int r_g = 0; r_g < RANGE_RESOLUTION; r_g++){
 		for(int idx_intensity = 0; idx_intensity < (int)intensity_max[r_g]; idx_intensity++){
@@ -459,7 +459,7 @@ void IntensityPartition::calc_otsu_binary(void)
 		/* std::cout << "intensity_std_deviation[" << r_g << "] : " << otsu_binary_msg.analysis[r_g].intensity_std_deviation << std::endl; */
 	}
 
-	
+
 	struct WB var_wb;
 
 	/* std::cout << "==========" << std::endl; */
@@ -473,14 +473,14 @@ void IntensityPartition::calc_otsu_binary(void)
 			var_wb.between = (ng * diff_mg * diff_mg + na * diff_ma * diff_ma) / (ng + na);
 			//var_wb.between = ng * na * (avr[r_g][i_threshold-1].grass - avr[r_g][i_threshold-1].asphalt) * (avr[r_g][i_threshold-1].grass - avr[r_g][i_threshold-1].asphalt) / (ng + na) * (ng + na);
 			float s_tmp = var_wb.between / var_wb.within;
-			
+
 			if(s_max[r_g] < s_tmp){
 				s_max[r_g] = s_tmp;
 				s_max_var_b[r_g] = var[r_g][i_threshold-1].asphalt;
 				otsu_threshold_tmp[r_g] = (float)i_threshold;
 			}
 		}
-		
+
 		if(r_g == 0){
 			otsu_binary_msg.intensity[r_g].threshold = 0.0;
 			otsu_binary_msg.analysis[r_g].separation = 0.0;
@@ -492,7 +492,7 @@ void IntensityPartition::calc_otsu_binary(void)
 		/* std::cout << "r = " << r_g << ", threshold = " << otsu_binary_msg.intensity[r_g].threshold << std::endl; */
 		/* std::cout << "r = " << r_g << ", S = " << otsu_binary_msg.analysis[r_g].separation << std::endl; */
 		//std::cout << "r = " << r_g << ", intensity_max = " << intensity_max[r_g] << std::endl;
-		
+
 		for(int i = 0; i < intensity_max[r_g]; i++){
 			if(otsu_binary_msg.analysis[r_g].distribution[i].intensity > 0){
 				//std::cout << "r = " << r_g << ", histogram[" << i << "] = " << otsu_binary_msg.analysis[r_g].distribution[i].intensity << std::endl;
@@ -505,7 +505,7 @@ void IntensityPartition::calc_otsu_binary(void)
 
 
 	// calc trust range
-	
+
 
 	// for debag
 
@@ -528,7 +528,7 @@ void IntensityPartition::calc_otsu_binary(void)
 	// calc threshold histogram in range
 	calc_diff_from_avr();
 
-	
+
 	// judge emergency
 	emergency_judge();
 
@@ -567,7 +567,7 @@ CloudIPtr IntensityPartition::otsu_pc_generator(void)
 		pt.z = ptz_list.at(iz);
 		iz++;
 	}
-	
+
 	if(otsu_binary_msg.emergency){
 		//intensity_max_all = 0.0;
 	}
@@ -593,7 +593,7 @@ CloudIPtr IntensityPartition::otsu_pc_generator(void)
 		pt.intensity = filtered_pc_->points[i].intensity;
 		i++;
 	}
-	
+
 	return otsu_pc_;
 }
 
@@ -630,7 +630,7 @@ CloudIPtr IntensityPartition::otsu_pc_generator_tail(void)
 		/* } */
 		iz++;
 	}
-	
+
 	if(otsu_binary_msg.emergency){
 		//intensity_max_all = 0.0;
 	}
@@ -656,7 +656,7 @@ CloudIPtr IntensityPartition::otsu_pc_generator_tail(void)
 		pt.intensity = filtered_pc_->points[i].intensity;
 		i++;
 	}
-	
+
 	return otsu_pc_;
 }
 

@@ -8,9 +8,9 @@
         <arg name="curvature_threshold" default="0.90"/>
         <arg name="intensity_upper_threshold" default="255"/>
         <arg name="intensity_lower_threshold" default="20"/>
-        <arg name="height_threshold" default="0.0"/>
+        <arg name="height_threshold" default="-1.0"/>
         <arg name="max_random_sample_size" default="8000"/>
-        <arg name="random_sample_ratio" default="0.20"/>
+        <arg name="random_sample_ratio" default="0.50"/>
         <arg name="is_otsu" default="false"/>
         <arg name="otsu_binary_separation_threshold" default="0.5"/>
         <arg name="otsu_binary_sum_of_diff_from_avr_threshold" default="999.9"/>
