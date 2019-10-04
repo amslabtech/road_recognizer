@@ -32,15 +32,15 @@ public:
 
 	IntensityPartition(int, int, float, float, float, float, float);
 
-	CloudINormalPtr execution(CloudIPtr);
+	CloudINormalPtr execution(CloudINormalPtr);
 	void initialize(void);
-	void cartesian_pt_2_polar_grid(CloudIPtr);
+	void cartesian_pt_2_polar_grid(CloudINormalPtr);
 	float calc_variance(const std::vector<std::vector<int> >&, int, int, int);
 	void calc_otsu_binary(void);
 	void calc_diff_from_avr(void);
 	void emergency_judge(void);
 	void separated_histogram_peak_filter(float, float, int);
-	CloudIPtr otsu_pc_generator(void);
+	CloudINormalPtr otsu_pc_generator(void);
 
 private:
 	const int GRASS = 1;
@@ -58,8 +58,8 @@ private:
 	float dR;// = RANGE_MAX / (float)RANGE_DIVISION_NUM;
 	float dTheta;// = 2*M_PI / (float)THETA_DIVISION_NUM;
 	float intensity_max_all;
-	float range_mu_otsu;	
-	float otsu_range_std_deviation;	
+	float range_mu_otsu;
+	float otsu_range_std_deviation;
 	std::vector<bool> peak_filter;
 	std::vector<float> intensity_max;
 	std::vector<float> intensity_min;
@@ -68,15 +68,15 @@ private:
 	std::vector<float> polar_grid_pt_cnt_row;
 	std::vector<float> polar_grid_avr_intensity_row;
 	std::vector<float> polar_grid_sum_intensity_row;
-	std::vector<float> time_mu_otsu;//[RANGE_DIVISION_NUM];	
+	std::vector<float> time_mu_otsu;//[RANGE_DIVISION_NUM];
 	std::vector<float> ptz_list;
 	std::vector<std::vector<float> > polar_grid_pt_cnt;//[RANGE_DIVISION_NUM][THETA_DIVISION_NUM];
 	std::vector<std::vector<float> > polar_grid_avr_intensity;//[RANGE_DIVISION_NUM][THETA_DIVISION_NUM];
 	std::vector<std::vector<float> > polar_grid_sum_intensity;//[RANGE_DIVISION_NUM][THETA_DIVISION_NUM];
 	sensor_msgs::PointCloud2 pub_pc;
-	CloudIPtr input_pc_ {new CloudI};
-	CloudIPtr polar_pc_ {new CloudI};
-	CloudIPtr otsu_binary_pc_ {new CloudI};
+	CloudINormalPtr input_pc_ {new CloudINormal};
+	CloudINormalPtr polar_pc_ {new CloudINormal};
+	CloudINormalPtr otsu_binary_pc_ {new CloudINormal};
 	struct GA{
 		std::array<std::vector<float>, 256> grass;
 		std::array<std::vector<float>, 256> asphalt;
@@ -85,7 +85,7 @@ private:
 		float within;
 		float between;
 	};
-	road_recognizer::OtsuBinary otsu_binary_msg; 
+	road_recognizer::OtsuBinary otsu_binary_msg;
 };
 
 
