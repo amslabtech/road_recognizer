@@ -46,7 +46,7 @@ public:
 	float log_likelihood_function();
 	float density_function(CloudIPtr, Eigen::Vector3f, Eigen::Vector3f);
 	Eigen::Matrix3f covariance_matrix(CloudIPtr);
-	float bic_calculation(bool, CloudIPtr);
+	float bic_calculation(bool, int, CloudIPtr);
 	int randomization(int);
 	float std_normal_distribution_integral(float);
 	float my_pow(float);
