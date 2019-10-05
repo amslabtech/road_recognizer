@@ -157,7 +157,7 @@ pcl::PointCloud<pcl::PointXYZI>::Ptr XmeansClustering::partitional_optimization(
 					break;
 				}
 				int rnd_idx = randomization(size);
-				std::cout << "ci : " << ci << ",  i_j_std_class_ex->points[rnd_idx].intensity" << i_j_std_class_ex->points[rnd_idx].intensity << std::endl;
+				std::cout << "k : " << k << ",  ci : " << ci << ",  i_j_std_class_ex->points[rnd_idx].intensity" << i_j_std_class_ex->points[rnd_idx].intensity << std::endl;
 				if(i_j_std_class_ex->points[rnd_idx].intensity == ci){
 					Eigen::Vector3f initial_center;
 					initial_center << i_j_std_class_ex->points[rnd_idx].x, i_j_std_class_ex->points[rnd_idx].y, i_j_std_class_ex->points[rnd_idx].z;
@@ -261,7 +261,6 @@ void XmeansClustering::xmeans_clustering(void)
 		float bic = bic_calculation(false, block, step, i_j_std_class_solo);
 		CloudIPtr tmp_pos {new CloudI};
 		CloudIPtr partitioned_pos {new CloudI};
-		// tmp_pos = virtual_class_partition(i_j_std_class_solo, block);
 		tmp_pos = virtual_class_partition(i_j_std_class_solo, block, step);
 		if(tmp_pos->points.size() == 0){
 			break;
@@ -347,7 +346,12 @@ pcl::PointCloud<pcl::PointXYZI>::Ptr XmeansClustering::virtual_class_partition(C
 	virtual_parrtition_class = solo_class;
 	for(auto& position : virtual_parrtition_class->points){
 		/* position.intensity = block + randomization(1); */
-		position.intensity = block + randomization(1) * step;
+		int rnd = randomization(1);
+		if(rnd == 0){
+			position.intensity = block;
+		}else{
+			position.intensity = step;
+		}
 	}
 	return virtual_parrtition_class;
 }
