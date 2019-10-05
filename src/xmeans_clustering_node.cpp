@@ -20,6 +20,8 @@ XmeansClustering::XmeansClustering(bool clustering_method, int n, int width_divi
 pcl::PointCloud<pcl::PointXYZINormal>::Ptr XmeansClustering::execution(CloudIPtr imput_pc)
 {
 	std::cout << "start" << std::endl;
+	
+	std::cout << "input pc size : " << imput_pc->points.size();
 
 	CloudINormalPtr road_side_pc {new CloudINormal};
 	
@@ -36,6 +38,8 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr XmeansClustering::execution(CloudIPtr
 	point_counter.clear();
 	intensity_sum.clear();
 	sum_diff_pow.clear();
+	identity.registration.clear();
+	identity.average_intensity_std_deviation.clear();
 
 	std::cout << "return pc" << std::endl;
 	return road_side_pc;
@@ -248,19 +252,24 @@ void XmeansClustering::xmeans_clustering(void)
 		/* std::cout << "bic_dash = " << bic_dash << std::endl; */
 
 		if(bic > bic_dash){
-			for(auto& position : i_j_std_class->points){
+			for(auto& position : partitioned_pos->points){
 				int ix = (int)position.x;
 				int jy = (int)position.y;
-				int class_intensity = (int)position.intensity;
-				cells.affiliation[ix][jy] = class_intensity;
+				cells.affiliation[ix][jy] = (int)position.intensity;
 			}
 			upper_block_num += 2;
 			bic_list.push_back(bic_dash);
 			bic_flags.push_back(false);
 			block_manager.push_back(false);
 		}else{
+			for(auto& position : i_j_std_class_solo->points){
+				int ix = (int)position.x;
+				int jy = (int)position.y;
+				cells.affiliation[ix][jy] = (int)position.intensity;
+			}
 			bic_flags.push_back(true);
 			block_manager.push_back(true);
+			identification(block, i_j_std_class_solo);
 		}
 
 		if(block > 0){
@@ -296,17 +305,22 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr XmeansClustering::points_extraction(v
 
 	CloudIPtr xmeans_pc {new CloudI};
 	CloudINormalPtr xmeans_normal_pc {new CloudINormal};
-	
 	xmeans_pc->points.resize(0);
 	
-	int observation_x = (int)(0.5 * WIDTH_DIVISION_NUM_);
-	int observation_y = (int)(0.5 * HEIGHT_DIVISION_NUM_);
-	int observed_position_class = cells.affiliation[observation_x][observation_y];
+	float min_intensity_std_deviation = 99999.9;
+	int id_size = identity.registration.size();
+	int rm_class = 0;
+	for(int id = 0; id < id_size; id++){
+		if(min_intensity_std_deviation > identity.average_intensity_std_deviation[id]){
+			min_intensity_std_deviation = identity.average_intensity_std_deviation[id];
+			rm_class = identity.registration[id];
+		}
+	}
 	
 	for(int i = 0; i < WIDTH_DIVISION_NUM_; i++){
 		for(int j = 0; j < HEIGHT_DIVISION_NUM_; j++){
 			/* std::cout << "cells.affiliation[" << i << "][" << j << "] = " << cells.affiliation[i][j] << std::endl; */
-			if(cells.affiliation[i][j] != observed_position_class && cells.point_cloud[i][j]->points.size() > 0){
+			if(cells.affiliation[i][j] != rm_class && cells.point_cloud[i][j]->points.size() > 0){
 				*xmeans_pc += *cells.point_cloud[i][j];
 			}
 		}
@@ -499,6 +513,18 @@ float XmeansClustering::bic_calculation(bool dash, int block, CloudIPtr i_j_std_
 	}
 
 	return bic;
+}
+
+
+void XmeansClustering::identification(int block, CloudIPtr cluster)
+{
+	float sum = 0.0;
+	int size = cluster->points.size();
+	for(auto& cls : cluster->points){
+		sum += cls.z;
+	}
+	identity.registration.push_back(block);
+	identity.average_intensity_std_deviation.push_back(sum/(float)size);
 }
 
 

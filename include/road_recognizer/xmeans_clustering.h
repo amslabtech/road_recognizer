@@ -47,6 +47,7 @@ public:
 	float density_function(CloudIPtr, Eigen::Vector3f, Eigen::Vector3f);
 	Eigen::Matrix3f covariance_matrix(CloudIPtr);
 	float bic_calculation(bool, int, CloudIPtr);
+	void identification(int, CloudIPtr);
 	int randomization(int);
 	float std_normal_distribution_integral(float);
 	float my_pow(float);
@@ -69,7 +70,12 @@ private:
 		std::vector<std::vector<float> > intensity_std_deviation;
 		std::vector<std::vector<CloudIPtr> > point_cloud;
 	};
+	struct classification{
+		std::vector<int> registration;
+		std::vector<float> average_intensity_std_deviation;
+	};
 	struct grid cells;
+	struct classification identity;
 
 	std::vector<std::vector<int> > point_counter;
 	std::vector<std::vector<float> > intensity_sum;
