@@ -21,7 +21,7 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr XmeansClustering::execution(CloudIPtr
 {
 	std::cout << "start" << std::endl;
 	
-	std::cout << "input pc size : " << imput_pc->points.size();
+	std::cout << "input pc size : " << imput_pc->points.size() << std::endl;;
 
 	CloudINormalPtr road_side_pc {new CloudINormal};
 	
@@ -41,7 +41,7 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr XmeansClustering::execution(CloudIPtr
 	identity.registration.clear();
 	identity.average_intensity_std_deviation.clear();
 
-	std::cout << "return pc" << std::endl;
+	std::cout << "return pc size :" << road_side_pc->points.size() << std::endl;
 	return road_side_pc;
 }
 
