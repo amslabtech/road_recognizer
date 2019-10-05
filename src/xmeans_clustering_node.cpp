@@ -122,7 +122,7 @@ void XmeansClustering::grid_partition(CloudIPtr not_partitioned_pc)
 }
 
 
-pcl::PointCloud<pcl::PointXYZI>::Ptr XmeansClustering::partitional_optimization(CloudIPtr i_j_std_class_ex, int block) // i_j_std_class_ex's class is partitioned virtually
+pcl::PointCloud<pcl::PointXYZI>::Ptr XmeansClustering::partitional_optimization(CloudIPtr i_j_std_class_ex, int block, int step) // i_j_std_class_ex's class is partitioned virtually
 {
 	std::cout << "partitional_optimization" << std::endl;
 
@@ -138,7 +138,13 @@ pcl::PointCloud<pcl::PointXYZI>::Ptr XmeansClustering::partitional_optimization(
 	int size = i_j_std_class_ex->points.size();
 	
 	// chose center
+	int ci = 0;
 	for(int k = 0; k < 2; k++){
+		if(k == 0){
+			ci = block;
+		}else{
+			ci = step;
+		}
 		coordinate_sums.push_back(eigen_zero);
 		centers.push_back(eigen_zero);
 		class_counter.push_back(0);
@@ -147,17 +153,17 @@ pcl::PointCloud<pcl::PointXYZI>::Ptr XmeansClustering::partitional_optimization(
 			pre_centers.push_back(eigen_random);
 		}else if(CLUSTERING_METHOD_ == kmeans_pp){
 			while(1){
+				if(size == 0){
+					break;
+				}
 				int rnd_idx = randomization(size);
-				if(i_j_std_class_ex->points[rnd_idx].intensity == block + k){
+				std::cout << "ci : " << ci << ",  i_j_std_class_ex->points[rnd_idx].intensity" << i_j_std_class_ex->points[rnd_idx].intensity << std::endl;
+				if(i_j_std_class_ex->points[rnd_idx].intensity == ci){
 					Eigen::Vector3f initial_center;
 					initial_center << i_j_std_class_ex->points[rnd_idx].x, i_j_std_class_ex->points[rnd_idx].y, i_j_std_class_ex->points[rnd_idx].z;
 					pre_centers.push_back(initial_center);
 					break;
 				}
-				if(size == 0){
-					break;
-				}
-				std::cout << "rnd_idx : " << rnd_idx << std::endl;
 			}
 		}
 	}
@@ -170,11 +176,16 @@ pcl::PointCloud<pcl::PointXYZI>::Ptr XmeansClustering::partitional_optimization(
 		}
 		// Calculate each of class's center, and make each of class's position(by point cloud)
 		all_center_move = 0.0;
-		for(int k = block; k < 2 + block; k++){
+		for(int k = 0; k < 2; k++){
+			if(k == 0){
+				ci = block;
+			}else{
+				ci = step;
+			}
 			coordinate_sums[k] = eigen_zero;
 			class_counter[k] = 0;
 			for(auto& position : i_j_std_class_ex->points){
-				if((int)position.intensity == k){
+				if((int)position.intensity == ci){
 					Eigen::Vector3f eigen_tmp_point;
 					eigen_tmp_point << position.x, position.y, position.z;
 					coordinate_sums[k] += eigen_tmp_point;
@@ -190,13 +201,18 @@ pcl::PointCloud<pcl::PointXYZI>::Ptr XmeansClustering::partitional_optimization(
 		// Reregister each of cells.affiliation[i][j]
 		for(auto& position : i_j_std_class_ex->points){
 			float min_range = WIDTH_DIVISION_NUM_ * HEIGHT_DIVISION_NUM_;
-			for(int k = block; k < 2 + block; k++){
+			for(int k = 0; k < 2; k++){
+				if(k == 0){
+					ci = block;
+				}else{
+					ci = step;
+				}
 				Eigen::Vector3f eigen_tmp_point;
 				eigen_tmp_point << position.x, position.y, position.z;
 				Eigen::Vector3f coordinate_distance_from_center = eigen_tmp_point - centers[k];
 				if(min_range > coordinate_distance_from_center.norm()){
 					min_range = coordinate_distance_from_center.norm();
-					position.intensity = (float)k;
+					position.intensity = (float)ci;
 				}
 			}
 		}
@@ -219,15 +235,14 @@ void XmeansClustering::xmeans_clustering(void)
 	std::cout << "xmeans_clustering" << std::endl;
 
 	int block = 0;
+	int step = 1;
 	int upper_block_num = 1;
 	std::vector<bool> bic_flags;
 	std::vector<bool> block_manager;
 	std::vector<float> bic_list;
 	CloudIPtr i_j_std_class_solo {new CloudI};
-	CloudIPtr i_j_std_class {new CloudI};
 
 	while(1){
-		i_j_std_class->points.clear();
 		i_j_std_class_solo->points.clear();
 		for(int i = 0; i < WIDTH_DIVISION_NUM_; i++){
 			for(int j = 0; j < HEIGHT_DIVISION_NUM_; j++){
@@ -238,21 +253,21 @@ void XmeansClustering::xmeans_clustering(void)
 					tmp_pos->points[0].y = (float)j;
 					tmp_pos->points[0].z = cells[i][j].intensity_std_deviation;
 					tmp_pos->points[0].intensity = block;
-					*i_j_std_class += *tmp_pos;
 					*i_j_std_class_solo += *tmp_pos;
 				}
 			}
 		}
 		
-		float bic = bic_calculation(false, block, i_j_std_class_solo);
+		float bic = bic_calculation(false, block, step, i_j_std_class_solo);
 		CloudIPtr tmp_pos {new CloudI};
 		CloudIPtr partitioned_pos {new CloudI};
-		tmp_pos = virtual_class_partition(i_j_std_class_solo, block);
+		// tmp_pos = virtual_class_partition(i_j_std_class_solo, block);
+		tmp_pos = virtual_class_partition(i_j_std_class_solo, block, step);
 		if(tmp_pos->points.size() == 0){
 			break;
 		}
-		partitioned_pos = partitional_optimization(tmp_pos, block);
-		float bic_dash = bic_calculation(true, block, partitioned_pos);
+		partitioned_pos = partitional_optimization(tmp_pos, block, step);
+		float bic_dash = bic_calculation(true, block, step, partitioned_pos);
 
 		std::cout << "bic = " << bic << std::endl;
 		std::cout << "bic_dash = " << bic_dash << std::endl;
@@ -263,43 +278,22 @@ void XmeansClustering::xmeans_clustering(void)
 				int jy = (int)position.y;
 				cells[ix][jy].affiliation = (int)position.intensity;
 			}
-			upper_block_num += 2;
-			bic_list.push_back(bic_dash);
-			bic_flags.push_back(false);
-			block_manager.push_back(false);
+			step++;
+			upper_block_num = step;
 		}else{
 			for(auto& position : i_j_std_class_solo->points){
 				int ix = (int)position.x;
 				int jy = (int)position.y;
 				cells[ix][jy].affiliation = (int)position.intensity;
 			}
-			bic_flags.push_back(true);
-			block_manager.push_back(true);
 			identification(block, i_j_std_class_solo);
+			block++;
 		}
 
-		if(block > 0){
-			block_manager[block-1] = true;
-		}
-
-		int true_counter = 0;
-		if(block == upper_block_num - 1){
-			for(int b = 0; b < upper_block_num; b++){
-				if(bic_flags[b] == true && block_manager[b] == true){
-					true_counter++;
-				}
-			}
-		}
-
-		if(upper_block_num == true_counter){
-			std::cout << "upper_block_num : " << upper_block_num << std::endl;
-			std::cout << "block : " << block << std::endl;
+		if(upper_block_num == block){
 			break;
 		}
 
-		block_manager[block] = true;
-
-		block++;
 		std::cout << "block num : " << block << std::endl;
 	}
 }
@@ -344,15 +338,16 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr XmeansClustering::points_extraction(v
 }
 
 
-pcl::PointCloud<pcl::PointXYZI>::Ptr XmeansClustering::virtual_class_partition(CloudIPtr solo_class, int block)
+/* pcl::PointCloud<pcl::PointXYZI>::Ptr XmeansClustering::virtual_class_partition(CloudIPtr solo_class, int block) */
+pcl::PointCloud<pcl::PointXYZI>::Ptr XmeansClustering::virtual_class_partition(CloudIPtr solo_class, int block, int step)
 {
 	/* std::cout << "virtual_class_partition" << std::endl; */
 
 	CloudIPtr virtual_parrtition_class {new CloudI};
 	virtual_parrtition_class = solo_class;
 	for(auto& position : virtual_parrtition_class->points){
-		position.intensity = block + randomization(1);
-		/* std::cout << "position.intensity : " << position.intensity << std::endl; */
+		/* position.intensity = block + randomization(1); */
+		position.intensity = block + randomization(1) * step;
 	}
 	return virtual_parrtition_class;
 }
@@ -427,7 +422,7 @@ Eigen::Matrix3f XmeansClustering::covariance_matrix(CloudIPtr ci_class)
 }
 
 
-float XmeansClustering::bic_calculation(bool dash, int block, CloudIPtr i_j_std_class_ex)
+float XmeansClustering::bic_calculation(bool dash, int block, int step, CloudIPtr i_j_std_class_ex)
 {
 	/* std::cout << "bic_calculation" << std::endl; */
 	int ci_num;
@@ -446,7 +441,13 @@ float XmeansClustering::bic_calculation(bool dash, int block, CloudIPtr i_j_std_
 		ci_num = 2;
 	}
 
-	for(int k = block; k < block + ci_num; k++){
+	for(int k = 0; k < ci_num; k++){
+		int ci;
+		if(k == 0){
+			ci = block;
+		}else{
+			ci = step;
+		}
 		Eigen::Vector3f mu;
 		Eigen::Vector3f sum = Eigen::Vector3f::Zero();
 		Eigen::Matrix3f cov;
@@ -455,7 +456,7 @@ float XmeansClustering::bic_calculation(bool dash, int block, CloudIPtr i_j_std_
 		ci_class->points.resize(0);
 		for(auto& position : i_j_std_class_ex->points){
 			/* std::cout << "dash : " << dash << ",  ci : " << ci << ",  position.intensty : " << position.intensity << std::endl; */
-			if((int)position.intensity == k){
+			if((int)position.intensity == ci){
 				CloudIPtr tmp_pt {new CloudI};
 				tmp_pt->points.resize(1);
 				tmp_pt->points[0].x = position.x;
@@ -484,38 +485,38 @@ float XmeansClustering::bic_calculation(bool dash, int block, CloudIPtr i_j_std_
 	if(!dash){
 		float log_likelihood = 0.0;
 		for(auto& position : i_j_std_class_ex->points){
-			std::cout << "solo likelihood calc" << std::endl;
+			/* std::cout << "solo likelihood calc" << std::endl; */
 			Eigen::Vector3f pos_data;
 			pos_data << position.x, position.y, position.z;
 			float df = density_function(ci_class_list[0], pos_data, mu_list[0]);
 			log_likelihood += log(df);
-			std::cout << "solo likelihood = " << log_likelihood << std::endl;
+			/* std::cout << "solo likelihood = " << log_likelihood << std::endl; */
 		}
 		bic = -2 * log_likelihood + 6 * log(i_j_std_class_ex->points.size());
 	}else{
 		float mu_diff_norm = (mu_list[0] - mu_list[1]).norm();
 		float mu_diff_norm_pow = my_pow(mu_diff_norm);
 		beta = sqrt(mu_diff_norm_pow / (cov_list[0].determinant() + cov_list[1].determinant()) );
-		std::cout << "beta = " << beta << std::endl;
+		/* std::cout << "beta = " << beta << std::endl; */
 		float lower_probability = std_normal_distribution_integral(beta);
 		alpha = 0.5 / lower_probability;
-		std::cout << "alpha = " << alpha << std::endl;
+		/* std::cout << "alpha = " << alpha << std::endl; */
 
-		for(int ci = 0; ci < 2; ci++){
+		for(int k = 0; k < 2; k++){
 			float log_likelihood = 0.0;
 			CloudIPtr tmp_pos {new CloudI};
-			tmp_pos = ci_class_list[ci];
+			tmp_pos = ci_class_list[k];
 			for(auto& position : tmp_pos->points){
 				Eigen::Vector3f pos_data;
 				pos_data << position.x, position.y, position.z;
-				float df = density_function(ci_class_list[ci], pos_data, mu_list[0]);
+				float df = density_function(ci_class_list[k], pos_data, mu_list[k]);
 				log_likelihood += log(df);
 			}
-			std::cout << "likelihood[" << ci << "] = " << likelihood << std::endl;
+			/* std::cout << "likelihood[" << ci << "] = " << log_likelihood << std::endl; */
 			log_likelihood_list.push_back(log_likelihood);
 		}
 
-		bic = -2 * (i_j_std_class_ex->points.size() * log(alpha) + log_likelihood_list[0] +  log_likelihood_list[1]) + 12.0 * log(ci_class_list[0]->points.size());
+		bic = -2 * (i_j_std_class_ex->points.size() * log(alpha) + log_likelihood_list[0] +  log_likelihood_list[1]) + 12.0 * log(i_j_std_class_ex->points.size());
 	}
 
 	return bic;

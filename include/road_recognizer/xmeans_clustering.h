@@ -39,14 +39,14 @@ public:
 	CloudINormalPtr execution(CloudIPtr);
 	void initialization(void);
 	void grid_partition(CloudIPtr not_partitioned_pc);
-	CloudIPtr partitional_optimization(CloudIPtr, int);
+	CloudIPtr partitional_optimization(CloudIPtr, int, int);
 	void xmeans_clustering(void);
 	CloudINormalPtr points_extraction(void);
-	CloudIPtr virtual_class_partition(CloudIPtr, int);
+	CloudIPtr virtual_class_partition(CloudIPtr, int, int);
 	float log_likelihood_function();
 	float density_function(CloudIPtr, Eigen::Vector3f, Eigen::Vector3f);
 	Eigen::Matrix3f covariance_matrix(CloudIPtr);
-	float bic_calculation(bool, int, CloudIPtr);
+	float bic_calculation(bool, int, int, CloudIPtr);
 	void identification(int, CloudIPtr);
 	int randomization(int);
 	float std_normal_distribution_integral(float);
