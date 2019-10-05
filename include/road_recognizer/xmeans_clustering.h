@@ -65,17 +65,17 @@ private:
 	double dY;
 	double EPS_;
 	struct grid{
-		std::vector<std::vector<int> > affiliation;
-		std::vector<std::vector<float> > intensity_average;
-		std::vector<std::vector<float> > intensity_std_deviation;
-		std::vector<std::vector<CloudIPtr> > point_cloud;
+		int affiliation;
+		float intensity_average;
+		float intensity_std_deviation;
+		CloudI point_cloud;
 	};
 	struct classification{
-		std::vector<int> registration;
-		std::vector<float> average_intensity_std_deviation;
+		int registration;
+		float average_intensity_std_deviation;
 	};
-	struct grid cells;
-	struct classification identity;
+	std::vector<std::vector<grid> > cells;
+	std::vector<classification> identity;
 
 	std::vector<std::vector<int> > point_counter;
 	std::vector<std::vector<float> > intensity_sum;
