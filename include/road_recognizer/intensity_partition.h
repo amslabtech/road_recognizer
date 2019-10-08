@@ -60,32 +60,26 @@ private:
 	float intensity_max_all;
 	float range_mu_otsu;	
 	float otsu_range_std_deviation;	
-	float max_std_deviation;
-	std::vector<float> max_std_deviation_list;
-	std::vector<float> polar_grid_pt_cnt_row;
-	std::vector<float> polar_grid_avr_intensity_row;
-	std::vector<float> polar_grid_sum_intensity_row;
-	std::vector<CloudI> polar_grid_pc_row;
+	std::vector<bool> peak_filter;
 	std::vector<float> intensity_max;
 	std::vector<float> intensity_min;
 	std::vector<float> s_max;//[RANGE_DIVISION_NUM]
 	std::vector<float> otsu_threshold_tmp;//[RANGE_DIVISION_NUM]
-	std::vector<bool> peak_filter;
+	std::vector<float> polar_grid_pt_cnt_row;
+	std::vector<float> polar_grid_avr_intensity_row;
+	std::vector<float> polar_grid_sum_intensity_row;
 	std::vector<float> time_mu_otsu;//[RANGE_DIVISION_NUM];	
 	std::vector<float> ptz_list;
 	std::vector<std::vector<float> > polar_grid_pt_cnt;//[RANGE_DIVISION_NUM][THETA_DIVISION_NUM];
 	std::vector<std::vector<float> > polar_grid_avr_intensity;//[RANGE_DIVISION_NUM][THETA_DIVISION_NUM];
 	std::vector<std::vector<float> > polar_grid_sum_intensity;//[RANGE_DIVISION_NUM][THETA_DIVISION_NUM];
-	std::vector<std::vector<float> > polar_grid_diff_sum_pow_intensity;//[RANGE_DIVISION_NUM][THETA_DIVISION_NUM];
-	std::vector<std::vector<float> > polar_grid_std_deviation_intensity;//[RANGE_DIVISION_NUM][THETA_DIVISION_NUM];
-	std::vector<std::vector<CloudI> > polar_grid_pc;//[RANGE_DIVISION_NUM][THETA_DIVISION_NUM];
 	sensor_msgs::PointCloud2 pub_pc;
 	CloudIPtr input_pc_ {new CloudI};
 	CloudIPtr polar_pc_ {new CloudI};
 	CloudIPtr otsu_binary_pc_ {new CloudI};
 	struct GA{
-		std::vector<std::vector<float> > grass;
-		std::vector<std::vector<float> > asphalt;
+		std::array<std::vector<float>, 256> grass;
+		std::array<std::vector<float>, 256> asphalt;
 	};
 	struct WB{
 		float within;

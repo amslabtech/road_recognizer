@@ -16,7 +16,7 @@ RoadCloudPublisher::RoadCloudPublisher(void)
     local_nh.param("RANDOM_SAMPLE_RATIO", RANDOM_SAMPLE_RATIO, {0.25});
 	
 	local_nh.param("RANGE_MAX", RANGE_MAX, {20.0});
-	local_nh.param("RANGE_DIVISION_NUM", RANGE_DIVISION_NUM, {20});
+	local_nh.param("RANGE_DIVISION_NUM", RANGE_DIVISION_NUM, {40});
 	local_nh.param("THETA_DIVISION_NUM", THETA_DIVISION_NUM, {360});
 	local_nh.param("OTSU_BINARY_SEPARATION_THRESHOLD", OTSU_BINARY_SEPARATION_THRESHOLD, {0.8});
 	local_nh.param("OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD", OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD, {3.0});
@@ -199,11 +199,11 @@ void RoadCloudPublisher::filter_curvature(void)
 
 void RoadCloudPublisher::filter_intensity(void)
 {
-	// IntensityPartition intensity_partition(RANGE_DIVISION_NUM, THETA_DIVISION_NUM, RANGE_MAX, PEAK_DIFF_THRESHOLD, OTSU_BINARY_SEPARATION_THRESHOLD, OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD, OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD);
-	// intensity_cloud = intensity_partition.execution(ground_cloud);
+	IntensityPartition intensity_partition(RANGE_DIVISION_NUM, THETA_DIVISION_NUM, RANGE_MAX, PEAK_DIFF_THRESHOLD, OTSU_BINARY_SEPARATION_THRESHOLD, OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD, OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD);
+	intensity_cloud = intensity_partition.execution(ground_cloud);
 
-	XmeansClustering xmeans_clustering(true, 10000, 50, 50, 20, 20, 0.01);
-	intensity_cloud = xmeans_clustering.execution(ground_cloud);
+	// XmeansClustering xmeans_clustering(true, 10000, 50, 50, 20, 20, 0.01);
+	// intensity_cloud = xmeans_clustering.execution(ground_cloud);
 
     /* pcl::PassThrough<PointXYZIN> pass; */
     /* pass.setInputCloud(road_cloud); */

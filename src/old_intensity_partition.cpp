@@ -475,7 +475,24 @@ CloudIPtr OldIntensityPartition::otsu_pc_generator(void)
 
 		iz++;
 	}
-	
+
+
+	for(auto& pt : polar_pc_->points){
+		float theta_tmp = atan2(pt.y,pt.x);
+		if(theta_tmp < 0){
+			theta_tmp = 2 * M_PI + theta_tmp;
+		}
+		int r_g = pt.z;
+		int theta_g = theta_tmp;
+		if(polar_grid_avr_intensity[r_g][theta_g] < otsu_threshold_tmp[r_g] - 1.0){
+			if(((float)r_g <= pt.z && pt.z < (float)r_g + dR) && ((float)theta_g <= theta_tmp && theta_tmp < (float)theta_g + dTheta)){
+				pt.intensity = -1.0;
+			}
+		}
+		pt.z = ptz_list.at(iz);
+		iz++;
+	}
+
 	if(otsu_binary_msg.emergency){
 		//intensity_max_all = 0.0;
 	}
