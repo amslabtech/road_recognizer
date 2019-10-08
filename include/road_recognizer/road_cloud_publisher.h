@@ -32,9 +32,6 @@ public:
     typedef pcl::PointXYZINormal PointXYZIN;
     typedef pcl::PointCloud<PointXYZIN> CloudXYZIN;
     typedef pcl::PointCloud<PointXYZIN>::Ptr CloudXYZINPtr;
-    typedef pcl::PointXYZI PointXYZI;
-    typedef pcl::PointCloud<PointXYZI> CloudXYZI;
-    typedef pcl::PointCloud<PointXYZI>::Ptr CloudXYZIPtr;
     typedef pcl::PointXYZ PointXYZ;
     typedef pcl::PointCloud<PointXYZ> CloudXYZ;
     typedef pcl::PointCloud<PointXYZ>::Ptr CloudXYZPtr;
@@ -66,6 +63,7 @@ private:
     double HEIGHT_THRESHOLD;
     int MAX_RANDOM_SAMPLE_SIZE;
     double RANDOM_SAMPLE_RATIO;
+	bool IS_OTSU;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;
@@ -79,8 +77,8 @@ private:
 
 	//IntensityPartition intensity_partition;
 
-    CloudXYZIPtr obstacles_cloud;
-    CloudXYZIPtr ground_cloud;
+    CloudXYZINPtr obstacles_cloud;
+    CloudXYZINPtr ground_cloud;
     CloudXYZINPtr curvature_cloud;
     CloudXYZINPtr intensity_cloud;
     CloudXYZINPtr road_cloud;
