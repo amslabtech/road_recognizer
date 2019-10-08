@@ -220,6 +220,7 @@ void IntensityPartition::separated_histogram_peak_filter(float avr_grass, float 
 	/* std::cout << "r_g : " << r_g << std::endl; */
 	/* std::cout << "fabs(avr_grass - avr_asphalt) = " << fabs(avr_grass - avr_asphalt) << std::endl; */
 	if(fabs(avr_grass - avr_asphalt) <= PEAK_DIFF_THRESHOLD_){
+	/* if(1.0 - avr_asphalt / avr_grass < PEAK_DIFF_THRESHOLD_){ */
 		peak_filter[r_g] = true;
 	}else{
 		peak_filter[r_g] = false;
@@ -365,15 +366,32 @@ void IntensityPartition::calc_otsu_binary(void)
 pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::otsu_pc_generator(void)
 {
 	size_t iz = 0;
+	/* for(auto& pt : polar_pc_->points){ */
+	/* 	for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){ */
+	/* 		if(((float)r_g <= pt.z && pt.z < (float)r_g+dR) */
+	/* 			&& (otsu_threshold_tmp[r_g] - 1.0 > pt.intensity */
+	/* 				//|| (otsu_binary_msg.analysis[r_g].otsubinary_diff_from_thresholds_avr > OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD_) */
+	/* 				|| (otsu_binary_msg.analysis[r_g].separation < OTSU_BINARY_SEPARATION_THRESHOLD_ && 1 < otsu_binary_msg.analysis[r_g].separation) */
+	/* 				|| peak_filter[r_g] */
+	/* 				|| (pt.x == 0.0 && pt.y == 0.0) */
+	/* 		   		) */
+	/* 			){ */
+	/* 			pt.intensity = -1.0; */
+	/* 		} */
+	/* 	} */
+	/* 	pt.z = ptz_list.at(iz); */
+	/* 	iz++; */
+	/* } */
+
 	for(auto& pt : polar_pc_->points){
-		for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
-			if(((float)r_g <= pt.z && pt.z < (float)r_g+dR)
-				&& (otsu_threshold_tmp[r_g] > pt.intensity
-					//|| (otsu_binary_msg.analysis[r_g].otsubinary_diff_from_thresholds_avr > OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD_)
-					|| (otsu_binary_msg.analysis[r_g].separation < OTSU_BINARY_SEPARATION_THRESHOLD_ && 1 < otsu_binary_msg.analysis[r_g].separation)
-					|| peak_filter[r_g]
-			   		)
-				){
+		float theta_tmp = atan2(pt.y,pt.x);
+		if(theta_tmp < 0){
+			theta_tmp = 2 * M_PI + theta_tmp;
+		}
+		int r_g = pt.z;
+		int theta_g = theta_tmp;
+		if(polar_grid_avr_intensity[r_g][theta_g] < otsu_threshold_tmp[r_g] - 1.0){
+			if(((float)r_g <= pt.z && pt.z < (float)r_g + dR) && ((float)theta_g <= theta_tmp && theta_tmp < (float)theta_g + dTheta)){
 				pt.intensity = -1.0;
 			}
 		}
