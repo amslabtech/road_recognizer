@@ -11,7 +11,7 @@
 	<!-- <include file="$(find velodyne_height_map)/launch/amsl_velodyne_heightmap.launch"/> -->
 	<include file="$(find road_recognizer)/launch/road_recognizer.launch"/>
 	
-	<node pkg="rosbag" name="player" type="play" args="--clock /home/amsl/bagfiles/cats/2019/left_start.bag"/>
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/left_start.bag"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/cats_meets_cat_2019&#45;05&#45;16&#45;16&#45;47&#45;20.bag &#45;s 450"/> -->
 	
 	
@@ -37,7 +37,7 @@
 
 
 
-	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/second/2018&#45;08&#45;04&#45;12&#45;58&#45;48.bag &#45;s 1140"/> -->
+	<node pkg="rosbag" name="player" type="play" args="--clock /home/amsl/bagfiles/cats/2018/second/2018-08-04-12-58-48.bag -s 1140"/>
 	
 	
 	

@@ -13,7 +13,7 @@
         <arg name="range_max" default="20"/>
         <arg name="range_division_num" default="40"/>
         <arg name="theta_division_num" default="360"/>
-        <arg name="otsu_binary_separation_threshold" default="0.7"/>
+        <arg name="otsu_binary_separation_threshold" default="0.99"/>
         <arg name="random_sample_ratio" default="0.20"/>
         <arg name="is_otsu" default="true"/>
         <arg name="otsu_binary_sum_of_diff_from_avr_threshold" default="999.9"/>
