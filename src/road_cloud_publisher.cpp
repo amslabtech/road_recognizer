@@ -14,14 +14,6 @@ RoadCloudPublisher::RoadCloudPublisher(void)
     local_nh.param("HEIGHT_THRESHOLD", HEIGHT_THRESHOLD, {0});
     local_nh.param("MAX_RANDOM_SAMPLE_SIZE", MAX_RANDOM_SAMPLE_SIZE, {5000});
     local_nh.param("RANDOM_SAMPLE_RATIO", RANDOM_SAMPLE_RATIO, {0.25});
-	
-	local_nh.param("RANGE_MAX", RANGE_MAX, {20.0});
-	local_nh.param("RANGE_DIVISION_NUM", RANGE_DIVISION_NUM, {40});
-	local_nh.param("THETA_DIVISION_NUM", THETA_DIVISION_NUM, {360});
-	local_nh.param("OTSU_BINARY_SEPARATION_THRESHOLD", OTSU_BINARY_SEPARATION_THRESHOLD, {0.8});
-	local_nh.param("OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD", OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD, {3.0});
-	local_nh.param("OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD", OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD, {999.9});
-	local_nh.param("PEAK_DIFF_THRESHOLD", PEAK_DIFF_THRESHOLD, {10.0});
     local_nh.param("IS_OTSU", IS_OTSU , {true});
     local_nh.param("RANGE_MAX", RANGE_MAX, {20.0});
     local_nh.param("RANGE_DIVISION_NUM", RANGE_DIVISION_NUM, {20});
@@ -79,7 +71,6 @@ void RoadCloudPublisher::process(void)
     ros::Rate loop_rate(HZ);
 
     while(ros::ok()){
-        /* if(obstacles_cloud_updated && ground_cloud_updated && intensity_heightmaped_cloud_updated){ */
         if(obstacles_cloud_updated && ground_cloud_updated){
             double start = ros::Time::now().toSec();
             std::cout << "=== road cloud publisher ===" << std::endl;
@@ -105,7 +96,6 @@ void RoadCloudPublisher::process(void)
 
             obstacles_cloud_updated = false;
             ground_cloud_updated = false;
-			// intensity_heightmaped_cloud_updated = false;
 
             std::cout << "time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
         }
