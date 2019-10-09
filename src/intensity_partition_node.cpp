@@ -34,12 +34,12 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::execution(CloudIN
 	cartesian_pt_2_polar_grid(input_pc_);
 	calc_otsu_binary();
 	otsu_binary_pc_ = otsu_pc_generator();
-	pcl::copyPointCloud(*otsu_binary_pc_, *grass_pc_);
-	for(auto& pt : grass_pc_->points){
-		pt.normal_x = 0.0;
-		pt.normal_y = 0.0;
-		pt.normal_z = 0.0;
-	}
+	/* pcl::copyPointCloud(*otsu_binary_pc_, *grass_pc_); */
+	/* for(auto& pt : grass_pc_->points){ */
+	/* 	pt.normal_x = 0.0; */
+	/* 	pt.normal_y = 0.0; */
+	/* 	pt.normal_z = 0.0; */
+	/* } */
 
 	peak_filter.clear();
 	ptz_list.clear();
@@ -54,7 +54,8 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::execution(CloudIN
 	polar_grid_avr_intensity.clear();
 	polar_grid_sum_intensity.clear();
 
-	return grass_pc_;
+	/* return grass_pc_; */
+	return otsu_binary_pc_;
 }
 
 void IntensityPartition::initialize(void)
@@ -415,7 +416,7 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::otsu_pc_generator
 	CloudINormalPtr filtered_pc_ {new CloudINormal};
 	pass.setInputCloud(polar_pc_);
 	pass.setFilterFieldName ("intensity");
-	pass.setFilterLimits(10.0, intensity_max_all);
+	pass.setFilterLimits(0.0, intensity_max_all);
 	//pass.setFilterLimitsNegative (true);
 	pass.filter(*filtered_pc_);
 
@@ -430,6 +431,10 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::otsu_pc_generator
 		pt.y = filtered_pc_->points[i].y;
 		pt.z = filtered_pc_->points[i].z;
 		pt.intensity = filtered_pc_->points[i].intensity;
+		pt.normal_x = 0.0;
+		pt.normal_y = 0.0;
+		pt.normal_z = 0.0;
+		pt.curvature = 0.0;
 		i++;
 	}
 
