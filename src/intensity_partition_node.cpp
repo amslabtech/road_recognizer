@@ -361,7 +361,7 @@ void IntensityPartition::calc_otsu_binary(void)
 
 pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::otsu_pc_generator(void)
 {
-	/* size_t iz = 0; */
+	size_t iz = 0;
 	/* for(auto& pt : polar_pc_->points){ */
 	/* 	for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){ */
 	/* 		if(((float)r_g <= pt.z && pt.z < (float)r_g+dR) */
@@ -406,6 +406,8 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::otsu_pc_generator
 			}
 			if(check_flag) break;
 		}
+		pt.z = ptz_list.at(iz);
+		iz++;
 	}
 
 	if(otsu_binary_msg.emergency){
