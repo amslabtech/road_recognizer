@@ -79,7 +79,6 @@ void RoadCloudPublisher::process(void)
     ros::Rate loop_rate(HZ);
 
     while(ros::ok()){
-        /* if(obstacles_cloud_updated && ground_cloud_updated && intensity_heightmaped_cloud_updated){ */
         if(obstacles_cloud_updated && ground_cloud_updated){
             double start = ros::Time::now().toSec();
             std::cout << "=== road cloud publisher ===" << std::endl;
@@ -105,7 +104,6 @@ void RoadCloudPublisher::process(void)
 
             obstacles_cloud_updated = false;
             ground_cloud_updated = false;
-			// intensity_heightmaped_cloud_updated = false;
 
             std::cout << "time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
         }
