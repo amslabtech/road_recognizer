@@ -13,14 +13,11 @@
         <arg name="range_max" default="20"/>
         <arg name="range_division_num" default="20"/>
         <arg name="theta_division_num" default="720"/>
-        <!-- <arg name="otsu_binary_separation_threshold" default="0.35"/> -->
-        <!-- <arg name="otsu_binary_separation_threshold" default="0.0"/> -->
-        <arg name="otsu_binary_separation_threshold" default="200.0"/>
+        <arg name="otsu_binary_separation_threshold" default="0.35"/>
         <arg name="random_sample_ratio" default="1.0"/>
 		<arg name="is_otsu" default="true"/>
         <arg name="otsu_binary_sum_of_diff_from_avr_threshold" default="999.9"/>
-        <arg name="peak_diff_threshold" default="12.0"/>
-        <!-- <arg name="peak_diff_threshold" default="0.0"/> -->
+        <arg name="var_between_threshold" default="200.0"/>
 
         <arg name="store_num" default="50"/>
         <arg name="position_difference_threshold" default="0.1"/>
@@ -58,7 +55,7 @@
             <param name="IS_OTSU" value="$(arg is_otsu)"/>
             <param name="OTSU_BINARY_SEPARATION_THRESHOLD" value="$(arg otsu_binary_separation_threshold)"/>
             <param name="OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD" value="$(arg otsu_binary_sum_of_diff_from_avr_threshold)"/>
-            <param name="PEAK_DIFF_THRESHOLD" value="$(arg peak_diff_threshold)"/>
+            <param name="VAR_BETWEEN_THRESHOLD" value="$(arg var_between_threshold)"/>
         </node>
 
         <node pkg="road_recognizer" type="road_point_cloud_storer" name="road_point_cloud_storer">
