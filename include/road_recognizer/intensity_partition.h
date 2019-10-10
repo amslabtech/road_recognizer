@@ -63,7 +63,7 @@ private:
 	std::vector<bool> peak_filter;
 	std::vector<float> intensity_max;
 	std::vector<float> intensity_min;
-	std::vector<float> s_max;//[RANGE_DIVISION_NUM]
+	std::vector<float> max_s_var_between;//[RANGE_DIVISION_NUM]
 	std::vector<float> otsu_threshold_tmp;//[RANGE_DIVISION_NUM]
 	std::vector<float> polar_grid_pt_cnt_row;
 	std::vector<float> polar_grid_avr_intensity_row;

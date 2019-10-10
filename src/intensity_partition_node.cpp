@@ -45,7 +45,7 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::execution(CloudIN
 	ptz_list.clear();
 	intensity_max.clear();
 	intensity_min.clear();
-	s_max.clear();
+	max_s_var_between.clear();
 	otsu_threshold_tmp.clear();
 	polar_grid_pt_cnt_row.clear();
 	polar_grid_avr_intensity_row.clear();
@@ -61,20 +61,22 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::execution(CloudIN
 void IntensityPartition::initialize(void)
 {
 	otsu_binary_msg.emergency = false;
-	for(int i = 0; i < THETA_DIVISION_NUM_; i++){
-		s_max.push_back(0.0);
-		otsu_threshold_tmp.push_back(0.0);
-		intensity_max.push_back(0.0);
-		intensity_min.push_back(999.9);
+	for(int theta_g = 0; theta_g < THETA_DIVISION_NUM_; theta_g++){
 		polar_grid_pt_cnt_row.push_back(0.0);
 		polar_grid_avr_intensity_row.push_back(-1.0);
 		polar_grid_sum_intensity_row.push_back(0.0);
 	}
-	for(int j = 0; j < RANGE_DIVISION_NUM_; j++){
+	for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
+		intensity_max.push_back(0.0);
+		intensity_min.push_back(999.9);
+		otsu_threshold_tmp.push_back(0.0);
+		max_s_var_between.push_back(0.0);
 		peak_filter.push_back(false);
 		polar_grid_pt_cnt.push_back(polar_grid_pt_cnt_row);
 		polar_grid_avr_intensity.push_back(polar_grid_avr_intensity_row);
 		polar_grid_sum_intensity.push_back(polar_grid_sum_intensity_row);
+		otsu_binary_msg.intensity[r_g].threshold = 0.0;
+		otsu_binary_msg.analysis[r_g].separation = -99.9;
 	}
 	intensity_max_all = 0.0;
 }
@@ -328,21 +330,16 @@ void IntensityPartition::calc_otsu_binary(void)
 			var_wb.between = (ng * diff_mg * diff_mg + na * diff_ma * diff_ma) / (ng + na);
 			float s_tmp = var_wb.between / var_wb.within;
 
-			if(s_max[r_g] < s_tmp){
-				s_max[r_g] = s_tmp;
-				otsu_threshold_tmp[r_g] = (float)i_threshold;
+			if(otsu_binary_msg.analysis[r_g].separation < s_tmp){
+				otsu_binary_msg.analysis[r_g].separation = s_tmp;
+				otsu_binary_msg.intensity[r_g].threshold = (float)i_threshold;
+				max_s_var_between[r_g] = var_wb.between;
 			}
 		}
-		// search for max separation
-		if(r_g == 0){
-			otsu_binary_msg.intensity[r_g].threshold = 0.0;
-			otsu_binary_msg.analysis[r_g].separation = 0.0;
-		}else{
-			otsu_binary_msg.intensity[r_g].threshold = otsu_threshold_tmp[r_g];
-			otsu_binary_msg.analysis[r_g].separation = s_max[r_g];
-			/* std::cout << "threshold[" << r_g << "] = " << otsu_binary_msg.intensity[r_g].threshold << std::endl; */
-			/* std::cout << "separation[" << r_g << "] = " << otsu_binary_msg.analysis[r_g].separation << std::endl; */
-		}
+		// otsu_binary_msg.analysis[r_g].separation = s_tmp;
+		/* std::cout << "threshold[" << r_g << "] = " << otsu_binary_msg.intensity[r_g].threshold << std::endl; */
+		/* std::cout << "separation[" << r_g << "] = " << otsu_binary_msg.analysis[r_g].separation << std::endl; */
+		std::cout << "max_s_var_between[" << r_g << "] = " << max_s_var_between[r_g] << std::endl;
 		separated_histogram_peak_filter(avr.grass[otsu_binary_msg.intensity[r_g].threshold][r_g], avr.asphalt[otsu_binary_msg.intensity[r_g].threshold][r_g], r_g);
 	}
 
@@ -387,25 +384,33 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::otsu_pc_generator
 			theta_tmp = 2 * M_PI + theta_tmp;
 		}
 
-		bool check_flag = false;
-		for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
-			for(int theta_g = 0; theta_g < THETA_DIVISION_NUM_; theta_g++){
-				if((r_g == (int)(r_tmp / dR)) && (theta_g == (int)(theta_tmp / dTheta))){
-					if(polar_grid_avr_intensity[r_g][theta_g] < otsu_threshold_tmp[r_g] - 1.0){
-						pt.intensity = -1.0;
-					}
-					if(otsu_binary_msg.analysis[r_g].separation < OTSU_BINARY_SEPARATION_THRESHOLD_){
-						pt.intensity = -1.0;
-					}
-					if(peak_filter[r_g]){
-						pt.intensity = -1.0;
-					}
-					check_flag = true;
-				}
-				if(check_flag) break;
-			}
-			if(check_flag) break;
+		// bool check_flag = false;
+		// for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
+		// 	for(int theta_g = 0; theta_g < THETA_DIVISION_NUM_; theta_g++){
+		// 		if((r_g == (int)(r_tmp / dR)) && (theta_g == (int)(theta_tmp / dTheta))){
+		// 			if(polar_grid_avr_intensity[r_g][theta_g] < otsu_binary_msg.intensity[r_g].threshold - 1.0){
+		// 				pt.intensity = -1.0;
+		// 			}
+		// 			#<{(| if(otsu_binary_msg.analysis[r_g].separation < OTSU_BINARY_SEPARATION_THRESHOLD_){ |)}>#
+		// 			#<{(| 	pt.intensity = -1.0; |)}>#
+		// 			#<{(| } |)}>#
+		// 			#<{(| if(peak_filter[r_g]){ |)}>#
+		// 			#<{(| 	pt.intensity = -1.0; |)}>#
+		// 			#<{(| } |)}>#
+		// 			if(max_s_var_between[r_g] < OTSU_BINARY_SEPARATION_THRESHOLD_){
+		// 				pt.intensity = -1.0;
+		// 			}
+		// 			check_flag = true;
+		// 		}
+		// 		if(check_flag) break;
+		// 	}
+		// 	if(check_flag) break;
+		// }
+		
+		if(pt.intensity / (0.08 * r_tmp + 16.9) < 1.0){
+			pt.intensity = -1.0;
 		}
+		
 		pt.z = ptz_list.at(iz);
 		iz++;
 	}
@@ -418,7 +423,7 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::otsu_pc_generator
 	CloudINormalPtr filtered_pc_ {new CloudINormal};
 	pass.setInputCloud(polar_pc_);
 	pass.setFilterFieldName ("intensity");
-	pass.setFilterLimits(10.0, intensity_max_all);
+	pass.setFilterLimits(0.0, intensity_max_all);
 	//pass.setFilterLimitsNegative (true);
 	pass.filter(*filtered_pc_);
 
