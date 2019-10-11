@@ -249,7 +249,7 @@ void IntensityPartition::calc_otsu_binary(void)
 	for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
 		for(int theta_g = 0; theta_g < THETA_DIVISION_NUM_; theta_g++){
 			int intensity_tmp = (int)polar_grid_avr_intensity[r_g][theta_g];
-			if(intensity_tmp > 0){
+			if(intensity_tmp >= 0){
 				/* histogram.at(intensity_tmp).at(r_g) += 1; */
 				histogram[intensity_tmp][r_g] += 1;
 			}
