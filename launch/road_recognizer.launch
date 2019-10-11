@@ -15,7 +15,7 @@
         <arg name="theta_division_num" default="720"/>
         <arg name="otsu_binary_separation_threshold" default="0.35"/>
         <arg name="random_sample_ratio" default="1.0"/>
-		<arg name="is_otsu" default="true"/>
+		<arg name="is_otsu" default="false"/>
         <arg name="otsu_binary_sum_of_diff_from_avr_threshold" default="999.9"/>
         <arg name="var_between_threshold" default="200.0"/>
 
