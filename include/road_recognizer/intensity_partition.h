@@ -39,7 +39,6 @@ public:
 	void calc_otsu_binary(void);
 	void calc_diff_from_avr(void);
 	void emergency_judge(void);
-	void separated_histogram_peak_filter(float, float, int);
 	CloudINormalPtr otsu_pc_generator(void);
 
 private:
@@ -49,7 +48,7 @@ private:
 	int	n_asphalt;// = 0;
 	int RANGE_DIVISION_NUM_;//= 20
 	int THETA_DIVISION_NUM_;//= 360;
-	float PEAK_DIFF_THRESHOLD_;
+	float VAR_BETWEEN_THRESHOLD_;
 	float OTSU_BINARY_SEPARATION_THRESHOLD_;// = 0.2;
 	float OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD_;// = 3.0;
 	float OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD_;// = 58.0;
@@ -60,10 +59,9 @@ private:
 	float intensity_max_all;
 	float range_mu_otsu;
 	float otsu_range_std_deviation;
-	std::vector<bool> peak_filter;
 	std::vector<float> intensity_max;
 	std::vector<float> intensity_min;
-	std::vector<float> s_max;//[RANGE_DIVISION_NUM]
+	std::vector<float> max_s_var_between;//[RANGE_DIVISION_NUM]
 	std::vector<float> otsu_threshold_tmp;//[RANGE_DIVISION_NUM]
 	std::vector<float> polar_grid_pt_cnt_row;
 	std::vector<float> polar_grid_avr_intensity_row;

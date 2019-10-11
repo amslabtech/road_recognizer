@@ -21,7 +21,7 @@ RoadCloudPublisher::RoadCloudPublisher(void)
     local_nh.param("OTSU_BINARY_SEPARATION_THRESHOLD", OTSU_BINARY_SEPARATION_THRESHOLD, {0.8});
     local_nh.param("OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD", OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD, {3.0});
     local_nh.param("OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD", OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD, {999.9});
-    local_nh.param("PEAK_DIFF_THRESHOLD", PEAK_DIFF_THRESHOLD, {10.0});
+    local_nh.param("VAR_BETWEEN_THRESHOLD", VAR_BETWEEN_THRESHOLD, {100.0});
 
     curvature_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/curvature", 1);
     intensity_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/intensity", 1);
@@ -202,7 +202,7 @@ void RoadCloudPublisher::filter_curvature(void)
 void RoadCloudPublisher::filter_intensity(void)
 {
     if(IS_OTSU){
-        IntensityPartition intensity_partition(RANGE_DIVISION_NUM, THETA_DIVISION_NUM, RANGE_MAX, PEAK_DIFF_THRESHOLD, OTSU_BINARY_SEPARATION_THRESHOLD, OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD, OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD);
+        IntensityPartition intensity_partition(RANGE_DIVISION_NUM, THETA_DIVISION_NUM, RANGE_MAX, VAR_BETWEEN_THRESHOLD, OTSU_BINARY_SEPARATION_THRESHOLD, OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD, OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD);
 
         intensity_cloud = intensity_partition.execution(ground_cloud);
         intensity_cloud->header = ground_cloud->header;
