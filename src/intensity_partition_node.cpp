@@ -88,7 +88,7 @@ void IntensityPartition::cartesian_pt_2_polar_grid(CloudINormalPtr cartesian_pc_
 		}
 
 		// create polar grid informations
-		bool get_pt_flag = false, r_flag = false, theta_flag = false;
+		bool get_pt_flag = false;
 		for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
 			for(int theta_g = 0; theta_g < THETA_DIVISION_NUM_; theta_g++){
 				if((r_g == (int)(r_tmp / dR)) && (theta_g == (int)(theta_tmp / dTheta))){
@@ -100,20 +100,10 @@ void IntensityPartition::cartesian_pt_2_polar_grid(CloudINormalPtr cartesian_pc_
 					polar_pc_->points[i].z = r_tmp;
 
 					get_pt_flag = true;
-					r_flag = true;
-					theta_flag = true;
 				}
-
-				if(intensity_min[r_g] > polar_grid_avr_intensity[r_g][theta_g] && get_pt_flag){
-					intensity_min[r_g] = polar_grid_avr_intensity[r_g][theta_g];
-				}
-				if(intensity_max[r_g] < polar_grid_avr_intensity[r_g][theta_g] && get_pt_flag){
-					intensity_max[r_g] = polar_grid_avr_intensity[r_g][theta_g];
-				}
-
-				if(theta_flag) break;
+				if(get_pt_flag) break;
 			}
-			if(r_flag) break;
+			if(get_pt_flag) break;
 
 		}
 
@@ -125,6 +115,14 @@ void IntensityPartition::cartesian_pt_2_polar_grid(CloudINormalPtr cartesian_pc_
 	}
 
 	for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
+		for(int theta_g = 0; theta_g < THETA_DIVISION_NUM_; theta_g++){
+			if(intensity_min[r_g] > polar_grid_avr_intensity[r_g][theta_g]){
+				intensity_min[r_g] = polar_grid_avr_intensity[r_g][theta_g];
+			}
+			if(intensity_max[r_g] < polar_grid_avr_intensity[r_g][theta_g]){
+				intensity_max[r_g] = polar_grid_avr_intensity[r_g][theta_g];
+			}
+		}
 		if(r_g == 0){
 			otsu_binary_msg.intensity[r_g].min = 0.0;
 			otsu_binary_msg.intensity[r_g].max = 0.0;
@@ -310,8 +308,8 @@ void IntensityPartition::calc_otsu_binary(void)
 			}
 		}
 		// otsu_binary_msg.analysis[r_g].separation = s_tmp;
-		/* std::cout << "threshold[" << r_g << "] = " << otsu_binary_msg.intensity[r_g].threshold << std::endl; */
-		/* std::cout << "separation[" << r_g << "] = " << otsu_binary_msg.analysis[r_g].separation << std::endl; */
+		std::cout << "threshold[" << r_g << "] = " << otsu_binary_msg.intensity[r_g].threshold << std::endl;
+		std::cout << "separation[" << r_g << "] = " << otsu_binary_msg.analysis[r_g].separation << std::endl;
 		std::cout << "max_s_var_between[" << r_g << "] = " << max_s_var_between[r_g] << std::endl;
 	}
 
@@ -359,7 +357,7 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::otsu_pc_generator
 		for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
 			for(int theta_g = 0; theta_g < THETA_DIVISION_NUM_; theta_g++){
 				if((r_g == (int)(r_tmp / dR)) && (theta_g == (int)(theta_tmp / dTheta))){
-					if(polar_grid_avr_intensity[r_g][theta_g] < otsu_binary_msg.intensity[r_g].threshold - 1.0){
+					if(polar_grid_avr_intensity[r_g][theta_g] < otsu_binary_msg.intensity[r_g].threshold){
 						pt.intensity = -1.0;
 					}
 					/* if(otsu_binary_msg.analysis[r_g].separation < OTSU_BINARY_SEPARATION_THRESHOLD_){ */
