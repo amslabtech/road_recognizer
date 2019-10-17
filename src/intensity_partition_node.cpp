@@ -353,6 +353,10 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::otsu_pc_generator
 			theta_tmp = 2 * M_PI + theta_tmp;
 		}
 
+		pt.z = ptz_list.at(iz);
+		iz++;
+		
+		
 		bool check_flag = false;
 		for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
 			for(int theta_g = 0; theta_g < THETA_DIVISION_NUM_; theta_g++){
@@ -364,7 +368,7 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::otsu_pc_generator
 					/* 	pt.intensity = -1.0; */
 					/* } */
 					if(max_s_var_between[r_g] < VAR_BETWEEN_THRESHOLD_){
-						pt.intensity = -1.0;
+						pt.z = -1.0;
 					}
 					check_flag = true;
 				}
@@ -377,8 +381,6 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::otsu_pc_generator
 		/* 	pt.intensity = -1.0; */
 		/* } */
 		
-		pt.z = ptz_list.at(iz);
-		iz++;
 	}
 
 	if(otsu_binary_msg.emergency){
@@ -412,6 +414,7 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::otsu_pc_generator
 	}
 
 	return otsu_pc_;
+	/* return polar_pc_; */
 }
 
 

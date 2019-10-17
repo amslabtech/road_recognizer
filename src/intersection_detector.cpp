@@ -303,10 +303,10 @@ void IntersectionDetector::visualize_beam(const std::vector<double>& beam_ranges
 
         std_msgs::ColorRGBA c;
         if(std::find(peak_list.begin(), peak_list.end(), i) == peak_list.end()){
-            c.r = 0;
+            c.r = 1;
             c.g = 1;
-            c.b = 0;
-            c.a = 0.8;
+            c.b = 1;
+            c.a = 0.5;
         }else{
             c.r = 1;
             c.g = 0;

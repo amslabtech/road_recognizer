@@ -44,7 +44,8 @@ void RoadPointCloudStorer::callback(const sensor_msgs::PointCloud2ConstPtr& msg_
 
     if(!first_flag){
         double d_yaw = current_yaw - last_yaw;
-        d_yaw = atan2(sin(d_yaw), cos(d_yaw));
+        // d_yaw = atan2(sin(d_yaw), cos(d_yaw));
+        d_yaw = -2.0 * atan2(sin(d_yaw), cos(d_yaw));
         Eigen::Matrix3d r;
         r = Eigen::AngleAxisd(-d_yaw, Eigen::Vector3d::UnitZ());
 
