@@ -357,29 +357,30 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::otsu_pc_generator
 		iz++;
 		
 		
-		bool check_flag = false;
-		for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
-			for(int theta_g = 0; theta_g < THETA_DIVISION_NUM_; theta_g++){
-				if((r_g == (int)(r_tmp / dR)) && (theta_g == (int)(theta_tmp / dTheta))){
-					if(polar_grid_avr_intensity[r_g][theta_g] < otsu_binary_msg.intensity[r_g].threshold){
-						pt.intensity = -1.0;
-					}
-					/* if(otsu_binary_msg.analysis[r_g].separation < OTSU_BINARY_SEPARATION_THRESHOLD_){ */
-					/* 	pt.intensity = -1.0; */
-					/* } */
-					if(max_s_var_between[r_g] < VAR_BETWEEN_THRESHOLD_){
-						pt.z = -1.0;
-					}
-					check_flag = true;
-				}
-				if(check_flag) break;
-			}
-			if(check_flag) break;
-		}
+		// bool check_flag = false;
+		// for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
+		// 	for(int theta_g = 0; theta_g < THETA_DIVISION_NUM_; theta_g++){
+		// 		if((r_g == (int)(r_tmp / dR)) && (theta_g == (int)(theta_tmp / dTheta))){
+		// 			if(polar_grid_avr_intensity[r_g][theta_g] < otsu_binary_msg.intensity[r_g].threshold){
+		// 				pt.intensity = -1.0;
+		// 			}
+		// 			#<{(| if(otsu_binary_msg.analysis[r_g].separation < OTSU_BINARY_SEPARATION_THRESHOLD_){ |)}>#
+		// 			#<{(| 	pt.intensity = -1.0; |)}>#
+		// 			#<{(| } |)}>#
+		// 			if(max_s_var_between[r_g] < VAR_BETWEEN_THRESHOLD_){
+		// 				pt.z = -1.0;
+		// 			}
+		// 			check_flag = true;
+		// 		}
+		// 		if(check_flag) break;
+		// 	}
+		// 	if(check_flag) break;
+		// }
 		
 		/* if(pt.intensity / (0.08 * r_tmp + 16.9) < 1.0){ */
-		/* 	pt.intensity = -1.0; */
-		/* } */
+		if(pt.intensity / (0.139*r_tmp*r_tmp - 2.4414*r_tmp + 17.183) < 1.0){
+			pt.intensity = -1.0;
+		}
 		
 	}
 

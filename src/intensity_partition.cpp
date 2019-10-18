@@ -122,6 +122,7 @@ private:
     double last_add_yaw;
     double current_yaw;
 
+	std::vector<float> intensity_study;
 };
 
 
@@ -139,9 +140,9 @@ int main(int argc, char** argv)
 IntensityPartition::IntensityPartition(void)
 {
 	RANGE_DIVISION_NUM_ = 20;
-	THETA_DIVISION_NUM_ = 120;
+	THETA_DIVISION_NUM_ = 720;
 	RANGE_MAX_ = 20;
-	VAR_BETWEEN_THRESHOLD_ = 0;
+	VAR_BETWEEN_THRESHOLD_ = 150;
 	OTSU_BINARY_SEPARATION_THRESHOLD_ = 0;
 	OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD_ = 0;
 	OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD_ = 0;
@@ -320,7 +321,7 @@ void IntensityPartition::execution(void)
 			/* 	} */
 			/* } */
 
-			std::cout << "size : " << rgba_pc->points.size() << std::endl;
+			/* std::cout << "size : " << rgba_pc->points.size() << std::endl; */
 
 			rgba_pc->header = input_pc_->header;
 			rgba_pc->width = rgba_pc->points.size();
@@ -339,6 +340,7 @@ void IntensityPartition::execution(void)
 			polar_grid_pt_cnt.clear();
 			polar_grid_avr_intensity.clear();
 			polar_grid_sum_intensity.clear();
+			intensity_study.clear();
 			tf_listen_flag = false;
 			pc_callback_flag = false;
 			odom_callback_flag = false;
@@ -410,6 +412,7 @@ void IntensityPartition::initialize(void)
 		polar_grid_sum_intensity.push_back(polar_grid_sum_intensity_row);
 		otsu_binary_msg.intensity[r_g].threshold = 0.0;
 		otsu_binary_msg.analysis[r_g].separation = -99.9;
+		intensity_study.push_back(0.0);
 	}
 	intensity_max_all = 0.0;
 }
@@ -420,14 +423,15 @@ void IntensityPartition::cartesian_pt_2_polar_grid(CloudINormalPtr cartesian_pc_
 	float r_tmp, theta_tmp, z_tmp;
 	size_t i = 0;
 	initialize();
-
+	
+	std::cout << "new" << std::endl;
 	for(auto& pt : cartesian_pc_->points){
 		r_tmp = sqrt(pt.x * pt.x + pt.y * pt.y);
 		theta_tmp = atan2(pt.y,pt.x);
 		if(theta_tmp < 0){
 			theta_tmp = 2 * M_PI + theta_tmp;
 		}
-
+		
 		// create polar grid informations
 		bool get_pt_flag = false;
 		for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
@@ -462,6 +466,12 @@ void IntensityPartition::cartesian_pt_2_polar_grid(CloudINormalPtr cartesian_pc_
 			}
 			if(intensity_max[r_g] < polar_grid_avr_intensity[r_g][theta_g]){
 				intensity_max[r_g] = polar_grid_avr_intensity[r_g][theta_g];
+			}
+			if(theta_g > 0 && theta_g < 10 && polar_grid_avr_intensity[r_g][theta_g] > 0){
+				std::cout << "theta : " << theta_g << ", r : " << r_g << ", intensity : " << polar_grid_avr_intensity[r_g][theta_g] << std::endl;
+			}
+			if(theta_g > 520 && theta_g < 530 && polar_grid_avr_intensity[r_g][theta_g] > 0){
+				std::cout << "theta : " << theta_g << ", r : " << r_g << ", intensity : " << polar_grid_avr_intensity[r_g][theta_g] << std::endl;
 			}
 		}
 		if(r_g == 0){
@@ -703,12 +713,13 @@ pcl::PointCloud<pcl::PointXYZI>::Ptr IntensityPartition::otsu_pc_generator(void)
 			for(int theta_g = 0; theta_g < THETA_DIVISION_NUM_; theta_g++){
 				if((r_g == (int)(r_tmp / dR)) && (theta_g == (int)(theta_tmp / dTheta))){
 					if(polar_grid_avr_intensity[r_g][theta_g] < otsu_binary_msg.intensity[r_g].threshold){
-						pt.intensity = 0.0;
-					}else{
-						pt.intensity = 1.0;
+						/* pt.intensity = 0.0; */
+						pt.intensity = -1.0;
+					/* }else{ */
+					/* 	pt.intensity = 1.0; */
 					}
 					if(max_s_var_between[r_g] < VAR_BETWEEN_THRESHOLD_){
-						pt.z = -1000;
+						pt.intensity = -1.0;
 					}
 					check_flag = true;
 				}
@@ -718,9 +729,10 @@ pcl::PointCloud<pcl::PointXYZI>::Ptr IntensityPartition::otsu_pc_generator(void)
 		}
 		
 		/* if(pt.intensity / (0.08 * r_tmp + 16.9) < 1.0){ */
-		/* 	pt.intensity = 0.0; */
-		/* }else{ */
-		/* 	pt.intensity = 1.0; */
+		/* 	#<{(| pt.intensity = 0.0; |)}># */
+		/* 	pt.intensity = -1.0; */
+		/* #<{(| }else{ |)}># */
+		/* #<{(| 	pt.intensity = 1.0; |)}># */
 		/* } */
 		
 	}
@@ -732,9 +744,10 @@ pcl::PointCloud<pcl::PointXYZI>::Ptr IntensityPartition::otsu_pc_generator(void)
 	pcl::PassThrough<PointINormal> pass;
 	CloudINormalPtr filtered_pc_ {new CloudINormal};
 	pass.setInputCloud(polar_pc_);
-	/* pass.setFilterFieldName ("intensity"); */
-	pass.setFilterFieldName ("z");
-	pass.setFilterLimits(-999, 999);
+	pass.setFilterFieldName ("intensity");
+	/* pass.setFilterFieldName ("z"); */
+	pass.setFilterLimits(0.0, intensity_max_all);
+	/* pass.setFilterLimits(-999, 999); */
 	//pass.setFilterLimitsNegative (true);
 	pass.filter(*filtered_pc_);
 
