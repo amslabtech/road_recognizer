@@ -204,7 +204,7 @@ void IntensityPartition::execution(void)
 
 				size_t size = otsu_binary_pc_->points.size();
 				size_list.push_back(size);
-				if(cnt > 5){
+				if(cnt > 15){
 					store_pc->points.erase(store_pc->points.begin(), store_pc->points.begin() + size_list.at(0));
 					size_list.erase(size_list.begin());
 				}
@@ -214,11 +214,11 @@ void IntensityPartition::execution(void)
 			}
 	
 
-			int grass_pt[20][720];
-			int asphalt_pt[20][720];
-			float score[20][720];
+			int grass_pt[20][120];
+			int asphalt_pt[20][120];
+			float score[20][120];
 			for(int r_g = 0; r_g < 20; r_g++){
-				for(int theta_g = 0; theta_g < 720; theta_g++){
+				for(int theta_g = 0; theta_g < 120; theta_g++){
 					grass_pt[r_g][theta_g] = 0;
 					asphalt_pt[r_g][theta_g] = 0;
 					score[r_g][theta_g] = 0;
