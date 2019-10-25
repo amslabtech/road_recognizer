@@ -9,10 +9,11 @@
 	
 	<!-- <include file="$(find velodyne_pointcloud)/launch/32e_points.launch"/> -->
 	<!-- <include file="$(find velodyne_height_map)/launch/amsl_velodyne_heightmap.launch"/> -->
-	<!-- <include file="$(find road_recognizer)/launch/road_recognizer.launch"/> -->
+	<include file="$(find road_recognizer)/launch/road_recognizer.launch"/>
 
 	<node pkg="road_recognizer" name="intensity_partition" type="intensity_partition"/>
-	<node pkg="road_recognizer" name="pc_store_for_robosym_nagai" type="pc_store_for_robosym_nagai" output="screen"/>
+	<node pkg="road_recognizer" name="intensity_date" type="intensity_date"/>
+	<!-- <node pkg="road_recognizer" name="pc_store_for_robosym_nagai" type="pc_store_for_robosym_nagai" output="screen"/> -->
 	
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/left_start.bag"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/cats_meets_cat_2019&#45;05&#45;16&#45;16&#45;47&#45;20.bag &#45;s 450"/> -->
@@ -20,23 +21,25 @@
 	<!-- 0629 -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/ohdanhodo.bag"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag"/> -->
-	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 1370"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 1380"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 1420"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 1530"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 1595"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 1705"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 1815"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 1870"/> -->
-	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 1940"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 1958"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 2155"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 2200"/> -->
-	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 2270"/> -->
+	<node pkg="rosbag" name="player" type="play" args="--clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag -s 2280 -r 0.1"/>
+
 	
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 2900"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 2733"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 1100"/> -->
 	
 	<!-- 0914 -->
-	<node pkg="rosbag" name="player" type="play" args="--clock /home/amsl/bagfiles/cats/2019/0914/tsukuba_full.bag -s 100 -r 0.1"/>
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/0914/tsukuba_full.bag &#45;s 100 &#45;r 0.1"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/0914/tsukuba_full.bag &#45;s 2070"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/0914/tsukuba_full.bag &#45;s 2210"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/0914/tsukuba_full.bag &#45;s 2480"/> -->
@@ -56,6 +59,17 @@
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/0914/tsukuba_full.bag &#45;s 4030"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/0914/tsukuba_full.bag &#45;s 4100"/> -->
 	
+	
+	<!-- 2019/10/21 -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/1021/2019&#45;10&#45;21&#45;15&#45;11&#45;29.bag"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/1021/2019&#45;10&#45;21&#45;15&#45;11&#45;29.bag &#45;s 1720 &#45;r 0.2"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/1021/2019&#45;10&#45;21&#45;15&#45;11&#45;29.bag &#45;s 2560"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/1021/2019&#45;10&#45;21&#45;15&#45;11&#45;29.bag &#45;s 2690"/> -->
+
+
+
+
+
 	<!-- 2018/6/30 -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/first/2018&#45;06&#45;30&#45;13&#45;52&#45;08.bag &#45;s 330"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/first/2018&#45;06&#45;30&#45;13&#45;52&#45;08.bag &#45;s 1050"/> -->
@@ -68,17 +82,26 @@
 	
 	<!-- 2018/8 -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/second/2018&#45;08&#45;04&#45;12&#45;58&#45;48.bag &#45;s 1430"/> -->
-	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/second/2018&#45;08&#45;04&#45;12&#45;58&#45;48.bag &#45;s 1500"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/second/2018&#45;08&#45;04&#45;12&#45;58&#45;48.bag &#45;s 1535 &#45;r 0.2"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/second/2018&#45;08&#45;04&#45;12&#45;58&#45;48.bag &#45;s 1140"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/second/2018&#45;08&#45;04&#45;12&#45;58&#45;48.bag &#45;s 700"/> -->
+
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/infant/rwrc2018/2018&#45;08&#45;04&#45;16&#45;10&#45;05.bag &#45;s 975 &#45;r 0.1 /tinypower/odom:=/odom"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/infant/rwrc2018/2018&#45;08&#45;04&#45;16&#45;10&#45;05.bag &#45;s 1150 /tinypower/odom:=/odom"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/infant/rwrc2018/2018&#45;08&#45;04&#45;16&#45;10&#45;05.bag &#45;s 1180 &#45;r 0.2 /tinypower/odom:=/odom"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/infant/rwrc2018/2018&#45;08&#45;04&#45;16&#45;10&#45;05.bag &#45;s 1650 /tinypower/odom:=/odom"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/infant/rwrc2018/2018&#45;08&#45;04&#45;16&#45;10&#45;05.bag &#45;s 1495 &#45;r 0.2 /tinypower/odom:=/odom"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/infant/rwrc2018/2018&#45;08&#45;04&#45;16&#45;10&#45;05.bag &#45;s 1535 /tinypower/odom:=/odom"/> -->
 
 	
 	<!-- 2018/10/13 -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/4th/2018&#45;10&#45;13&#45;15&#45;03&#45;05.bag /tinypower/odom:=/odom"/> -->
+	<!-- #9 -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/4th/2018&#45;10&#45;13&#45;15&#45;03&#45;05.bag &#45;s 100 /tinypower/odom:=/odom &#45;r 2"/> -->
-	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/4th/2018&#45;10&#45;13&#45;15&#45;03&#45;05.bag &#45;s 210 /tinypower/odom:=/odom"/> -->
-	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/4th/2018&#45;10&#45;13&#45;15&#45;03&#45;05.bag &#45;s 390 &#45;r 2 /tinypower/odom:=/odom"/> -->
-	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/4th/2018&#45;10&#45;13&#45;15&#45;03&#45;05.bag &#45;s 460 /tinypower/odom:=/odom"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/4th/2018&#45;10&#45;13&#45;15&#45;03&#45;05.bag &#45;s 200 /tinypower/odom:=/odom"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/4th/2018&#45;10&#45;13&#45;15&#45;03&#45;05.bag &#45;s 300 /tinypower/odom:=/odom"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/4th/2018&#45;10&#45;13&#45;15&#45;03&#45;05.bag &#45;s 400 &#45;r 2 /tinypower/odom:=/odom"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/4th/2018&#45;10&#45;13&#45;15&#45;03&#45;05.bag &#45;s 495 /tinypower/odom:=/odom"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/4th/2018&#45;10&#45;13&#45;15&#45;03&#45;05.bag &#45;s 735 /tinypower/odom:=/odom"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/4th/2018&#45;10&#45;13&#45;15&#45;03&#45;05.bag &#45;s 835 /tinypower/odom:=/odom"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/4th/2018&#45;10&#45;13&#45;15&#45;03&#45;05.bag &#45;s 1060 /tinypower/odom:=/odom"/> -->
@@ -88,16 +111,16 @@
 
 
 	<!-- 2018/11/4 -->
-	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/5th/2018&#45;11&#45;04&#45;15&#45;22&#45;49.bag &#45;s 170"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/5th/2018&#45;11&#45;04&#45;15&#45;22&#45;49.bag &#45;s 230"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/5th/2018&#45;11&#45;04&#45;15&#45;22&#45;49.bag &#45;s 290"/> -->
-	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/5th/2018&#45;11&#45;04&#45;15&#45;22&#45;49.bag &#45;s 450"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/5th/2018&#45;11&#45;04&#45;15&#45;22&#45;49.bag &#45;s 480"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/5th/2018&#45;11&#45;04&#45;15&#45;22&#45;49.bag &#45;s 650"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/5th/2018&#45;11&#45;04&#45;15&#45;22&#45;49.bag &#45;s 720"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/5th/2018&#45;11&#45;04&#45;15&#45;22&#45;49.bag &#45;s 980"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/5th/2018&#45;11&#45;04&#45;15&#45;22&#45;49.bag &#45;s 1220"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/5th/2018&#45;11&#45;04&#45;15&#45;22&#45;49.bag &#45;s 1420"/> -->
-	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/5th/2018&#45;11&#45;04&#45;15&#45;22&#45;49.bag &#45;s 1550"/> -->
-	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/5th/2018&#45;11&#45;04&#45;15&#45;22&#45;49.bag &#45;s 1750"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/5th/2018&#45;11&#45;04&#45;15&#45;22&#45;49.bag &#45;s 1620 &#45;r 0.1"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/5th/2018&#45;11&#45;04&#45;15&#45;22&#45;49.bag &#45;s 1769"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/5th/2018&#45;11&#45;04&#45;15&#45;22&#45;49.bag &#45;s 1850"/> -->
 
 	<node pkg="rviz" name="rviz" type="rviz" args="-d /home/amsl/.rviz/otsu.rviz"/>

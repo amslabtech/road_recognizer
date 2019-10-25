@@ -15,11 +15,11 @@
         <arg name="range_max" default="20"/>
         <arg name="range_division_num" default="20"/>
         <arg name="theta_division_num" default="720"/>
-        <arg name="otsu_binary_separation_threshold" default="0.35"/>
+        <arg name="otsu_binary_separation_threshold" default="0.1"/>
         <arg name="random_sample_ratio" default="1.0"/>
 	<arg name="is_otsu" default="true"/>
 	<arg name="otsu_binary_sum_of_diff_from_avr_threshold" default="999.9"/>
-	<arg name="var_between_threshold" default="200.0"/>
+	<arg name="var_between_threshold" default="150.0"/>
 	<!-- <arg name="var_between_threshold" default="25"/> -->
 	<!-- <arg name="var_between_threshold" default="0.0"/> -->
 
@@ -63,12 +63,12 @@
             <param name="VAR_BETWEEN_THRESHOLD" value="$(arg var_between_threshold)"/>
         </node>
 
-        <node pkg="road_recognizer" type="road_point_cloud_storer" name="road_point_cloud_storer">
-            <param name="HZ" value="$(arg hz)"/>
-            <param name="STORE_NUM" value="$(arg store_num)"/>
-            <param name="POSITION_DIFFERENCE_THRESHOLD" value="$(arg position_difference_threshold)"/>
-            <param name="YAW_DIFFERENCE_THRESHOLD" value="$(arg yaw_difference_threshold)"/>
-        </node>
+        <!-- <node pkg="road_recognizer" type="road_point_cloud_storer" name="road_point_cloud_storer"> -->
+        <!--     <param name="HZ" value="$(arg hz)"/> -->
+        <!--     <param name="STORE_NUM" value="$(arg store_num)"/> -->
+        <!--     <param name="POSITION_DIFFERENCE_THRESHOLD" value="$(arg position_difference_threshold)"/> -->
+        <!--     <param name="YAW_DIFFERENCE_THRESHOLD" value="$(arg yaw_difference_threshold)"/> -->
+        <!-- </node> -->
 
         <!-- <node pkg="road_recognizer" type="road_recognizer" name="road_recognizer"> -->
         <!--     <param name="HZ" value="$(arg hz)"/> -->

@@ -1,4 +1,5 @@
 
+
 #include <iostream>
 #include <vector>
 
@@ -140,7 +141,7 @@ int main(int argc, char** argv)
 IntensityPartition::IntensityPartition(void)
 {
 	RANGE_DIVISION_NUM_ = 20;
-	THETA_DIVISION_NUM_ = 720;
+	THETA_DIVISION_NUM_ = 120;
 	RANGE_MAX_ = 20;
 	/* VAR_BETWEEN_THRESHOLD_ = 150; */
 	VAR_BETWEEN_THRESHOLD_ = 0; //Mr. kusakari ver.
@@ -160,7 +161,7 @@ IntensityPartition::IntensityPartition(void)
 
 	sub_pc = n.subscribe("/velodyne_clear", 10, &IntensityPartition::fresh_pc_callback, this);
 	sub_odom = n.subscribe("/odom/complement", 10, &IntensityPartition::odom_callback, this);
-	advertise_pc = n.advertise<sensor_msgs::PointCloud2>("/robosym_pc", 10);
+	advertise_pc = n.advertise<sensor_msgs::PointCloud2>("/robosym_date_pc", 10);
 }
 
 
@@ -719,34 +720,34 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::otsu_pc_generator
 		
 	
 		// Karry method
-		bool check_flag = false;
-		for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
-			for(int theta_g = 0; theta_g < THETA_DIVISION_NUM_; theta_g++){
-				if((r_g == (int)(r_tmp / dR)) && (theta_g == (int)(theta_tmp / dTheta))){
-					if(polar_grid_avr_intensity[r_g][theta_g] < otsu_binary_msg.intensity[r_g].threshold){
-						pt.intensity = 0.0;
-						/* pt.intensity = -1.0; */
-					}else{
-						pt.intensity = 1.0;
-					}
-					if(max_s_var_between[r_g] < VAR_BETWEEN_THRESHOLD_){
-						pt.intensity = -1.0;
-					}
-					check_flag = true;
-				}
-				if(check_flag) break;
-			}
-			if(check_flag) break;
-		}
+		// bool check_flag = false;
+		// for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
+		// 	for(int theta_g = 0; theta_g < THETA_DIVISION_NUM_; theta_g++){
+		// 		if((r_g == (int)(r_tmp / dR)) && (theta_g == (int)(theta_tmp / dTheta))){
+		// 			if(polar_grid_avr_intensity[r_g][theta_g] < otsu_binary_msg.intensity[r_g].threshold){
+		// 				pt.intensity = 0.0;
+		// 				#<{(| pt.intensity = -1.0; |)}>#
+		// 			}else{
+		// 				pt.intensity = 1.0;
+		// 			}
+		// 			if(max_s_var_between[r_g] < VAR_BETWEEN_THRESHOLD_){
+		// 				pt.intensity = -1.0;
+		// 			}
+		// 			check_flag = true;
+		// 		}
+		// 		if(check_flag) break;
+		// 	}
+		// 	if(check_flag) break;
+		// }
 		
 
-		//Date method
-		/* if(pt.intensity / (0.139*r_tmp*r_tmp - 2.4414*r_tmp + 17.183) < 1.0){ */
-		/* 	pt.intensity = 0.0; */
-		/* 	#<{(| pt.intensity = -1.0; |)}># */
-		/* }else{ */
-		/* 	pt.intensity = 1.0; */
-		/* } */
+		// Date method
+		if(pt.intensity / (0.139*r_tmp*r_tmp - 2.4414*r_tmp + 17.183) < 1.0){
+			pt.intensity = 0.0;
+			/* pt.intensity = -1.0; */
+		}else{
+			pt.intensity = 1.0;
+		}
 		
 	}
 

@@ -190,6 +190,7 @@ add_executable(road_cloud_publisher src/road_cloud_publisher_node.cpp)
 add_executable(road_point_cloud_storer src/road_point_cloud_storer_node.cpp)
 add_executable(road_recognizer src/road_recognizer_node.cpp)
 add_executable(intensity_partition src/intensity_partition.cpp) # added by nagai
+add_executable(intensity_date src/intensity_date.cpp) # added by nagai
 add_executable(pc_store_for_robosym_nagai src/pc_store_for_robosym_nagai.cpp) # added by nagai
 add_executable(old_intensity_partition src/old_intensity_partition.cpp) # added by nagai
 add_executable(make_image_node src/make_image_node.cpp)
@@ -208,6 +209,7 @@ add_dependencies(road_cloud_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 add_dependencies(road_point_cloud_storer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(road_recognizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(intensity_partition ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}) # added by nagai
+add_dependencies(intensity_date ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}) # added by nagai
 add_dependencies(pc_store_for_robosym_nagai ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}) # added by nagai
 add_dependencies(old_intensity_partition ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS}) # added by nagai
 add_dependencies(make_image_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -233,6 +235,10 @@ target_link_libraries(road_recognizer
   libroad_recognizer
 )
 target_link_libraries(intensity_partition
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+)
+target_link_libraries(intensity_date
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
 )
