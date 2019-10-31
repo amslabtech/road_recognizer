@@ -31,7 +31,7 @@ IntersectionDetector::IntersectionDetector(void)
 {
     beam_sub = nh.subscribe("beam_array", 1, &IntersectionDetector::beam_callback, this);
     beam_pub = local_nh.advertise<visualization_msgs::Marker>("beam", 1);
-    intersection_flag_pub = nh.advertise<std_msgs::Bool>("/intersection_flag", 1);
+    // intersection_flag_pub = nh.advertise<std_msgs::Bool>("/intersection_flag", 1);
     intersection_directions_pub = nh.advertise<std_msgs::Float64MultiArray>("/intersection_directions", 1);
 
     local_nh.param("EPSILON1", EPSILON1, {0.25});
@@ -202,9 +202,9 @@ void IntersectionDetector::beam_callback(const std_msgs::Float64MultiArrayConstP
         visualize_beam(beam_ranges, peak_list);
 
         ////////////////////////////////////////
-        std_msgs::Bool intersection_flag;
-        intersection_flag.data = (peak_list.size() > 3);
-        intersection_flag_pub.publish(intersection_flag);
+        // std_msgs::Bool intersection_flag;
+        // intersection_flag.data = (peak_list.size() > 3);
+        // intersection_flag_pub.publish(intersection_flag);
         ////////////////////////////////////////
         std_msgs::Float64MultiArray directions;
         for(auto it=peak_list.begin();it!=peak_list.end();++it){
