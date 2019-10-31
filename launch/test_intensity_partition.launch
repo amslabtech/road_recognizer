@@ -14,7 +14,7 @@
 	<!-- <node pkg="road_recognizer" name="intensity_partition" type="intensity_partition" output="screen"/> -->
 	<!-- <node pkg="road_recognizer" name="pc_store_for_robosym_nagai" type="pc_store_for_robosym_nagai" output="screen"/> -->
 	
-	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/left_start.bag"/> -->
+	<node pkg="rosbag" name="player" type="play" args="--clock /home/amsl/bagfiles/cats/2019/left_start.bag"/>
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/cats_meets_cat_2019&#45;05&#45;16&#45;16&#45;47&#45;20.bag &#45;s 450"/> -->
 	
 	<!-- 0629 -->
@@ -84,7 +84,7 @@
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/4th/2018&#45;10&#45;13&#45;15&#45;03&#45;05.bag &#45;s 1060 /tinypower/odom:=/odom"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/4th/2018&#45;10&#45;13&#45;15&#45;03&#45;05.bag &#45;s 1500 /tinypower/odom:=/odom"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/4th/2018&#45;10&#45;13&#45;14&#45;29&#45;03.bag /tinypower/odom:=/odom"/> -->
-	<node pkg="rosbag" name="player" type="play" args="--clock /home/amsl/bagfiles/infant/2018-10-13-13-23-54.bag /tinypower/odom:=/odom"/>
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/infant/2018&#45;10&#45;13&#45;13&#45;23&#45;54.bag /tinypower/odom:=/odom"/> -->
 
 
 

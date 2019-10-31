@@ -281,7 +281,7 @@ void IntensityPartition::calc_otsu_binary(void)
 
 	for(int i = 0; i < (int)intensity_max_all; i++){
 		printf("%3d : ", i);
-		for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
+		for(int r_g = 0; r_g < 7; r_g++){
 			for(int theta_g = 0; theta_g < THETA_DIVISION_NUM_; theta_g++){
 				if(i == (int)polar_grid_avr_intensity[r_g][theta_g]){
 					printf("#");
