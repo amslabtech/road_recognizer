@@ -4,7 +4,6 @@
         <arg name="hz" default="10"/>
         <arg name="normal_estimation_radius" default="0.60"/>
         <arg name="leaf_size" default="0.30"/>
-        <!--arg name="curvature_threshold" default="0.005"/-->
         <arg name="curvature_threshold" default="0.90"/>
         <arg name="intensity_upper_threshold" default="255"/>
         <arg name="intensity_lower_threshold" default="20"/>
