@@ -93,7 +93,6 @@ void RoadRecognizer::callback(const sensor_msgs::PointCloud2ConstPtr& msg_road_s
     downsampled_cloud->header = road_cloud->header;
     std::cout << "after voxel grid cloud size: " << downsampled_cloud->points.size() << std::endl;
 
-    /*
     std::cout << "before cloud size: " << downsampled_cloud->points.size() << std::endl;
     pcl::StatisticalOutlierRemoval<PointXYZIN> sor;
     sor.setInputCloud(downsampled_cloud);
@@ -101,7 +100,6 @@ void RoadRecognizer::callback(const sensor_msgs::PointCloud2ConstPtr& msg_road_s
     sor.setStddevMulThresh(OUTLIER_REMOVAL_THRESHOLD);
     sor.filter(*filtered_cloud);
     std::cout << "after statistical outlier removal cloud size: " << filtered_cloud->points.size() << std::endl;
-    */
 
     std::cout << "--- beam model ---" << std::endl;
     CloudXYZPtr beam_cloud(new CloudXYZ);
@@ -116,9 +114,9 @@ void RoadRecognizer::callback(const sensor_msgs::PointCloud2ConstPtr& msg_road_s
     pcl::toROSMsg(*downsampled_cloud, cloud1);
     downsampled_pub.publish(cloud1);
 
-    // sensor_msgs::PointCloud2 cloud2;
-    // pcl::toROSMsg(*filtered_cloud, cloud2);
-    // filtered_pub.publish(cloud2);
+    sensor_msgs::PointCloud2 cloud2;
+    pcl::toROSMsg(*filtered_cloud, cloud2);
+    filtered_pub.publish(cloud2);
 
     if(ENABLE_VISUALIZATION){
         visualize_cloud();
