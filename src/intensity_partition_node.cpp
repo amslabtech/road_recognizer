@@ -329,23 +329,6 @@ void IntensityPartition::calc_otsu_binary(void)
 pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::otsu_pc_generator(void)
 {
 	size_t iz = 0;
-	/* for(auto& pt : polar_pc_->points){ */
-	/* 	for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){ */
-	/* 		if(((float)r_g <= pt.z && pt.z < (float)r_g+dR) */
-	/* 			&& (otsu_threshold_tmp[r_g] - 1.0 > pt.intensity */
-	/* 				//|| (otsu_binary_msg.analysis[r_g].otsubinary_diff_from_thresholds_avr > OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD_) */
-	/* 				|| (otsu_binary_msg.analysis[r_g].separation < OTSU_BINARY_SEPARATION_THRESHOLD_ && 1 < otsu_binary_msg.analysis[r_g].separation) */
-	/* 				|| (pt.x == 0.0 && pt.y == 0.0) */
-	/* 		   		) */
-	/* 			){ */
-	/* 			pt.intensity = -1.0; */
-	/* 		} */
-	/* 	} */
-	/* 	pt.z = ptz_list.at(iz); */
-	/* 	iz++; */
-	/* } */
-
-
 	for(auto& pt : polar_pc_->points){
 		float r_tmp = sqrt(pt.x * pt.x + pt.y * pt.y);
 		float theta_tmp = atan2(pt.y,pt.x);
@@ -356,7 +339,7 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::otsu_pc_generator
 		pt.z = ptz_list.at(iz);
 		iz++;
 		
-		
+		// Otsu binarization
 		bool check_flag = false;
 		for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
 			for(int theta_g = 0; theta_g < THETA_DIVISION_NUM_; theta_g++){
@@ -376,7 +359,8 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::otsu_pc_generator
 			}
 			if(check_flag) break;
 		}
-		
+	
+		//Date manual
 		/* if(pt.intensity / (0.08 * r_tmp + 16.9) < 1.0){ */
 		/* if(pt.intensity / (0.139*r_tmp*r_tmp - 2.4414*r_tmp + 17.183) < 1.0){ */
 		/* 	pt.intensity = -1.0; */
@@ -384,15 +368,16 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::otsu_pc_generator
 		
 	}
 
-	if(otsu_binary_msg.emergency){
-		//intensity_max_all = 0.0;
-	}
+	/* if(otsu_binary_msg.emergency){ */
+	/* 	//intensity_max_all = 0.0; */
+	/* } */
 
 	pcl::PassThrough<PointINormal> pass;
 	CloudINormalPtr filtered_pc_ {new CloudINormal};
 	pass.setInputCloud(polar_pc_);
 	pass.setFilterFieldName ("intensity");
-	pass.setFilterLimits(0.0, intensity_max_all);
+	/* pass.setFilterLimits(0.0, intensity_max_all); */
+	pass.setFilterLimits(10.0, intensity_max_all);
 	//pass.setFilterLimitsNegative (true);
 	pass.filter(*filtered_pc_);
 
