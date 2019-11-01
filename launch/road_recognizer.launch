@@ -63,6 +63,15 @@
             <param name="POSITION_DIFFERENCE_THRESHOLD" value="$(arg position_difference_threshold)"/>
             <param name="YAW_DIFFERENCE_THRESHOLD" value="$(arg yaw_difference_threshold)"/>
         </node>
+		
+        <node pkg="road_recognizer" type="road_point_cloud_storer" name="ground_point_cloud_storer">
+            <param name="HZ" value="$(arg hz)"/>
+            <param name="STORE_NUM" value="$(arg store_num)"/>
+            <param name="POSITION_DIFFERENCE_THRESHOLD" value="$(arg position_difference_threshold)"/>
+            <param name="YAW_DIFFERENCE_THRESHOLD" value="$(arg yaw_difference_threshold)"/>
+			<remap from="cloud/road" to="/velodyne_clear"/>
+			<remap from="cloud/road/stored" to="/velodyne_clear/stored"/>
+        </node>
 
         <node pkg="road_recognizer" type="road_recognizer" name="road_recognizer">
             <param name="HZ" value="$(arg hz)"/>
