@@ -60,7 +60,7 @@ private:
     ros::NodeHandle local_nh;
     ros::Subscriber beam_sub;
     ros::Publisher beam_pub;
-    ros::Publisher intersection_flag_pub;
+    // ros::Publisher intersection_flag_pub;
     ros::Publisher intersection_directions_pub;
 };
 
