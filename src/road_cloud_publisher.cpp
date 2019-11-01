@@ -193,7 +193,7 @@ void RoadCloudPublisher::filter_curvature(void)
     //pass.setFilterLimits(0, CURVATURE_THRESHOLD);
     //pass.setFilterLimitsNegative(true);
     pass.setFilterFieldName("normal_z");
-    pass.setFilterLimits(0, CURVATURE_THRESHOLD);
+    pass.setFilterLimits(-CURVATURE_THRESHOLD, CURVATURE_THRESHOLD);
     curvature_cloud->header = ground_cloud->header;
     curvature_cloud->points.clear();
     pass.filter(*curvature_cloud);
