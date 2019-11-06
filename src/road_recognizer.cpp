@@ -69,8 +69,11 @@ void RoadRecognizer::callback(const sensor_msgs::PointCloud2ConstPtr& msg_road_s
     CloudXYZINPtr road_cloud(new CloudXYZIN);
     pcl::fromROSMsg(*msg_road_stored_cloud, *road_cloud);
 
+    CloudXYZIPtr obstacles_cloud_without_normal(new CloudXYZI);
     CloudXYZINPtr obstacles_cloud(new CloudXYZIN);
-    pcl::fromROSMsg(*msg_obstacles_cloud, *obstacles_cloud);
+    // pcl::fromROSMsg(*msg_obstacles_cloud, *obstacles_cloud);
+    pcl::fromROSMsg(*msg_obstacles_cloud, *obstacles_cloud_without_normal);
+    pcl::copyPointCloud(*obstacles_cloud_without_normal, *obstacles_cloud);
 
     *road_cloud += *obstacles_cloud;
 
