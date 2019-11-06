@@ -279,18 +279,6 @@ void IntensityPartition::calc_otsu_binary(void)
 		}
 	}
 
-	std::cout << "intensity histogram of all ranges" << std::endl;
-	for(int i = 0; i < (int)intensity_max_all; i++){
-		printf("%3d : ", i);
-		for(int r_g = 0; r_g < 7; r_g++){
-			for(int theta_g = 0; theta_g < THETA_DIVISION_NUM_; theta_g++){
-				if(i == (int)polar_grid_avr_intensity[r_g][theta_g]){
-					printf("#");
-				}
-			}
-		}
-		printf("\n");
-	}
 
 
 		// calc whole variance
@@ -335,6 +323,24 @@ void IntensityPartition::calc_otsu_binary(void)
 
 	// judge emergency
 	// emergency_judge();
+
+	std::cout << "intensity histogram of all ranges" << std::endl;
+	for(int i = 0; i < (int)intensity_max_all; i++){
+		printf("%3d : ", i);
+		for(int r_g = 0; r_g < 7; r_g++){
+			for(int theta_g = 0; theta_g < THETA_DIVISION_NUM_; theta_g++){
+				if(i == (int)polar_grid_avr_intensity[r_g][theta_g]){
+					if(i <= otsu_binary_msg.intensity[r_g].threshold){
+						std::cout << "#";
+					}else{
+						std::cout << "\033[32m#\033[0m";
+					}
+				}
+			}
+		}
+		printf("\n");
+	}
+
 
 	r_res_array.clear();
 	var_num_avr_row.clear();
