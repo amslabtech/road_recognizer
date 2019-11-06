@@ -7,7 +7,7 @@
         <!--arg name="curvature_threshold" default="0.005"/-->
         <arg name="curvature_threshold" default="0.90"/>
         <arg name="intensity_upper_threshold" default="255"/>
-        <arg name="intensity_lower_threshold" default="20"/>
+        <arg name="intensity_lower_threshold" default="27"/>
         <arg name="height_threshold" default="-1.0"/>
         <arg name="max_random_sample_size" default="8000"/>
         <arg name="range_max" default="20"/>

@@ -208,12 +208,12 @@ void RoadCloudPublisher::filter_intensity(void)
         intensity_cloud->header = ground_cloud->header;
     }else{
         pcl::PassThrough<PointXYZIN> intensity_pass;
+        intensity_cloud->header = ground_cloud->header;
+        intensity_cloud->width = intensity_cloud->points.size();
         intensity_pass.setInputCloud(ground_cloud);
         intensity_pass.setFilterFieldName("intensity");
         intensity_pass.setFilterLimits(INTENSITY_LOWER_THRESHOLD, INTENSITY_UPPER_THRESHOLD);
-        intensity_cloud->header = ground_cloud->header;
         intensity_pass.filter(*intensity_cloud);
-        intensity_cloud->width = intensity_cloud->points.size();
     }
 }
 
