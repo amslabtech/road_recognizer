@@ -12,12 +12,12 @@
         <arg name="max_random_sample_size" default="8000"/>
         <arg name="range_max" default="20"/>
         <arg name="range_division_num" default="20"/>
-        <arg name="theta_division_num" default="720"/>
-        <arg name="otsu_binary_separation_threshold" default="0.35"/>
+        <arg name="theta_division_num" default="120"/>
+        <arg name="otsu_binary_separation_threshold" default="0.3"/>
         <arg name="random_sample_ratio" default="1.0"/>
 		<arg name="is_otsu" default="false"/>
         <arg name="otsu_binary_sum_of_diff_from_avr_threshold" default="999.9"/>
-        <arg name="var_between_threshold" default="200.0"/>
+        <arg name="var_between_threshold" default="150.0"/>
 
         <arg name="store_num" default="50"/>
         <arg name="position_difference_threshold" default="0.1"/>
