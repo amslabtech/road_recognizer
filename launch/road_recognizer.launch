@@ -13,11 +13,11 @@
         <arg name="range_max" default="20"/>
         <arg name="range_division_num" default="20"/>
         <arg name="theta_division_num" default="120"/>
-        <arg name="otsu_binary_separation_threshold" default="0.35"/>
+        <arg name="otsu_binary_separation_threshold" default="0.1"/>
         <arg name="random_sample_ratio" default="1.0"/>
 		<arg name="is_otsu" default="false"/>
         <arg name="otsu_binary_sum_of_diff_from_avr_threshold" default="999.9"/>
-        <arg name="var_between_threshold" default="200.0"/>
+        <arg name="var_between_threshold" default="100.0"/>
 
         <arg name="store_num" default="50"/>
         <arg name="position_difference_threshold" default="0.1"/>
@@ -58,38 +58,38 @@
             <param name="VAR_BETWEEN_THRESHOLD" value="$(arg var_between_threshold)"/>
         </node>
 
-        <!-- <node pkg="road_recognizer" type="road_point_cloud_storer" name="road_point_cloud_storer"> -->
-        <!--     <param name="HZ" value="$(arg hz)"/> -->
-        <!--     <param name="STORE_NUM" value="$(arg store_num)"/> -->
-        <!--     <param name="POSITION_DIFFERENCE_THRESHOLD" value="$(arg position_difference_threshold)"/> -->
-        <!--     <param name="YAW_DIFFERENCE_THRESHOLD" value="$(arg yaw_difference_threshold)"/> -->
-        <!-- </node> -->
-        <!--  -->
-        <!-- <node pkg="road_recognizer" type="road_recognizer" name="road_recognizer"> -->
-        <!--     <param name="HZ" value="$(arg hz)"/> -->
-        <!--     <param name="LEAF_SIZE" value="$(arg leaf_size)"/> -->
-        <!--     <param name="MAX_RANDOM_SAMPLE_SIZE" value="$(arg max_random_sample_size)"/> -->
-        <!--     <param name="RANDOM_SAMPLE_RATIO" value="$(arg random_sample_ratio)"/> -->
-        <!--     <param name="OUTLIER_REMOVAL_K" value="$(arg outlier_removal_k)"/> -->
-        <!--     <param name="OUTLIER_REMOVAL_THRESHOLD" value="$(arg outlier_removal_threshold)"/> -->
-        <!--     <param name="ENABLE_VISUALIZATION" value="$(arg enable_visualization)"/> -->
-        <!--     <param name="BEAM_ANGLE_NUM" value="$(arg beam_angle_num)"/> -->
-        <!--     <param name="MAX_BEAM_RANGE" value="$(arg max_beam_range)"/> -->
-        <!--     <param name="MIN_BEAM_RANGE" value="$(arg min_beam_range)"/> -->
-        <!--     <param name="RANSAC_DISTANCE_THRESHOLD" value="$(arg ransac_distance_threshold)"/> -->
-        <!--     <param name="RANSAC_MIN_LINE_LENGTH_THRESHOLD" value="$(arg ransac_min_line_length_threshold)"/> -->
-        <!--     <param name="RANSAC_MIN_LINE_DENSITY_THRESHOLD" value="$(arg ransac_min_line_density_threshold)"/> -->
-        <!--     <param name="EUCLIDEAN_CLUSTERING_TOLERANCE" value="$(arg euclidean_clustering_tolerance)"/> -->
-        <!--     <param name="MAX_ROAD_DIRECTION_DIFFERENCE" value="$(arg max_road_direction_difference)"/> -->
-        <!--     <param name="MIN_ROAD_WIDTH" value="$(arg min_road_width)"/> -->
-        <!--     <param name="BEAM_MEDIAN_N" value="$(arg beam_median_n)"/> -->
-        <!--     <param name="LINE_NORMAL_MEAN_INNER_PRODUCT_THRESHOLD" value="$(arg line_normal_mean_inner_product_threshold)"/> -->
-        <!--     <param name="RADIUS_FOR_2D_NORMAL" value="$(arg radius_for_2d_normal)"/> -->
-        <!--     <remap from="/velodyne_obstacles" to="/cloud/static"/> -->
-        <!-- </node> -->
-        <!--  -->
-        <!-- <node pkg="road_recognizer" type="intersection_detector" name="intersection_detector"> -->
-        <!-- </node> -->
+        <node pkg="road_recognizer" type="road_point_cloud_storer" name="road_point_cloud_storer">
+            <param name="HZ" value="$(arg hz)"/>
+            <param name="STORE_NUM" value="$(arg store_num)"/>
+            <param name="POSITION_DIFFERENCE_THRESHOLD" value="$(arg position_difference_threshold)"/>
+            <param name="YAW_DIFFERENCE_THRESHOLD" value="$(arg yaw_difference_threshold)"/>
+        </node>
+
+        <node pkg="road_recognizer" type="road_recognizer" name="road_recognizer">
+            <param name="HZ" value="$(arg hz)"/>
+            <param name="LEAF_SIZE" value="$(arg leaf_size)"/>
+            <param name="MAX_RANDOM_SAMPLE_SIZE" value="$(arg max_random_sample_size)"/>
+            <param name="RANDOM_SAMPLE_RATIO" value="$(arg random_sample_ratio)"/>
+            <param name="OUTLIER_REMOVAL_K" value="$(arg outlier_removal_k)"/>
+            <param name="OUTLIER_REMOVAL_THRESHOLD" value="$(arg outlier_removal_threshold)"/>
+            <param name="ENABLE_VISUALIZATION" value="$(arg enable_visualization)"/>
+            <param name="BEAM_ANGLE_NUM" value="$(arg beam_angle_num)"/>
+            <param name="MAX_BEAM_RANGE" value="$(arg max_beam_range)"/>
+            <param name="MIN_BEAM_RANGE" value="$(arg min_beam_range)"/>
+            <param name="RANSAC_DISTANCE_THRESHOLD" value="$(arg ransac_distance_threshold)"/>
+            <param name="RANSAC_MIN_LINE_LENGTH_THRESHOLD" value="$(arg ransac_min_line_length_threshold)"/>
+            <param name="RANSAC_MIN_LINE_DENSITY_THRESHOLD" value="$(arg ransac_min_line_density_threshold)"/>
+            <param name="EUCLIDEAN_CLUSTERING_TOLERANCE" value="$(arg euclidean_clustering_tolerance)"/>
+            <param name="MAX_ROAD_DIRECTION_DIFFERENCE" value="$(arg max_road_direction_difference)"/>
+            <param name="MIN_ROAD_WIDTH" value="$(arg min_road_width)"/>
+            <param name="BEAM_MEDIAN_N" value="$(arg beam_median_n)"/>
+            <param name="LINE_NORMAL_MEAN_INNER_PRODUCT_THRESHOLD" value="$(arg line_normal_mean_inner_product_threshold)"/>
+            <param name="RADIUS_FOR_2D_NORMAL" value="$(arg radius_for_2d_normal)"/>
+            <remap from="/velodyne_obstacles" to="/cloud/static"/>
+        </node>
+
+        <node pkg="road_recognizer" type="intersection_detector" name="intersection_detector">
+        </node>
 
     </group>
 

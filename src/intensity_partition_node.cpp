@@ -330,10 +330,10 @@ void IntensityPartition::calc_otsu_binary(void)
 	}
 
 	// calc threshold histogram in range
-	calc_diff_from_avr();
+	// calc_diff_from_avr();
 
 	// judge emergency
-	emergency_judge();
+	// emergency_judge();
 
 	r_res_array.clear();
 	var_num_avr_row.clear();
@@ -380,15 +380,15 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::otsu_pc_generator
 		iz++;
 	}
 
-	if(otsu_binary_msg.emergency){
-		//intensity_max_all = 0.0;
-	}
+	/* if(otsu_binary_msg.emergency){ */
+	/* 	intensity_max_all = 0.0; */
+	/* } */
 
 	pcl::PassThrough<PointINormal> pass;
 	CloudINormalPtr filtered_pc_ {new CloudINormal};
 	pass.setInputCloud(polar_pc_);
 	pass.setFilterFieldName ("intensity");
-	pass.setFilterLimits(0.0, intensity_max_all);
+	pass.setFilterLimits(10.0, intensity_max_all);
 	//pass.setFilterLimitsNegative (true);
 	pass.filter(*filtered_pc_);
 

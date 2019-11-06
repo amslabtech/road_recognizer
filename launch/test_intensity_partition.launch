@@ -14,7 +14,7 @@
 	<!-- <node pkg="road_recognizer" name="intensity_partition" type="intensity_partition" output="screen"/> -->
 	<!-- <node pkg="road_recognizer" name="pc_store_for_robosym_nagai" type="pc_store_for_robosym_nagai" output="screen"/> -->
 	
-	<node pkg="rosbag" name="player" type="play" args="--clock /home/amsl/bagfiles/cats/2019/left_start.bag"/>
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/left_start.bag"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/cats_meets_cat_2019&#45;05&#45;16&#45;16&#45;47&#45;20.bag &#45;s 450"/> -->
 	
 	<!-- 0629 -->
@@ -57,6 +57,9 @@
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/0914/tsukuba_full.bag &#45;s 4030"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/0914/tsukuba_full.bag &#45;s 4100"/> -->
 	
+	<!-- 11/02 -->
+	<node pkg="rosbag" name="player" type="play" args="--clock /home/amsl/bagfiles/cats/2019/1102/2019-11-02-14-48-37.bag"/>
+
 	<!-- 2018/6/30 -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/first/2018&#45;06&#45;30&#45;13&#45;52&#45;08.bag &#45;s 330"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2018/first/2018&#45;06&#45;30&#45;13&#45;52&#45;08.bag &#45;s 1050"/> -->
