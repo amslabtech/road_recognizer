@@ -29,6 +29,7 @@ RoadCloudPublisher::RoadCloudPublisher(void)
     road_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("cloud/road", 1);
     obstacles_sub = nh.subscribe("/velodyne_obstacles", 1, &RoadCloudPublisher::obstacles_callback, this);
     ground_sub = nh.subscribe("/velodyne_clear", 1, &RoadCloudPublisher::ground_callback, this);
+    ignore_intensity_sub = nh.subscribe("/task/ignore_intensity", 1, &RoadCloudPublisher::ignore_intensity_callback, this);
 
     obstacles_cloud = CloudXYZINPtr(new CloudXYZIN);
     ground_cloud = CloudXYZINPtr(new CloudXYZIN);
@@ -38,6 +39,7 @@ RoadCloudPublisher::RoadCloudPublisher(void)
 
     obstacles_cloud_updated = false;
     ground_cloud_updated = false;
+	ignore_intensity_flag = false;
 
     std::cout << "HZ: " << HZ << std::endl;
     std::cout << "NORMAL_ESTIMATION_RADIUS: " << NORMAL_ESTIMATION_RADIUS << std::endl;;
@@ -66,6 +68,11 @@ void RoadCloudPublisher::ground_callback(const sensor_msgs::PointCloud2ConstPtr&
     ground_cloud_updated = true;
 }
 
+void RoadCloudPublisher::ignore_intensity_callback(const std_msgs::BoolConstPtr& msg)
+{
+	ignore_intensity_flag = msg->data;
+}
+
 void RoadCloudPublisher::process(void)
 {
     ros::Rate loop_rate(HZ);
@@ -86,7 +93,10 @@ void RoadCloudPublisher::process(void)
             std::cout << "curvature cloud size: " << curvature_cloud->points.size() << std::endl;
             filter_intensity();
             std::cout << "intensity cloud size: " << intensity_cloud->points.size() << std::endl;
-            *road_cloud = *curvature_cloud + *intensity_cloud;
+			*road_cloud = *curvature_cloud;
+			if(!ignore_intensity_flag){
+				*road_cloud += *intensity_cloud;
+			}
             // *road_cloud = *intensity_cloud;
 
             filter_height();
