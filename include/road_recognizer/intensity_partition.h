@@ -30,7 +30,7 @@ public:
 	typedef pcl::PointCloud<PointINormal> CloudINormal;
 	typedef pcl::PointCloud<PointINormal>::Ptr CloudINormalPtr;
 
-	IntensityPartition(int, int, float, float, float, float, float);
+	IntensityPartition(int, int, float, float, float, float, float, float, float);
 
 	CloudINormalPtr execution(CloudINormalPtr);
 	void initialize(void);
@@ -48,6 +48,8 @@ private:
 	int	n_asphalt;// = 0;
 	int RANGE_DIVISION_NUM_;//= 20
 	int THETA_DIVISION_NUM_;//= 360;
+	float CHEAT_INTENSITY_WIDTH_;
+	float INTENSITY_LOWER_THRESHOLD_;
 	float VAR_BETWEEN_THRESHOLD_;
 	float OTSU_BINARY_SEPARATION_THRESHOLD_;// = 0.2;
 	float OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD_;// = 3.0;
