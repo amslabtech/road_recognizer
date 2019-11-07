@@ -22,6 +22,7 @@
 #include "road_recognizer/intensity_partition.h"
 #include "road_recognizer/xmeans_clustering.h"
 
+#include <std_msgs/Bool.h>
 // OMP
 #include <omp.h>
 
@@ -44,6 +45,7 @@ public:
     void process(void);
     void obstacles_callback(const sensor_msgs::PointCloud2ConstPtr&);
     void ground_callback(const sensor_msgs::PointCloud2ConstPtr&);
+    void ignore_intensity_callback(const std_msgs::BoolConstPtr&);
     void publish_clouds(void);
     void downsample(void);
     void estimate_normal(void);
@@ -74,6 +76,7 @@ private:
     ros::Publisher road_cloud_pub;
     ros::Subscriber obstacles_sub;
     ros::Subscriber ground_sub;
+    ros::Subscriber ignore_intensity_sub;
 
 	//IntensityPartition intensity_partition;
 
@@ -84,6 +87,7 @@ private:
     CloudXYZINPtr road_cloud;
     bool obstacles_cloud_updated;
     bool ground_cloud_updated;
+	bool ignore_intensity_flag;
 
 
 	int RANGE_DIVISION_NUM;//= 20
