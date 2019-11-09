@@ -1,7 +1,6 @@
 #include "road_recognizer/intensity_partition.h"
 
-IntensityPartition::IntensityPartition(int range_division_num, int theta_division_num, float range_max, float var_between_threshold
-									, float otsu_binary_separation_threshold, float otsu_binary_diff_from_avr_threshold, float otsu_binary_sum_of_diff_from_avr_threshold)
+IntensityPartition::IntensityPartition(int range_division_num, int theta_division_num, float range_max, float var_between_threshold, float otsu_binary_separation_threshold, float otsu_binary_diff_from_avr_threshold, float otsu_binary_sum_of_diff_from_avr_threshold, float intensity_lower_threshold, float cheat_intensity_width)
 {
 	RANGE_DIVISION_NUM_ = range_division_num;
 	THETA_DIVISION_NUM_ = theta_division_num;
@@ -10,12 +9,13 @@ IntensityPartition::IntensityPartition(int range_division_num, int theta_divisio
 	OTSU_BINARY_SEPARATION_THRESHOLD_ = otsu_binary_separation_threshold;
 	OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD_ = otsu_binary_sum_of_diff_from_avr_threshold;
 	OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD_ = otsu_binary_diff_from_avr_threshold;
+	INTENSITY_LOWER_THRESHOLD_ = intensity_lower_threshold;
+	CHEAT_INTENSITY_WIDTH_ = cheat_intensity_width;
 
 	otsu_binary_msg.range_division_num = RANGE_DIVISION_NUM_;
 	otsu_binary_msg.theta_division_num = THETA_DIVISION_NUM_;
 	otsu_binary_msg.range_max = RANGE_MAX_;
 	otsu_binary_msg.otsubinary_separation_threshold = OTSU_BINARY_SEPARATION_THRESHOLD_;
-	otsu_binary_sum_of_diff_from_avr_threshold = OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD_;
 	otsu_binary_msg.intensity.resize(RANGE_DIVISION_NUM_);
 	otsu_binary_msg.analysis.resize(RANGE_DIVISION_NUM_);
 
@@ -34,6 +34,7 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::execution(CloudIN
 	cartesian_pt_2_polar_grid(input_pc_);
 	calc_otsu_binary();
 	otsu_binary_pc_ = otsu_pc_generator();
+	otsu_binary_pc_->header = ground_pc_->header;
 
 	polar_pc_->points.clear();
 	ptz_list.clear();
@@ -341,7 +342,6 @@ void IntensityPartition::calc_otsu_binary(void)
 		printf("\n");
 	}
 
-
 	r_res_array.clear();
 	var_num_avr_row.clear();
 	histogram.clear();
@@ -360,15 +360,24 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::otsu_pc_generator
 
 		bool check_flag = false;
 		for(int r_g = 0; r_g < RANGE_DIVISION_NUM_; r_g++){
+			if(otsu_binary_msg.analysis[r_g].separation < OTSU_BINARY_SEPARATION_THRESHOLD_){
+				otsu_binary_msg.intensity[r_g].threshold = INTENSITY_LOWER_THRESHOLD_;
+			}
+			if(max_s_var_between[r_g] < VAR_BETWEEN_THRESHOLD_){
+				otsu_binary_msg.intensity[r_g].threshold = INTENSITY_LOWER_THRESHOLD_;
+			}
+			if(otsu_binary_msg.intensity[r_g].threshold < INTENSITY_LOWER_THRESHOLD_ - CHEAT_INTENSITY_WIDTH_ && INTENSITY_LOWER_THRESHOLD_ + CHEAT_INTENSITY_WIDTH_ < otsu_binary_msg.intensity[r_g].threshold){
+				otsu_binary_msg.intensity[r_g].threshold = INTENSITY_LOWER_THRESHOLD_;
+			}
 			for(int theta_g = 0; theta_g < THETA_DIVISION_NUM_; theta_g++){
 				if((r_g == (int)(r_tmp / dR)) && (theta_g == (int)(theta_tmp / dTheta))){
-					if(polar_grid_avr_intensity[r_g][theta_g] < otsu_binary_msg.intensity[r_g].threshold - 1.0){
-						pt.intensity = -1.0;
-					}
-					if(otsu_binary_msg.analysis[r_g].separation < OTSU_BINARY_SEPARATION_THRESHOLD_){
-						pt.intensity = -1.0;
-					}
-					if(max_s_var_between[r_g] < VAR_BETWEEN_THRESHOLD_){
+					/* if(otsu_binary_msg.analysis[r_g].separation < OTSU_BINARY_SEPARATION_THRESHOLD_){ */
+					/* 	pt.intensity = -1.0; */
+					/* } */
+					/* if(max_s_var_between[r_g] < VAR_BETWEEN_THRESHOLD_){ */
+					/* 	pt.intensity = -1.0; */
+					/* } */
+					if(polar_grid_avr_intensity[r_g][theta_g] < otsu_binary_msg.intensity[r_g].threshold){
 						pt.intensity = -1.0;
 					}
 					check_flag = true;
@@ -391,7 +400,7 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr IntensityPartition::otsu_pc_generator
 	CloudINormalPtr filtered_pc_ {new CloudINormal};
 	pass.setInputCloud(polar_pc_);
 	pass.setFilterFieldName ("intensity");
-	pass.setFilterLimits(25.0, intensity_max_all);
+	pass.setFilterLimits(0.0, intensity_max_all);
 	//pass.setFilterLimitsNegative (true);
 	pass.filter(*filtered_pc_);
 

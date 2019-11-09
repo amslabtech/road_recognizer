@@ -1,43 +1,43 @@
 <?xml version="1.0"?>
 <launch>
 
-    <arg name="hz" default="10"/>
-    <arg name="normal_estimation_radius" default="0.60"/>
-    <arg name="leaf_size" default="0.30"/>
-    <!--arg name="curvature_threshold" default="0.005"/-->
-    <arg name="curvature_threshold" default="0.90"/>
-    <arg name="intensity_upper_threshold" default="255"/>
-    <arg name="intensity_lower_threshold" default="20"/>
-    <arg name="height_threshold" default="-1.0"/>
-    <arg name="max_random_sample_size" default="8000"/>
-    <arg name="range_max" default="20"/>
-    <arg name="range_division_num" default="20"/>
-    <arg name="theta_division_num" default="120"/>
-    <arg name="otsu_binary_separation_threshold" default="0.3"/>
-    <arg name="random_sample_ratio" default="1.0"/>
-    <arg name="is_otsu" default="false"/>
-    <arg name="otsu_binary_sum_of_diff_from_avr_threshold" default="999.9"/>
-    <arg name="var_between_threshold" default="150.0"/>
+	<arg name="hz" default="10"/>
+	<arg name="normal_estimation_radius" default="0.60"/>
+	<arg name="leaf_size" default="0.30"/>
+	<!--arg name="curvature_threshold" default="0.005"/-->
+	<arg name="curvature_threshold" default="0.90"/>
+	<arg name="intensity_upper_threshold" default="255"/>
+	<arg name="intensity_lower_threshold" default="20"/>
+	<arg name="height_threshold" default="-1.0"/>
+	<arg name="max_random_sample_size" default="8000"/>
+	<arg name="range_max" default="20"/>
+	<arg name="range_division_num" default="20"/>
+	<arg name="theta_division_num" default="120"/>
+	<arg name="otsu_binary_separation_threshold" default="0.7"/>
+	<arg name="random_sample_ratio" default="1.0"/>
+	<arg name="is_otsu" default="false"/>
+	<arg name="cheat_intensity_width" default="2.0"/>
+	<arg name="var_between_threshold" default="250.0"/>
 
-    <arg name="store_num" default="50"/>
-    <arg name="position_difference_threshold" default="0.1"/>
-    <arg name="yaw_difference_threshold" default="0.1"/>
+	<arg name="store_num" default="50"/>
+	<arg name="position_difference_threshold" default="0.1"/>
+	<arg name="yaw_difference_threshold" default="0.1"/>
 
-    <arg name="outlier_removal_k" default="50"/>
-    <arg name="outlier_removal_threshold" default="1.0"/>
-    <arg name="enable_visualization" default="false"/>
-    <arg name="beam_angle_num" default="120"/>
-    <arg name="max_beam_range" default="20"/>
-    <arg name="min_beam_range" default="0.3"/>
-    <arg name="ransac_distance_threshold" default="0.20"/>
-    <arg name="ransac_min_line_length_threshold" default="5.0"/>
-    <arg name="ransac_min_line_density_threshold" default="3.0"/>
-    <arg name="euclidean_clustering_tolerance" default="1.0"/>
-    <arg name="max_road_direction_difference" default="0.1"/>
-    <arg name="min_road_width" default="1.0"/>
-    <arg name="beam_median_n" default="3"/>
-    <arg name="line_normal_mean_inner_product_threshold" default="0.5"/>
-    <arg name="radius_for_2d_normal" default="1.0"/>
+	<arg name="outlier_removal_k" default="50"/>
+	<arg name="outlier_removal_threshold" default="1.0"/>
+	<arg name="enable_visualization" default="false"/>
+	<arg name="beam_angle_num" default="120"/>
+	<arg name="max_beam_range" default="20"/>
+	<arg name="min_beam_range" default="0.3"/>
+	<arg name="ransac_distance_threshold" default="0.20"/>
+	<arg name="ransac_min_line_length_threshold" default="5.0"/>
+	<arg name="ransac_min_line_density_threshold" default="3.0"/>
+	<arg name="euclidean_clustering_tolerance" default="1.0"/>
+	<arg name="max_road_direction_difference" default="0.1"/>
+	<arg name="min_road_width" default="1.0"/>
+	<arg name="beam_median_n" default="3"/>
+	<arg name="line_normal_mean_inner_product_threshold" default="0.5"/>
+	<arg name="radius_for_2d_normal" default="1.0"/>
 
     <group ns="recognition/road_recognizer">
         <node pkg="road_recognizer" type="road_cloud_publisher" name="road_cloud_publisher">
@@ -55,7 +55,7 @@
             <param name="THETA_DIVISION_NUM" value="$(arg theta_division_num)"/>
             <param name="IS_OTSU" value="$(arg is_otsu)"/>
             <param name="OTSU_BINARY_SEPARATION_THRESHOLD" value="$(arg otsu_binary_separation_threshold)"/>
-            <param name="OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD" value="$(arg otsu_binary_sum_of_diff_from_avr_threshold)"/>
+            <param name="CHEAT_INTENSITY_WIDTH" value="$(arg cheat_intensity_width)"/>
             <param name="VAR_BETWEEN_THRESHOLD" value="$(arg var_between_threshold)"/>
         </node>
 
