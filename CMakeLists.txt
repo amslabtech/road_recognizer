@@ -247,6 +247,7 @@ target_link_libraries(intersection_detector
 target_link_libraries(velodyne_differentiator
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
+  ${OpenCV_LIBRARIES}
 )
 
 #############
