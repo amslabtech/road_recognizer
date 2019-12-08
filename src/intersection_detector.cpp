@@ -39,6 +39,7 @@ IntersectionDetector::IntersectionDetector(void)
     local_nh.param("EPSILON3", EPSILON3, {0.95});
     local_nh.param("MIN_RANGE", MIN_RANGE, {10.0});
     local_nh.param("MIN_WIDTH", MIN_WIDTH, {0.8});
+    local_nh.param("PEAK_ONLY", PEAK_ONLY, {false});
 
     std::cout << "=== intersection_detector ===" << std::endl;
     std::cout << "EPSILON1: " << EPSILON1 << std::endl;
@@ -46,6 +47,7 @@ IntersectionDetector::IntersectionDetector(void)
     std::cout << "EPSILON3: " << EPSILON3 << std::endl;
     std::cout << "MIN_RANGE: " << MIN_RANGE << std::endl;
     std::cout << "MIN_WIDTH: " << MIN_WIDTH << std::endl;
+    std::cout << "PEAK_ONLY: " << PEAK_ONLY << std::endl;
 }
 
 void IntersectionDetector::beam_callback(const std_msgs::Float64MultiArrayConstPtr& msg)
@@ -287,34 +289,49 @@ void IntersectionDetector::visualize_beam(const std::vector<double>& beam_ranges
     beam_marker.type = visualization_msgs::Marker::LINE_LIST;
     beam_marker.action = visualization_msgs::Marker::ADD;
     beam_marker.lifetime = ros::Duration(0);
+    beam_marker.pose.orientation.w = 1.0;
     beam_marker.points.reserve(N);
     beam_marker.colors.reserve(N);
     beam_marker.scale.x = 0.1;
     for(int i=0;i<N;i++){
-        geometry_msgs::Point p;
-        p.x = 0.0;
-        p.y = 0.0;
-        p.z = 0.0;
-        beam_marker.points.push_back(p);
-        double angle = i / (double)N * 2.0 * M_PI  - M_PI;
-        p.x = beam_ranges[i] * cos(angle);
-        p.y = beam_ranges[i] * sin(angle);
-        beam_marker.points.push_back(p);
-
-        std_msgs::ColorRGBA c;
-        if(std::find(peak_list.begin(), peak_list.end(), i) == peak_list.end()){
-            c.r = 0;
-            c.g = 1;
-            c.b = 0;
-            c.a = 0.8;
+        bool is_not_peak = std::find(peak_list.begin(), peak_list.end(), i) == peak_list.end();
+        if(is_not_peak){
+            if(!PEAK_ONLY){
+                geometry_msgs::Point p;
+                p.x = 0.0;
+                p.y = 0.0;
+                p.z = 0.0;
+                beam_marker.points.push_back(p);
+                double angle = i / (double)N * 2.0 * M_PI  - M_PI;
+                p.x = beam_ranges[i] * cos(angle);
+                p.y = beam_ranges[i] * sin(angle);
+                beam_marker.points.push_back(p);
+                std_msgs::ColorRGBA c;
+                c.r = 0;
+                c.g = 1;
+                c.b = 0;
+                c.a = 0.8;
+                beam_marker.colors.push_back(c);
+                beam_marker.colors.push_back(c);
+            }
         }else{
+            geometry_msgs::Point p;
+            p.x = 0.0;
+            p.y = 0.0;
+            p.z = 0.0;
+            beam_marker.points.push_back(p);
+            double angle = i / (double)N * 2.0 * M_PI  - M_PI;
+            p.x = beam_ranges[i] * cos(angle);
+            p.y = beam_ranges[i] * sin(angle);
+            beam_marker.points.push_back(p);
+            std_msgs::ColorRGBA c;
             c.r = 1;
             c.g = 0;
             c.b = 0;
             c.a = 0.8;
+            beam_marker.colors.push_back(c);
+            beam_marker.colors.push_back(c);
         }
-        beam_marker.colors.push_back(c);
-        beam_marker.colors.push_back(c);
     }
     beam_pub.publish(beam_marker);
 }

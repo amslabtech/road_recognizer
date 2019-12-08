@@ -47,6 +47,7 @@ private:
     double EPSILON3;
     double MIN_RANGE;
     double MIN_WIDTH;
+    bool PEAK_ONLY;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;
