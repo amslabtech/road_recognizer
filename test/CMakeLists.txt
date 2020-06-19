@@ -8,6 +8,14 @@ target_link_libraries(road_recognizer_test
     ${PCL_LIBRARIES}
 )
 
+catkin_add_gtest(beam_model_test
+    src/beam_model_test.cpp
+)
+target_link_libraries(beam_model_test
+    ${catkin_LIBRARIES}
+    beam_model
+)
+
 catkin_add_gtest(intersection_detection_test
     src/intersection_detection_test.cpp
     ../src/intersection_detector.cpp

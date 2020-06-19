@@ -54,6 +54,9 @@ include_directories(
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
+add_library(beam_model src/beam_model.cpp)
+add_dependencies(beam_model ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 add_executable(road_cloud_publisher src/road_cloud_publisher_node.cpp src/road_cloud_publisher.cpp src/intensity_partition_node.cpp)
 add_executable(road_point_cloud_storer src/road_point_cloud_storer_node.cpp src/road_point_cloud_storer.cpp)
 add_executable(road_recognizer src/road_recognizer_node.cpp src/road_recognizer.cpp)
