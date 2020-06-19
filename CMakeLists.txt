@@ -102,10 +102,6 @@ target_link_libraries(intersection_detector
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
-  add_rostest_gtest(road_recognizer_test
-    test/road_recognizer.test
-    test/road_recognizer_test.cpp
-  )
-  target_link_libraries(road_recognizer_test ${catkin_LIBRARIES})
+  add_subdirectory(test)
 endif()
 
