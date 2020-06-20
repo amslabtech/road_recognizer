@@ -16,7 +16,8 @@ target_link_libraries(peak_detector_test
     peak_detector
 )
 
-catkin_add_gtest(intersection_detection_test
+add_rostest_gtest(intersection_detection_test
+    test/intersection_detection.test
     src/intersection_detection_test.cpp
     ../src/intersection_detector.cpp
 )
