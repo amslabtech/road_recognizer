@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 #include <chrono>
-#include "road_recognizer/beam_model.h"
+#include "road_recognizer/peak_detector.h"
 
-TEST(BeamModelTest, DetectPeak)
+TEST(PeakDetectionTest, DetectPeak)
 {
-    road_recognizer::BeamModel beam_model;
+    road_recognizer::PeakDetector beam_model;
     const unsigned int SIZE = 120;
     std::vector<double>beam_ranges(SIZE);
     unsigned int i = 0;
@@ -34,9 +34,9 @@ TEST(BeamModelTest, DetectPeak)
     }
 }
 
-TEST(BeamModelTest, DetectPeakInHalfCircle)
+TEST(PeakDetectionTest, DetectPeakInHalfCircle)
 {
-    road_recognizer::BeamModel beam_model;
+    road_recognizer::PeakDetector beam_model;
     const unsigned int SIZE = 120;
     const double DTHETA = 2 * M_PI / (double)SIZE;
     std::vector<double>beam_ranges(SIZE);
@@ -58,9 +58,9 @@ TEST(BeamModelTest, DetectPeakInHalfCircle)
     }
 }
 
-TEST(BeamModelTest, DetectPeakInCircle)
+TEST(PeakDetectionTest, DetectPeakInCircle)
 {
-    road_recognizer::BeamModel beam_model;
+    road_recognizer::PeakDetector beam_model;
     const unsigned int SIZE = 120;
     std::vector<double>beam_ranges(SIZE);
     unsigned int i = 0;

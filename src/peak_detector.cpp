@@ -1,4 +1,4 @@
-#include "road_recognizer/beam_model.h"
+#include "road_recognizer/peak_detector.h"
 
 namespace road_recognizer
 {
@@ -28,7 +28,7 @@ bool Peak::operator!=(const Peak& p) const
     return index_ != p.index_;
 }
 
-BeamModel::BeamModel(void)
+PeakDetector::PeakDetector(void)
 : EPSILON1_(0.25)
 , EPSILON2_DIV_(8)
 , EPSILON3_(0.95)
@@ -38,7 +38,7 @@ BeamModel::BeamModel(void)
 {
 }
 
-void BeamModel::set_parameters(double epsilon1, double epsilon2_div, double epsilon3, double min_range, double min_width)
+void PeakDetector::set_parameters(double epsilon1, double epsilon2_div, double epsilon3, double min_range, double min_width)
 {
     EPSILON1_ = epsilon1;
     EPSILON2_DIV_ = epsilon2_div;
@@ -47,7 +47,7 @@ void BeamModel::set_parameters(double epsilon1, double epsilon2_div, double epsi
     MIN_WIDTH_ = min_width;
 }
 
-std::vector<Peak> BeamModel::detect_peaks(const std::vector<double>& beam_ranges)
+std::vector<Peak> PeakDetector::detect_peaks(const std::vector<double>& beam_ranges)
 {
     beam_ranges_ = beam_ranges;
     const int N = beam_ranges_.size();
@@ -215,7 +215,7 @@ std::vector<Peak> BeamModel::detect_peaks(const std::vector<double>& beam_ranges
     return std::vector<Peak>();
 }
 
-std::vector<Peak> BeamModel::search_peaks(const std::vector<double>& beam_ranges, double avg)
+std::vector<Peak> PeakDetector::search_peaks(const std::vector<double>& beam_ranges, double avg)
 {
     std::vector<Peak> peak_list;
     const int N = beam_ranges.size();
@@ -235,7 +235,7 @@ std::vector<Peak> BeamModel::search_peaks(const std::vector<double>& beam_ranges
     return peak_list;
 }
 
-void BeamModel::set_peak_attribute(const std::vector<double>& beam_ranges, std::vector<Peak>& peak_list)
+void PeakDetector::set_peak_attribute(const std::vector<double>& beam_ranges, std::vector<Peak>& peak_list)
 {
     const int N = beam_ranges.size();
     const double D_THETA = 2.0 * M_PI / (double)N;
@@ -275,7 +275,7 @@ void BeamModel::set_peak_attribute(const std::vector<double>& beam_ranges, std::
     }
 }
 
-void BeamModel::clean_peaks(std::vector<int>& erase_list, std::vector<Peak>& peak_list)
+void PeakDetector::clean_peaks(std::vector<int>& erase_list, std::vector<Peak>& peak_list)
 {
     // std::cout << "cleaning" << std::endl;
     for(auto it=peak_list.begin();it!=peak_list.end();){

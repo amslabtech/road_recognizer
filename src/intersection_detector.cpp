@@ -36,9 +36,9 @@ void IntersectionDetector::beam_callback(const std_msgs::Float64MultiArrayConstP
     const int N = beam_ranges.size();
     std::cout << "number of beam: " << N << std::endl;
     if(N > 0){
-        BeamModel beam_model;
-        beam_model.set_parameters(EPSILON1_, EPSILON2_DIV_, EPSILON3_, MIN_RANGE_, MIN_WIDTH_);
-        std::vector<Peak> peak_list = beam_model.detect_peaks(beam_ranges);
+        PeakDetector peak_detector;
+        peak_detector.set_parameters(EPSILON1_, EPSILON2_DIV_, EPSILON3_, MIN_RANGE_, MIN_WIDTH_);
+        std::vector<Peak> peak_list = peak_detector.detect_peaks(beam_ranges);
         visualize_beam(beam_ranges, peak_list);
 
         std_msgs::Float64MultiArray directions;

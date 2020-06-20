@@ -54,8 +54,8 @@ include_directories(
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
-add_library(beam_model src/beam_model.cpp)
-add_dependencies(beam_model ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_library(peak_detector src/peak_detector.cpp)
+add_dependencies(peak_detector ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 add_executable(road_cloud_publisher src/road_cloud_publisher_node.cpp src/road_cloud_publisher.cpp src/intensity_partition_node.cpp)
 add_executable(road_point_cloud_storer src/road_point_cloud_storer_node.cpp src/road_point_cloud_storer.cpp)
@@ -100,7 +100,7 @@ target_link_libraries(make_image_node
 )
 target_link_libraries(intersection_detector
   ${catkin_LIBRARIES}
-  beam_model
+  peak_detector
 )
 
 if(CATKIN_ENABLE_TESTING)

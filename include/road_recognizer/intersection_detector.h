@@ -13,7 +13,7 @@
 #include <std_msgs/Bool.h>
 #include <visualization_msgs/Marker.h>
 
-#include "road_recognizer/beam_model.h"
+#include "road_recognizer/peak_detector.h"
 
 namespace road_recognizer
 {

@@ -1,9 +1,9 @@
 /**
- * @file beam_model.h
+ * @file peak_detector.h
  * @author amsl
  */
-#ifndef __ROAD_RECOGNIZER_BEAM_MODEL_H
-#define __ROAD_RECOGNIZER_BEAM_MODEL_H
+#ifndef __ROAD_RECOGNIZER_PEAK_DETECTOR_H
+#define __ROAD_RECOGNIZER_PEAK_DETECTOR_H
 
 // reference: https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=4378557
 // reference: https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=6005622
@@ -35,10 +35,10 @@ public:
 private:
 };
 
-class BeamModel
+class PeakDetector
 {
 public:
-    BeamModel(void);
+    PeakDetector(void);
 
     void set_parameters(double epsilon1, double epsilon2_div, double epsilon3, double min_range, double min_width);
     std::vector<Peak> detect_peaks(const std::vector<double>& beam_ranges);
@@ -58,4 +58,4 @@ private:
     std::vector<double> beam_ranges_;
 };
 }
-#endif// __ROAD_RECOGNIZER_BEAM_MODEL_H 
+#endif// __ROAD_RECOGNIZER_PEAK_DETECTOR_H 
