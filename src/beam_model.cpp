@@ -38,6 +38,15 @@ BeamModel::BeamModel(void)
 {
 }
 
+void BeamModel::set_parameters(double epsilon1, double epsilon2_div, double epsilon3, double min_range, double min_width)
+{
+    EPSILON1_ = epsilon1;
+    EPSILON2_DIV_ = epsilon2_div;
+    EPSILON3_ = epsilon3;
+    MIN_RANGE_ = min_range;
+    MIN_WIDTH_ = min_width;
+}
+
 std::vector<Peak> BeamModel::detect_peaks(const std::vector<double>& beam_ranges)
 {
     beam_ranges_ = beam_ranges;

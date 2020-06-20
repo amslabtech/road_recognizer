@@ -3,7 +3,7 @@
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "intersection_detector");
-    IntersectionDetector id;
+    road_recognizer::IntersectionDetector id;
     id.process();
     return 0;
 }

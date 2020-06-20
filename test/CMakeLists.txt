@@ -23,4 +23,5 @@ catkin_add_gtest(intersection_detection_test
 target_link_libraries(intersection_detection_test
     ${catkin_LIBRARIES}
     ${PCL_LIBRARIES}
+    beam_model
 )

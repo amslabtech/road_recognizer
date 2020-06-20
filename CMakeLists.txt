@@ -100,7 +100,7 @@ target_link_libraries(make_image_node
 )
 target_link_libraries(intersection_detector
   ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
+  beam_model
 )
 
 if(CATKIN_ENABLE_TESTING)

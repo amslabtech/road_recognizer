@@ -40,12 +40,13 @@ class BeamModel
 public:
     BeamModel(void);
 
-    std::vector<Peak> detect_peaks(const std::vector<double>&);
+    void set_parameters(double epsilon1, double epsilon2_div, double epsilon3, double min_range, double min_width);
+    std::vector<Peak> detect_peaks(const std::vector<double>& beam_ranges);
 
 private:
-    std::vector<Peak> search_peaks(const std::vector<double>&, double);
-    void set_peak_attribute(const std::vector<double>&, std::vector<Peak>&);
-    void clean_peaks(std::vector<int>&, std::vector<Peak>&);
+    std::vector<Peak> search_peaks(const std::vector<double>& beam_ranges, double avg);
+    void set_peak_attribute(const std::vector<double>& beam_ranges, std::vector<Peak>& peak_list);
+    void clean_peaks(std::vector<int>& erase_list, std::vector<Peak>& peak_list);
 
     double EPSILON1_;
     double EPSILON2_DIV_;
