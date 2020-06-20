@@ -4,7 +4,7 @@
 
 TEST(PeakDetectionTest, DetectPeak)
 {
-    road_recognizer::PeakDetector beam_model;
+    road_recognizer::PeakDetector peak_detector;
     const unsigned int SIZE = 120;
     std::vector<double>beam_ranges(SIZE);
     unsigned int i = 0;
@@ -24,7 +24,7 @@ TEST(PeakDetectionTest, DetectPeak)
         beam_ranges[i] = 5.0;
     }
     auto start = std::chrono::system_clock::now();
-    std::vector<road_recognizer::Peak> peaks = beam_model.detect_peaks(beam_ranges);
+    std::vector<road_recognizer::Peak> peaks = peak_detector.detect_peaks(beam_ranges);
     auto end = std::chrono::system_clock::now();
     ASSERT_EQ(peaks.size(), 2);
     double time = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
@@ -36,7 +36,7 @@ TEST(PeakDetectionTest, DetectPeak)
 
 TEST(PeakDetectionTest, DetectPeakInHalfCircle)
 {
-    road_recognizer::PeakDetector beam_model;
+    road_recognizer::PeakDetector peak_detector;
     const unsigned int SIZE = 120;
     const double DTHETA = 2 * M_PI / (double)SIZE;
     std::vector<double>beam_ranges(SIZE);
@@ -48,7 +48,7 @@ TEST(PeakDetectionTest, DetectPeakInHalfCircle)
         beam_ranges[i] = 20.0;
     }
     auto start = std::chrono::system_clock::now();
-    std::vector<road_recognizer::Peak> peaks = beam_model.detect_peaks(beam_ranges);
+    std::vector<road_recognizer::Peak> peaks = peak_detector.detect_peaks(beam_ranges);
     auto end = std::chrono::system_clock::now();
     ASSERT_EQ(peaks.size(), 0);
     double time = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
@@ -60,7 +60,7 @@ TEST(PeakDetectionTest, DetectPeakInHalfCircle)
 
 TEST(PeakDetectionTest, DetectPeakInCircle)
 {
-    road_recognizer::PeakDetector beam_model;
+    road_recognizer::PeakDetector peak_detector;
     const unsigned int SIZE = 120;
     std::vector<double>beam_ranges(SIZE);
     unsigned int i = 0;
@@ -68,7 +68,7 @@ TEST(PeakDetectionTest, DetectPeakInCircle)
         beam_ranges[i] = 20.0;
     }
     auto start = std::chrono::system_clock::now();
-    std::vector<road_recognizer::Peak> peaks = beam_model.detect_peaks(beam_ranges);
+    std::vector<road_recognizer::Peak> peaks = peak_detector.detect_peaks(beam_ranges);
     auto end = std::chrono::system_clock::now();
     ASSERT_EQ(peaks.size(), 0);
     double time = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
