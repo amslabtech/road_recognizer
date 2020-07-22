@@ -64,6 +64,7 @@ add_executable(intensity_partition src/intensity_partition.cpp)
 add_executable(old_intensity_partition src/old_intensity_partition.cpp)
 add_executable(make_image_node src/make_image_node.cpp src/make_image.cpp)
 add_executable(intersection_detector src/intersection_detector.cpp src/intersection_detector_node.cpp)
+add_executable(road_shape_estimator src/road_shape_estimator_node.cpp src/road_shape_estimator.cpp)
 
 add_dependencies(road_cloud_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(road_point_cloud_storer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -72,6 +73,7 @@ add_dependencies(intensity_partition ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catki
 add_dependencies(old_intensity_partition ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(make_image_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(intersection_detector ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(road_shape_estimator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(road_cloud_publisher
   ${catkin_LIBRARIES}
@@ -101,6 +103,10 @@ target_link_libraries(make_image_node
 target_link_libraries(intersection_detector
   ${catkin_LIBRARIES}
   peak_detector
+)
+target_link_libraries(road_shape_estimator
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
 )
 
 if(CATKIN_ENABLE_TESTING)
