@@ -56,9 +56,13 @@ void RoadShapeEstimator::fit_ransac_spline(const pcl::PointCloud<PointT>::Ptr cl
 
 pcl::PointIndices RoadShapeEstimator::get_random_sample(const pcl::PointIndices& indices)
 {
+    // TODO: unique random sampling
     std::uniform_int_distribution<> dist(0, indices.indices.size() - 1);
     pcl::PointIndices sample_indices;
-    sample_indices = indices;
+    sample_indices.indices.reserve(sample_num_);
+    while(static_cast<int>(sample_indices.indices.size()) < sample_num_){
+        sample_indices.indices.emplace_back(indices.indices[dist(mt_)]);
+    }
     return sample_indices;
 }
 
