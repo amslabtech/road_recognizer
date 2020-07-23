@@ -12,6 +12,11 @@ RoadShapeEstimator::RoadShapeEstimator(void)
 : local_nh_("~")
 , mt_(rnd_())
 {
+    local_nh_.param<double>("convergence_threshold", convergence_threshold_, 0.01);
+    local_nh_.param<int>("max_iteration", max_iteration_, 100);
+    local_nh_.param<int>("sample_num", sample_num_, 4);
+    local_nh_.param<int>("fitting_decision_data_num", fitting_decision_data_num_, 10);
+
     cloud_sub_ = nh_.subscribe("cloud", 1, &RoadShapeEstimator::cloud_callback, this);
 }
 

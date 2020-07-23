@@ -44,7 +44,7 @@ protected:
     int max_iteration_;
     /// Min number of samples for fitting 
     int sample_num_;
-    int fitting_decistion_data_num_;
+    int fitting_decision_data_num_;
 
     ros::NodeHandle nh_;
     ros::NodeHandle local_nh_;
