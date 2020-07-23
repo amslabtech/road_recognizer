@@ -29,13 +29,13 @@ public:
     /**
      * @brief Divide cloud into segments using beam model 
      */
-    std::vector<pcl::PointIndices> divide_cloud_into_segments(const pcl::PointCloud<PointT>::Ptr cloud_ptr);
+    std::vector<std::vector<Eigen::Vector2d>> divide_cloud_into_segments(const pcl::PointCloud<PointT>::Ptr cloud_ptr);
     /** 
      * @brief Compute spline fitting using RANSAC 
      */
-    void fit_ransac_spline(const pcl::PointCloud<PointT>::Ptr cloud_ptr, const pcl::PointIndices& indices);
-    pcl::PointIndices get_random_sample(const pcl::PointIndices& indices);
-    void fit_spline(const pcl::PointCloud<PointT>::Ptr cloud_ptr, const pcl::PointIndices& indices);
+    void fit_ransac_spline(const std::vector<Eigen::Vector2d>& segment);
+    std::vector<unsigned int> get_random_sample(const std::vector<Eigen::Vector2d>& segment);
+    void fit_spline(const std::vector<Eigen::Vector2d>& segment, const std::vector<unsigned int>& indices);
 
 protected:
     /// Threshold of error 

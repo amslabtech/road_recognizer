@@ -30,45 +30,45 @@ void RoadShapeEstimator::cloud_callback(const sensor_msgs::PointCloud2ConstPtr& 
     pcl::PointCloud<PointT>::Ptr cloud_ptr(new pcl::PointCloud<PointT>);
     pcl::fromROSMsg(*msg, *cloud_ptr);
 
-    std::vector<pcl::PointIndices> segments = divide_cloud_into_segments(cloud_ptr);
+    std::vector<std::vector<Eigen::Vector2d>> segments = divide_cloud_into_segments(cloud_ptr);
 
     // RANSAC 
-    for(const auto& indices : segments){
-        fit_ransac_spline(cloud_ptr, indices);
+    for(const auto& segment : segments){
+        fit_ransac_spline(segment);
     }
 }
 
-std::vector<pcl::PointIndices> RoadShapeEstimator::divide_cloud_into_segments(const pcl::PointCloud<PointT>::Ptr cloud_ptr)
+std::vector<std::vector<Eigen::Vector2d>> RoadShapeEstimator::divide_cloud_into_segments(const pcl::PointCloud<PointT>::Ptr cloud_ptr)
 {
-    std::vector<pcl::PointIndices> segments;
+    std::vector<std::vector<Eigen::Vector2d>> segments;
     segments.resize(1);
     for(unsigned int i=0;i<cloud_ptr->points.size();i++){
-        segments[0].indices.push_back(i);
+        segments[0].push_back(Eigen::Vector2d(cloud_ptr->points[i].x, cloud_ptr->points[i].y));
     }
     return segments;
 }
 
-void RoadShapeEstimator::fit_ransac_spline(const pcl::PointCloud<PointT>::Ptr cloud_ptr, const pcl::PointIndices& indices)
+void RoadShapeEstimator::fit_ransac_spline(const std::vector<Eigen::Vector2d>& segment)
 {
-    pcl::PointIndices sample_indices = get_random_sample(indices);
-    fit_spline(cloud_ptr, sample_indices);
+    std::vector<unsigned int> sample_indices = get_random_sample(segment);
+    fit_spline(segment, sample_indices);
 }
 
-pcl::PointIndices RoadShapeEstimator::get_random_sample(const pcl::PointIndices& indices)
+std::vector<unsigned int> RoadShapeEstimator::get_random_sample(const std::vector<Eigen::Vector2d>& segment)
 {
     // TODO: unique random sampling
-    std::uniform_int_distribution<> dist(0, indices.indices.size() - 1);
-    pcl::PointIndices sample_indices;
-    sample_indices.indices.reserve(sample_num_);
-    while(static_cast<int>(sample_indices.indices.size()) < sample_num_){
-        sample_indices.indices.emplace_back(indices.indices[dist(mt_)]);
+    std::uniform_int_distribution<> dist(0, segment.size() - 1);
+    std::vector<unsigned int> sample_indices;
+    sample_indices.reserve(sample_num_);
+    while(static_cast<int>(sample_indices.size()) < sample_num_){
+        sample_indices.emplace_back(dist(mt_));
     }
     return sample_indices;
 }
 
-void RoadShapeEstimator::fit_spline(const pcl::PointCloud<PointT>::Ptr cloud_ptr, const pcl::PointIndices& indices)
+void RoadShapeEstimator::fit_spline(const std::vector<Eigen::Vector2d>& segment, const std::vector<unsigned int>& indices)
 {
-
+    std::vector<double> t(sample_num_, 0);
 }
 
 }
