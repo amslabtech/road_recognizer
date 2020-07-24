@@ -16,6 +16,7 @@ RoadShapeEstimator::RoadShapeEstimator(void)
     local_nh_.param<int>("max_iteration", max_iteration_, 100);
     local_nh_.param<int>("sample_num", sample_num_, 4);
     local_nh_.param<int>("fitting_decision_data_num", fitting_decision_data_num_, 10);
+    local_nh_.param<double>("resolution", resolution_, 0.2);
 
     cloud_sub_ = nh_.subscribe("cloud", 1, &RoadShapeEstimator::cloud_callback, this);
 
@@ -34,6 +35,8 @@ void RoadShapeEstimator::cloud_callback(const sensor_msgs::PointCloud2ConstPtr& 
 {
     pcl::PointCloud<PointT>::Ptr cloud_ptr(new pcl::PointCloud<PointT>);
     pcl::fromROSMsg(*msg, *cloud_ptr);
+
+    rasterize(cloud_ptr);
 
     std::vector<std::vector<Eigen::Vector2d>> segments = divide_cloud_into_segments(cloud_ptr);
 
@@ -102,6 +105,29 @@ Eigen::MatrixXd RoadShapeEstimator::fit_spline(const std::vector<Eigen::Vector2d
     Eigen::MatrixXd p_mat = Eigen::MatrixXd::Zero(4, 2);
     p_mat = (t_mat * m_mat_).completeOrthogonalDecomposition().pseudoInverse() * q_mat;
     return p_mat;
+}
+
+void RoadShapeEstimator::rasterize(const pcl::PointCloud<PointT>::Ptr cloud_ptr)
+{
+    grid_params_.min_x = cloud_ptr->points[0].x;
+    grid_params_.max_x = cloud_ptr->points[0].x;
+    grid_params_.min_y = cloud_ptr->points[0].y;
+    grid_params_.max_y = cloud_ptr->points[0].y;
+    for(const auto& p : cloud_ptr->points){
+        grid_params_.min_x = std::min(grid_params_.min_x, p.x);
+        grid_params_.max_x = std::max(grid_params_.max_x, p.x);
+        grid_params_.min_y = std::min(grid_params_.min_y, p.y);
+        grid_params_.max_y = std::max(grid_params_.max_y, p.y);
+    }
+    grid_params_.grid_height = (grid_params_.max_x - grid_params_.min_x) / resolution_;
+    grid_params_.grid_width = (grid_params_.max_y - grid_params_.min_y) / resolution_;
+    rasterized_image = std::vector<std::vector<bool>>(grid_params_.grid_height, std::vector<bool>(grid_params_.grid_width, 0));
+
+    for(const auto& p : cloud_ptr->points){
+        const unsigned int x_index = (p.x - grid_params_.min_x) / resolution_;
+        const unsigned int y_index = (p.y - grid_params_.min_y) / resolution_;
+        rasterized_image[x_index][y_index] = 1;
+    }
 }
 
 }

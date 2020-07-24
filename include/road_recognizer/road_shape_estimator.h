@@ -39,8 +39,20 @@ public:
      * @brief Compute control points of spline curve
      */
     Eigen::MatrixXd fit_spline(const std::vector<Eigen::Vector2d>& segment, const std::vector<unsigned int>& indices);
+    void rasterize(const pcl::PointCloud<PointT>::Ptr cloud_ptr);
 
 protected:
+    struct GridParams
+    {
+        float min_x;
+        float min_y;
+        float max_x;
+        float max_y;
+        double width;
+        double height;
+        unsigned int grid_width;
+        unsigned int grid_height;
+    };
     /// Threshold of error 
     double convergence_threshold_;
     /// Max iteration num
@@ -48,6 +60,7 @@ protected:
     /// Min number of samples for fitting 
     int sample_num_;
     int fitting_decision_data_num_;
+    double resolution_;
 
     ros::NodeHandle nh_;
     ros::NodeHandle local_nh_;
@@ -55,6 +68,8 @@ protected:
     std::random_device rnd_;
     std::mt19937 mt_;
     Eigen::MatrixXd m_mat_;
+    std::vector<std::vector<bool>> rasterized_image;
+    GridParams grid_params_;
 };
 
 }
