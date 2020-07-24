@@ -60,7 +60,7 @@ protected:
     /// Min number of samples for fitting 
     int sample_num_;
     int fitting_decision_data_num_;
-    double resolution_;
+    double cells_per_meter_;
 
     ros::NodeHandle nh_;
     ros::NodeHandle local_nh_;
