@@ -33,7 +33,7 @@ public:
     /** 
      * @brief Compute spline fitting using RANSAC 
      */
-    void fit_ransac_spline(const std::vector<Eigen::Vector2d>& segment);
+    Eigen::MatrixXd fit_ransac_spline(const std::vector<Eigen::Vector2d>& segment);
     std::vector<unsigned int> get_random_sample(const std::vector<Eigen::Vector2d>& segment);
     /**
      * @brief Compute control points of spline curve

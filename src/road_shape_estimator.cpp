@@ -44,9 +44,10 @@ void RoadShapeEstimator::cloud_callback(const sensor_msgs::PointCloud2ConstPtr& 
 
     std::vector<std::vector<Eigen::Vector2d>> segments = divide_cloud_into_segments(cloud_ptr);
 
+    std::vector<Eigen::MatrixXd> control_points_list;
     // RANSAC 
     for(const auto& segment : segments){
-        fit_ransac_spline(segment);
+        control_points_list.push_back(fit_ransac_spline(segment));
     }
 }
 
@@ -60,7 +61,7 @@ std::vector<std::vector<Eigen::Vector2d>> RoadShapeEstimator::divide_cloud_into_
     return segments;
 }
 
-void RoadShapeEstimator::fit_ransac_spline(const std::vector<Eigen::Vector2d>& segment)
+Eigen::MatrixXd RoadShapeEstimator::fit_ransac_spline(const std::vector<Eigen::Vector2d>& segment)
 {
     double best_score = 0.0;
     Eigen::MatrixXd best_control_points = Eigen::MatrixXd::Zero(4, 2);
@@ -74,6 +75,7 @@ void RoadShapeEstimator::fit_ransac_spline(const std::vector<Eigen::Vector2d>& s
             best_control_points = control_points;
         }
     }
+    return best_control_points;
 }
 
 std::vector<unsigned int> RoadShapeEstimator::get_random_sample(const std::vector<Eigen::Vector2d>& segment)
