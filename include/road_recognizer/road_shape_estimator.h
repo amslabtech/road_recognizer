@@ -67,7 +67,7 @@ protected:
     ros::Subscriber cloud_sub_;
     std::random_device rnd_;
     std::mt19937 mt_;
-    Eigen::MatrixXd m_mat_;
+    Eigen::Matrix4d m_mat_;
     std::vector<std::vector<bool>> rasterized_image;
     GridParams grid_params_;
 };

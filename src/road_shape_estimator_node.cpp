@@ -7,7 +7,7 @@
 
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "road_shape_estimator.h");
+    ros::init(argc, argv, "road_shape_estimator");
     road_recognizer::RoadShapeEstimator rse;
     rse.process();
     return 0;
