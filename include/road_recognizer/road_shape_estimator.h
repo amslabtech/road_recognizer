@@ -40,6 +40,8 @@ public:
      */
     Eigen::MatrixXd fit_spline(const std::vector<Eigen::Vector2d>& segment, const std::vector<unsigned int>& indices);
     void rasterize(const pcl::PointCloud<PointT>::Ptr cloud_ptr);
+    double compute_score(const Eigen::MatrixXd& control_points);
+    Eigen::Vector4d get_cubic(double x);
 
 protected:
     struct GridParams

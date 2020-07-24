@@ -58,8 +58,18 @@ std::vector<std::vector<Eigen::Vector2d>> RoadShapeEstimator::divide_cloud_into_
 
 void RoadShapeEstimator::fit_ransac_spline(const std::vector<Eigen::Vector2d>& segment)
 {
-    std::vector<unsigned int> sample_indices = get_random_sample(segment);
-    Eigen::MatrixXd control_points = fit_spline(segment, sample_indices);
+    double best_score = 0.0;
+    Eigen::MatrixXd best_control_points = Eigen::MatrixXd::Zero(4, 2);
+
+    for(unsigned int i=0;i<max_iteration_;++i){
+        std::vector<unsigned int> sample_indices = get_random_sample(segment);
+        Eigen::MatrixXd control_points = fit_spline(segment, sample_indices);
+        double score = compute_score(control_points);
+        if(score > best_score){
+            best_score = score;
+            best_control_points = control_points;
+        }
+    }
 }
 
 std::vector<unsigned int> RoadShapeEstimator::get_random_sample(const std::vector<Eigen::Vector2d>& segment)
@@ -128,6 +138,35 @@ void RoadShapeEstimator::rasterize(const pcl::PointCloud<PointT>::Ptr cloud_ptr)
         const unsigned int y_index = (p.y - grid_params_.min_y) * cells_per_meter_;
         rasterized_image[x_index][y_index] = 1;
     }
+}
+
+double RoadShapeEstimator::compute_score(const Eigen::MatrixXd& control_points)
+{
+    // TODO: Vary num with the length of the curve
+    const unsigned int num = 10;
+    // t \in [0, 1]
+    std::vector<double> t(num, 0);
+    for(unsigned int i=1;i<num;++i){
+        t[i] = t[i-1] + 0.1;
+    }
+    double score = 0;
+    for(unsigned int i=0;i<num;++i){
+        Eigen::Vector4d t_vec = get_cubic(t[i]);
+        Eigen::Vector2d v = t_vec.transpose() * m_mat_ * control_points; 
+        const unsigned int x_index = (v(0) - grid_params_.min_x) * cells_per_meter_;
+        const unsigned int y_index = (v(1) - grid_params_.min_y) * cells_per_meter_;
+        if(rasterized_image[x_index][y_index] > 0){
+            score += 1.0;
+        }
+    }
+    return score;
+}
+
+Eigen::Vector4d RoadShapeEstimator::get_cubic(double x)
+{
+    Eigen::Vector4d v;
+    v << x * x * x, x * x, x, 1;
+    return v;
 }
 
 }
