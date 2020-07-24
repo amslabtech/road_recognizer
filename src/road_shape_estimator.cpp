@@ -12,10 +12,14 @@ RoadShapeEstimator::RoadShapeEstimator(void)
 : local_nh_("~")
 , mt_(rnd_())
 {
+    int max_iteration, sample_num, fitting_decision_data_num;
     local_nh_.param<double>("convergence_threshold", convergence_threshold_, 0.01);
-    local_nh_.param<int>("max_iteration", max_iteration_, 100);
-    local_nh_.param<int>("sample_num", sample_num_, 4);
-    local_nh_.param<int>("fitting_decision_data_num", fitting_decision_data_num_, 10);
+    local_nh_.param<int>("max_iteration", max_iteration, 100);
+    max_iteration_ = max_iteration;
+    local_nh_.param<int>("sample_num", sample_num, 4);
+    sample_num_ = sample_num;
+    local_nh_.param<int>("fitting_decision_data_num", fitting_decision_data_num, 10);
+    fitting_decision_data_num_ = fitting_decision_data_num;
     local_nh_.param<double>("resolution", cells_per_meter_, 5.0);
 
     cloud_sub_ = nh_.subscribe("cloud", 1, &RoadShapeEstimator::cloud_callback, this);
@@ -78,7 +82,7 @@ std::vector<unsigned int> RoadShapeEstimator::get_random_sample(const std::vecto
     std::uniform_int_distribution<> dist(0, segment.size() - 1);
     std::vector<unsigned int> sample_indices;
     sample_indices.reserve(sample_num_);
-    while(static_cast<int>(sample_indices.size()) < sample_num_){
+    while(sample_indices.size() < sample_num_){
         sample_indices.emplace_back(dist(mt_));
     }
     return sample_indices;

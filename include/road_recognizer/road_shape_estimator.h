@@ -58,10 +58,10 @@ protected:
     /// Threshold of error 
     double convergence_threshold_;
     /// Max iteration num
-    int max_iteration_;
+    unsigned int max_iteration_;
     /// Min number of samples for fitting 
-    int sample_num_;
-    int fitting_decision_data_num_;
+    unsigned int sample_num_;
+    unsigned int fitting_decision_data_num_;
     double cells_per_meter_;
 
     ros::NodeHandle nh_;
