@@ -35,7 +35,10 @@ public:
      */
     void fit_ransac_spline(const std::vector<Eigen::Vector2d>& segment);
     std::vector<unsigned int> get_random_sample(const std::vector<Eigen::Vector2d>& segment);
-    void fit_spline(const std::vector<Eigen::Vector2d>& segment, const std::vector<unsigned int>& indices);
+    /**
+     * @brief Compute control points of spline curve
+     */
+    Eigen::MatrixXd fit_spline(const std::vector<Eigen::Vector2d>& segment, const std::vector<unsigned int>& indices);
 
 protected:
     /// Threshold of error 
@@ -51,6 +54,7 @@ protected:
     ros::Subscriber cloud_sub_;
     std::random_device rnd_;
     std::mt19937 mt_;
+    Eigen::MatrixXd m_mat_;
 };
 
 }

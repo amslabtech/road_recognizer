@@ -18,6 +18,11 @@ RoadShapeEstimator::RoadShapeEstimator(void)
     local_nh_.param<int>("fitting_decision_data_num", fitting_decision_data_num_, 10);
 
     cloud_sub_ = nh_.subscribe("cloud", 1, &RoadShapeEstimator::cloud_callback, this);
+
+    m_mat_ << -1,  3, -3, 1,
+               3, -6,  3, 0,
+              -3,  3,  0, 0,
+               1,  0,  0, 0;
 }
 
 void RoadShapeEstimator::process(void)
@@ -51,7 +56,7 @@ std::vector<std::vector<Eigen::Vector2d>> RoadShapeEstimator::divide_cloud_into_
 void RoadShapeEstimator::fit_ransac_spline(const std::vector<Eigen::Vector2d>& segment)
 {
     std::vector<unsigned int> sample_indices = get_random_sample(segment);
-    fit_spline(segment, sample_indices);
+    Eigen::MatrixXd control_points = fit_spline(segment, sample_indices);
 }
 
 std::vector<unsigned int> RoadShapeEstimator::get_random_sample(const std::vector<Eigen::Vector2d>& segment)
@@ -66,9 +71,37 @@ std::vector<unsigned int> RoadShapeEstimator::get_random_sample(const std::vecto
     return sample_indices;
 }
 
-void RoadShapeEstimator::fit_spline(const std::vector<Eigen::Vector2d>& segment, const std::vector<unsigned int>& indices)
+Eigen::MatrixXd RoadShapeEstimator::fit_spline(const std::vector<Eigen::Vector2d>& segment, const std::vector<unsigned int>& indices)
 {
-    std::vector<double> t(sample_num_, 0);
+    const unsigned int num = indices.size() - 1;
+    std::vector<double> d(num, 0);
+    for(unsigned int i=0;i<num;++i){
+        d[i] = (segment[indices[i+1]] - segment[indices[i]]).norm();
+    }
+    std::vector<double> cumulative_sum_of_d(num, 0);
+    for(unsigned int i=0;i<num;++i){
+        cumulative_sum_of_d[i] += d[i];
+    }
+    // t \in [0, 1]
+    std::vector<double> t(num, 0);
+    for(unsigned int i=0;i<num;++i){
+        t[i] = d[i] / cumulative_sum_of_d[i];
+    }
+    Eigen::MatrixXd t_mat = Eigen::MatrixXd::Ones(num, 4);
+    for(unsigned int i=0;i<num;++i){
+        for(unsigned int j=1;j<4;++j){
+            t_mat(i, 3-j) = t_mat(i, 4-j) * t[i]; 
+        }
+    }
+    Eigen::MatrixXd q_mat = Eigen::MatrixXd::Zero(num, 2);
+    for(unsigned int i=0;i<num;++i){
+        q_mat.row(i) = segment[indices[i]].transpose();
+    }
+
+    // four control points
+    Eigen::MatrixXd p_mat = Eigen::MatrixXd::Zero(4, 2);
+    p_mat = (t_mat * m_mat_).completeOrthogonalDecomposition().pseudoInverse() * q_mat;
+    return p_mat;
 }
 
 }
