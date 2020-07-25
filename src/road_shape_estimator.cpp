@@ -104,7 +104,7 @@ Eigen::MatrixXd RoadShapeEstimator::fit_ransac_spline(const std::vector<Eigen::V
     for(unsigned int i=0;i<max_iteration_;++i){
         std::vector<unsigned int> sample_indices = get_random_sample(segment);
         Eigen::MatrixXd control_points = fit_spline(segment, sample_indices);
-        double score = compute_score(control_points);
+        const double score = compute_score(control_points);
         if(score > best_score){
             best_score = score;
             best_control_points = control_points;
