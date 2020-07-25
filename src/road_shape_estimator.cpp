@@ -176,7 +176,7 @@ Eigen::Vector4d RoadShapeEstimator::get_cubic(double x)
     return v;
 }
 
-void RoadShapeEstimator::publish_marker(const std::vector<Eigen::MatrixXd>& control_points_list, std_msgs::Header& header)
+void RoadShapeEstimator::publish_marker(const std::vector<Eigen::MatrixXd>& control_points_list, const std_msgs::Header& header)
 {
     visualization_msgs::MarkerArray curves;
     for(unsigned int i=0;i<control_points_list.size();++i){

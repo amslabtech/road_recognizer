@@ -44,7 +44,7 @@ public:
     void rasterize(const pcl::PointCloud<PointT>::Ptr cloud_ptr);
     double compute_score(const Eigen::MatrixXd& control_points);
     Eigen::Vector4d get_cubic(double x);
-    void publish_marker(const std::vector<Eigen::MatrixXd>& control_points_list, std_msgs::Header& header);
+    void publish_marker(const std::vector<Eigen::MatrixXd>& control_points_list, const std_msgs::Header& header);
 
 protected:
     struct GridParams
