@@ -50,6 +50,8 @@ void RoadShapeEstimator::cloud_callback(const sensor_msgs::PointCloud2ConstPtr& 
     for(const auto& segment : segments){
         control_points_list.push_back(fit_ransac_spline(segment));
     }
+
+    publish_marker(control_points_list, msg->header);
 }
 
 std::vector<std::vector<Eigen::Vector2d>> RoadShapeEstimator::divide_cloud_into_segments(const pcl::PointCloud<PointT>::Ptr cloud_ptr)
