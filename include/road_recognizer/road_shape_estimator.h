@@ -45,6 +45,7 @@ public:
     double compute_score(const Eigen::MatrixXd& control_points);
     Eigen::Vector4d get_cubic(double x);
     void publish_marker(const std::vector<Eigen::MatrixXd>& control_points_list, const std_msgs::Header& header);
+    std::vector<double> get_beam_from_cloud(pcl::PointCloud<PointT>::Ptr cloud_ptr, double origin_x, double origin_y);
 
 protected:
     struct GridParams
@@ -66,6 +67,8 @@ protected:
     unsigned int sample_num_;
     unsigned int fitting_decision_data_num_;
     double cells_per_meter_;
+    unsigned int beam_num_;
+    double max_beam_range_;
 
     ros::NodeHandle nh_;
     ros::NodeHandle local_nh_;

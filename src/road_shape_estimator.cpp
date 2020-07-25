@@ -12,7 +12,7 @@ RoadShapeEstimator::RoadShapeEstimator(void)
 : local_nh_("~")
 , mt_(rnd_())
 {
-    int max_iteration, sample_num, fitting_decision_data_num;
+    int max_iteration, sample_num, fitting_decision_data_num, beam_num;
     local_nh_.param<double>("convergence_threshold", convergence_threshold_, 0.01);
     local_nh_.param<int>("max_iteration", max_iteration, 100);
     max_iteration_ = max_iteration;
@@ -21,6 +21,9 @@ RoadShapeEstimator::RoadShapeEstimator(void)
     local_nh_.param<int>("fitting_decision_data_num", fitting_decision_data_num, 10);
     fitting_decision_data_num_ = fitting_decision_data_num;
     local_nh_.param<double>("resolution", cells_per_meter_, 5.0);
+    local_nh_.param<int>("beam_num", beam_num, 120);
+    beam_num_ = beam_num;
+    local_nh_.param<double>("max_beam_range", max_beam_range_, 10.0);
 
     curves_pub_ = local_nh_.advertise<visualization_msgs::MarkerArray>("viz/curves", 1);
     cloud_sub_ = nh_.subscribe("cloud", 1, &RoadShapeEstimator::cloud_callback, this);
@@ -56,6 +59,7 @@ void RoadShapeEstimator::cloud_callback(const sensor_msgs::PointCloud2ConstPtr& 
 
 std::vector<std::vector<Eigen::Vector2d>> RoadShapeEstimator::divide_cloud_into_segments(const pcl::PointCloud<PointT>::Ptr cloud_ptr)
 {
+    std::vector<double> beam_list = get_beam_from_cloud(cloud_ptr, 0, 0);
     std::vector<std::vector<Eigen::Vector2d>> segments;
     segments.resize(1);
     for(unsigned int i=0;i<cloud_ptr->points.size();i++){
@@ -205,6 +209,23 @@ void RoadShapeEstimator::publish_marker(const std::vector<Eigen::MatrixXd>& cont
         curves.markers.push_back(m);
     }
     curves_pub_.publish(curves);
+}
+
+std::vector<double> RoadShapeEstimator::get_beam_from_cloud(pcl::PointCloud<PointT>::Ptr cloud_ptr, double origin_x, double origin_y)
+{
+    const double d_theta = 2 * M_PI / static_cast<double>(beam_num_);
+    std::vector<double> beam_list(beam_num_, max_beam_range_);
+    auto compute_distance = [](double x0, double y0, double x1, double y1)
+    {
+        return sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
+    };
+    for(const auto& p : cloud_ptr->points){
+        const double distance = compute_distance(p.x, p.y, origin_x, origin_y);
+        const double direction = atan2(p.y - origin_y, p.x - origin_x) + M_PI;
+        const unsigned int index = std::floor(direction / d_theta);
+        beam_list[index] = std::min(beam_list[index], distance);
+    }
+    return beam_list;
 }
 
 }
