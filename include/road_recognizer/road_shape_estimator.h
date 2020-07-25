@@ -44,9 +44,21 @@ public:
      */
     Eigen::MatrixXd fit_spline(const std::vector<Eigen::Vector2d>& segment, const std::vector<unsigned int>& indices);
     void rasterize(const pcl::PointCloud<PointT>::Ptr cloud_ptr);
+    /**
+     * @brief Compute fitting score of given spline using rasterized image
+     */
     double compute_score(const Eigen::MatrixXd& control_points);
+    /**
+     * @brief Returns {x^3, x^2, x, 1}
+     */
     Eigen::Vector4d get_cubic(double x);
+    /**
+     * @brief Publish markers for visualizing curves
+     */
     void publish_marker(const std::vector<Eigen::MatrixXd>& control_points_list, const std_msgs::Header& header);
+    /**
+     * @brief Compute beam model from origin in given cloud
+     */
     std::vector<double> get_beam_from_cloud(pcl::PointCloud<PointT>::Ptr cloud_ptr, double origin_x, double origin_y);
 
 protected:
