@@ -17,6 +17,8 @@
 #include <pcl/point_types.h>
 #include <Eigen/Dense>
 
+#include "road_recognizer/peak_detector.h"
+
 namespace road_recognizer
 {
 

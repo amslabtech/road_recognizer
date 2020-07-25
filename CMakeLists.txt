@@ -107,6 +107,7 @@ target_link_libraries(intersection_detector
 target_link_libraries(road_shape_estimator
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
+  peak_detector
 )
 
 if(CATKIN_ENABLE_TESTING)

@@ -59,11 +59,39 @@ void RoadShapeEstimator::cloud_callback(const sensor_msgs::PointCloud2ConstPtr& 
 
 std::vector<std::vector<Eigen::Vector2d>> RoadShapeEstimator::divide_cloud_into_segments(const pcl::PointCloud<PointT>::Ptr cloud_ptr)
 {
-    std::vector<double> beam_list = get_beam_from_cloud(cloud_ptr, 0, 0);
     std::vector<std::vector<Eigen::Vector2d>> segments;
-    segments.resize(1);
-    for(unsigned int i=0;i<cloud_ptr->points.size();i++){
-        segments[0].push_back(Eigen::Vector2d(cloud_ptr->points[i].x, cloud_ptr->points[i].y));
+
+    const std::vector<double> beam_list = get_beam_from_cloud(cloud_ptr, 0, 0);
+    PeakDetector peak_detector;
+    const std::vector<Peak> peak_list = peak_detector.detect_peaks(beam_list);
+    if(peak_list.size() < 2){
+        std::cout << "num of peaks must be >= 2 to diveide cloud" << std::endl;
+        return segments;
+    }
+    const unsigned int peak_num = peak_list.size();
+    segments.resize(peak_num);
+
+    const double d_theta = 2 * M_PI / static_cast<double>(beam_num_);
+    for(unsigned int i=0;i<beam_num_;++i){
+        const double direction = i * d_theta - M_PI;
+        for(unsigned int j=0;j<peak_num;++j){
+            if(j > 0){
+                const unsigned int k = j - 1; 
+                if(peak_list[j].angle_ <= direction && direction < peak_list[k].angle_){
+                    Eigen::Vector2d v;
+                    v << beam_list[i] * cos(direction), beam_list[i] * sin(direction);
+                    segments[j].push_back(v);
+                }
+            }else{
+                // if j == 0
+                const unsigned int k = peak_num - 1; 
+                if(direction < peak_list[j].angle_ || peak_list[k].angle_ <= direction){
+                    Eigen::Vector2d v;
+                    v << beam_list[i] * cos(direction), beam_list[i] * sin(direction);
+                    segments[j].push_back(v);
+                }
+            }
+        }
     }
     return segments;
 }
