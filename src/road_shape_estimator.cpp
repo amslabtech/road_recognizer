@@ -22,6 +22,7 @@ RoadShapeEstimator::RoadShapeEstimator(void)
     fitting_decision_data_num_ = fitting_decision_data_num;
     local_nh_.param<double>("resolution", cells_per_meter_, 5.0);
 
+    curves_pub_ = local_nh_.advertise<visualization_msgs::MarkerArray>("viz/curves", 1);
     cloud_sub_ = nh_.subscribe("cloud", 1, &RoadShapeEstimator::cloud_callback, this);
 
     m_mat_ << -1,  3, -3, 1,
@@ -173,6 +174,35 @@ Eigen::Vector4d RoadShapeEstimator::get_cubic(double x)
     Eigen::Vector4d v;
     v << x * x * x, x * x, x, 1;
     return v;
+}
+
+void RoadShapeEstimator::publish_marker(const std::vector<Eigen::MatrixXd>& control_points_list, std_msgs::Header& header)
+{
+    visualization_msgs::MarkerArray curves;
+    for(unsigned int i=0;i<control_points_list.size();++i){
+        const Eigen::MatrixXd& cp = control_points_list[i];
+        visualization_msgs::Marker m;    
+        m.header = header;
+        m.action = visualization_msgs::Marker::ADD;
+        m.ns = ros::this_node::getName();
+        m.id = i;
+        m.type = visualization_msgs::Marker::LINE_STRIP;
+        m.frame_locked = true;
+        m.points.reserve(11);
+
+        const Eigen::MatrixXd tmp_mat = m_mat_ * cp;
+        for(double t=0.0;t<=1.0;t+=0.1){
+            const Eigen::Vector4d t_vec = get_cubic(t);
+            const Eigen::Vector2d point = (t_vec.transpose() * tmp_mat).transpose();
+            geometry_msgs::Point p;
+            p.x = point(0); 
+            p.y = point(1); 
+            m.points.emplace_back(p);
+        }
+
+        curves.markers.push_back(m);
+    }
+    curves_pub_.publish(curves);
 }
 
 }

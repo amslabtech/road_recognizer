@@ -10,6 +10,8 @@
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl_ros/point_cloud.h>
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -42,6 +44,7 @@ public:
     void rasterize(const pcl::PointCloud<PointT>::Ptr cloud_ptr);
     double compute_score(const Eigen::MatrixXd& control_points);
     Eigen::Vector4d get_cubic(double x);
+    void publish_marker(const std::vector<Eigen::MatrixXd>& control_points_list, std_msgs::Header& header);
 
 protected:
     struct GridParams
@@ -66,6 +69,7 @@ protected:
 
     ros::NodeHandle nh_;
     ros::NodeHandle local_nh_;
+    ros::Publisher curves_pub_;
     ros::Subscriber cloud_sub_;
     std::random_device rnd_;
     std::mt19937 mt_;
