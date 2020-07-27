@@ -23,7 +23,7 @@ RoadShapeEstimator::RoadShapeEstimator(void)
     local_nh_.param<double>("resolution", cells_per_meter_, 5.0);
     local_nh_.param<int>("beam_num", beam_num, 120);
     beam_num_ = beam_num;
-    local_nh_.param<double>("max_beam_range", max_beam_range_, 10.0);
+    local_nh_.param<double>("max_beam_range", max_beam_range_, 20.0);
 
     curves_pub_ = local_nh_.advertise<visualization_msgs::MarkerArray>("viz/curves", 1);
     cloud_sub_ = nh_.subscribe("cloud", 1, &RoadShapeEstimator::cloud_callback, this);
