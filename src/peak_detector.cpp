@@ -207,6 +207,11 @@ std::vector<Peak> PeakDetector::detect_peaks(const std::vector<double>& beam_ran
         for(auto it=peak_list.begin();it!=peak_list.end();++it){
             it->index_ = (it->index_ + start_index) % N;
         }
+        auto compare_peak_index = [](const auto& p1, const auto& p2) -> bool
+        {
+            return (p1.index_ < p2.index_);
+        };
+        std::sort(peak_list.begin(), peak_list.end(), compare_peak_index);
 
         return peak_list;
     }else{
