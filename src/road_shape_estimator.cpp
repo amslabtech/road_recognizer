@@ -68,6 +68,11 @@ std::vector<std::vector<Eigen::Vector2d>> RoadShapeEstimator::divide_cloud_into_
         std::cout << "num of peaks must be >= 2 to diveide cloud" << std::endl;
         return segments;
     }
+    auto get_peak_direction = [&](const Peak& peak)
+    {
+        const double direction = peak.index_ * 2 * M_PI / static_cast<double>(beam_num_) - M_PI;
+        return direction;
+    };
     const unsigned int peak_num = peak_list.size();
     segments.resize(peak_num);
 
@@ -76,9 +81,11 @@ std::vector<std::vector<Eigen::Vector2d>> RoadShapeEstimator::divide_cloud_into_
         const double direction = i * d_theta - M_PI;
         // check if the direction is between two peaks
         for(unsigned int j=0;j<peak_num;++j){
+            const double direction_j = get_peak_direction(peak_list[j]);
             if(j > 0){
                 const unsigned int k = j - 1; 
-                if(peak_list[j].angle_ <= direction && direction < peak_list[k].angle_){
+                const double direction_k = get_peak_direction(peak_list[k]);
+                if(direction_j <= direction && direction < direction_k){
                     Eigen::Vector2d v;
                     v << beam_list[i] * cos(direction), beam_list[i] * sin(direction);
                     segments[j].push_back(v);
@@ -86,7 +93,8 @@ std::vector<std::vector<Eigen::Vector2d>> RoadShapeEstimator::divide_cloud_into_
             }else{
                 // if j == 0
                 const unsigned int k = peak_num - 1; 
-                if(direction < peak_list[j].angle_ || peak_list[k].angle_ <= direction){
+                const double direction_k = get_peak_direction(peak_list[k]);
+                if(direction < direction_j || direction_k <= direction){
                     Eigen::Vector2d v;
                     v << beam_list[i] * cos(direction), beam_list[i] * sin(direction);
                     segments[j].push_back(v);
