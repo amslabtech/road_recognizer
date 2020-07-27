@@ -85,10 +85,11 @@ std::vector<std::vector<Eigen::Vector2d>> RoadShapeEstimator::divide_cloud_into_
             if(j > 0){
                 const unsigned int k = j - 1; 
                 const double direction_k = get_peak_direction(peak_list[k]);
-                if(direction_j <= direction && direction < direction_k){
+                if(direction_k <= direction && direction < direction_j){
                     Eigen::Vector2d v;
                     v << beam_list[i] * cos(direction), beam_list[i] * sin(direction);
                     segments[j].push_back(v);
+                    break;
                 }
             }else{
                 // if j == 0
@@ -98,6 +99,7 @@ std::vector<std::vector<Eigen::Vector2d>> RoadShapeEstimator::divide_cloud_into_
                     Eigen::Vector2d v;
                     v << beam_list[i] * cos(direction), beam_list[i] * sin(direction);
                     segments[j].push_back(v);
+                    break;
                 }
             }
         }
