@@ -65,7 +65,7 @@ std::vector<std::vector<Eigen::Vector2d>> RoadShapeEstimator::divide_cloud_into_
     PeakDetector peak_detector;
     const std::vector<Peak> peak_list = peak_detector.detect_peaks(beam_list);
     if(peak_list.size() < 2){
-        std::cout << "num of peaks must be >= 2 to diveide cloud" << std::endl;
+        std::cout << "num of peaks must be >= 2 to divide cloud" << std::endl;
         return segments;
     }
     auto get_peak_direction = [&](const Peak& peak)
