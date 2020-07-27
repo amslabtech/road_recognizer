@@ -233,7 +233,11 @@ void RoadShapeEstimator::publish_marker(const std::vector<Eigen::MatrixXd>& cont
         m.id = i;
         m.type = visualization_msgs::Marker::LINE_STRIP;
         m.frame_locked = true;
+        m.pose.orientation.w = 1.0;
+        m.scale.x = 0.1;
+        m.lifetime = ros::Duration();
         m.points.reserve(11);
+        m.colors.reserve(11);
 
         const Eigen::MatrixXd tmp_mat = m_mat_ * cp;
         for(double t=0.0;t<=1.0;t+=0.1){
@@ -243,6 +247,10 @@ void RoadShapeEstimator::publish_marker(const std::vector<Eigen::MatrixXd>& cont
             p.x = point(0); 
             p.y = point(1); 
             m.points.emplace_back(p);
+            std_msgs::ColorRGBA c;
+            c.r = 1.0;
+            c.a = 0.8;
+            m.colors.emplace_back(c);
         }
 
         curves.markers.push_back(m);
