@@ -52,9 +52,8 @@ void RoadShapeEstimator::cloud_callback(const sensor_msgs::PointCloud2ConstPtr& 
     pcl::PointCloud<PointT>::Ptr cloud_ptr(new pcl::PointCloud<PointT>);
     pcl::fromROSMsg(*msg, *cloud_ptr);
 
-    rasterize(cloud_ptr);
-
     std::vector<std::vector<Eigen::Vector2d>> segments = divide_cloud_into_segments(cloud_ptr);
+    rasterize(segments);
 
     std::vector<Eigen::MatrixXd> control_points_list;
     // RANSAC 
@@ -177,27 +176,31 @@ Eigen::MatrixXd RoadShapeEstimator::fit_spline(const std::vector<Eigen::Vector2d
     return p_mat;
 }
 
-void RoadShapeEstimator::rasterize(const pcl::PointCloud<PointT>::Ptr cloud_ptr)
+void RoadShapeEstimator::rasterize(const std::vector<std::vector<Eigen::Vector2d>>& segments)
 {
-    grid_params_.min_x = cloud_ptr->points[0].x;
-    grid_params_.max_x = cloud_ptr->points[0].x;
-    grid_params_.min_y = cloud_ptr->points[0].y;
-    grid_params_.max_y = cloud_ptr->points[0].y;
-    for(const auto& p : cloud_ptr->points){
-        grid_params_.min_x = std::min(grid_params_.min_x, p.x);
-        grid_params_.max_x = std::max(grid_params_.max_x, p.x);
-        grid_params_.min_y = std::min(grid_params_.min_y, p.y);
-        grid_params_.max_y = std::max(grid_params_.max_y, p.y);
+    grid_params_.min_x = segments[0][0](0);
+    grid_params_.max_x = segments[0][0](0);
+    grid_params_.min_y = segments[0][0](1);
+    grid_params_.max_y = segments[0][0](1);
+    for(const auto& segment : segments){
+        for(const auto& p : segment){
+            grid_params_.min_x = std::min(static_cast<double>(grid_params_.min_x), p(0));
+            grid_params_.max_x = std::max(static_cast<double>(grid_params_.max_x), p(0));
+            grid_params_.min_y = std::min(static_cast<double>(grid_params_.min_y), p(1));
+            grid_params_.max_y = std::max(static_cast<double>(grid_params_.max_y), p(1));
+        }
     }
     grid_params_.grid_height = std::ceil((grid_params_.max_x - grid_params_.min_x) * cells_per_meter_);
     grid_params_.grid_width = std::ceil((grid_params_.max_y - grid_params_.min_y) * cells_per_meter_);
     rasterized_image = std::vector<std::vector<bool>>(grid_params_.grid_height, std::vector<bool>(grid_params_.grid_width, 0));
 
-    for(const auto& p : cloud_ptr->points){
-        const unsigned int x_index = (p.x - grid_params_.min_x) * cells_per_meter_;
-        const unsigned int y_index = (p.y - grid_params_.min_y) * cells_per_meter_;
+    for(const auto& segment : segments){
+        for(const auto& p : segment){
+            const unsigned int x_index = (p(0) - grid_params_.min_x) * cells_per_meter_;
+            const unsigned int y_index = (p(1) - grid_params_.min_y) * cells_per_meter_;
         rasterized_image[x_index][y_index] = 1;
     }
+}
 }
 
 double RoadShapeEstimator::compute_score(const Eigen::MatrixXd& control_points)

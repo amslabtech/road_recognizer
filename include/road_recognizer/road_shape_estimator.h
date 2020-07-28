@@ -43,7 +43,7 @@ public:
      * @brief Compute control points of spline curve
      */
     Eigen::MatrixXd fit_spline(const std::vector<Eigen::Vector2d>& segment, const std::vector<unsigned int>& indices);
-    void rasterize(const pcl::PointCloud<PointT>::Ptr cloud_ptr);
+    void rasterize(const std::vector<std::vector<Eigen::Vector2d>>& segments);
     /**
      * @brief Compute fitting score of given spline using rasterized image
      */
