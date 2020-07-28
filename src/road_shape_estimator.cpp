@@ -158,7 +158,7 @@ Eigen::MatrixXd RoadShapeEstimator::fit_spline(const std::vector<Eigen::Vector2d
     // t \in [0, 1]
     std::vector<double> t(num, 0);
     for(unsigned int i=0;i<num;++i){
-        t[i] = d[i] / cumulative_sum_of_d[i];
+        t[i] = cumulative_sum_of_d[i] / cumulative_sum_of_d[num-1];
     }
     Eigen::MatrixXd t_mat = Eigen::MatrixXd::Ones(num, 4);
     for(unsigned int i=0;i<num;++i){
