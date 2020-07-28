@@ -151,8 +151,9 @@ Eigen::MatrixXd RoadShapeEstimator::fit_spline(const std::vector<Eigen::Vector2d
         d[i] = (segment[indices[i+1]] - segment[indices[i]]).norm();
     }
     std::vector<double> cumulative_sum_of_d(num, 0);
-    for(unsigned int i=0;i<num;++i){
-        cumulative_sum_of_d[i] += d[i];
+    cumulative_sum_of_d[0] = d[0];
+    for(unsigned int i=1;i<num;++i){
+        cumulative_sum_of_d[i] = cumulative_sum_of_d[i-1] + d[i];
     }
     // t \in [0, 1]
     std::vector<double> t(num, 0);
