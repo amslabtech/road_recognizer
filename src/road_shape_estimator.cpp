@@ -32,6 +32,14 @@ RoadShapeEstimator::RoadShapeEstimator(void)
                3, -6,  3, 0,
               -3,  3,  0, 0,
                1,  0,  0, 0;
+    
+    std::cout << "convergence_threshold: " << convergence_threshold_ << std::endl;
+    std::cout << "max_iteration: " << max_iteration_ << std::endl;
+    std::cout << "sample_num: " << sample_num << std::endl;
+    std::cout << "fitting_decision_data_num: " << fitting_decision_data_num_ << std::endl;
+    std::cout << "cells_per_meter: " << cells_per_meter_ << std::endl;
+    std::cout << "beam_num: " << beam_num_ << std::endl;
+    std::cout << "max_beam_range: " << max_beam_range_ << std::endl;
 }
 
 void RoadShapeEstimator::process(void)
