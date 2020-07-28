@@ -145,9 +145,9 @@ std::vector<unsigned int> RoadShapeEstimator::get_random_sample(const std::vecto
 
 Eigen::MatrixXd RoadShapeEstimator::fit_spline(const std::vector<Eigen::Vector2d>& segment, const std::vector<unsigned int>& indices)
 {
-    const unsigned int num = indices.size() - 1;
+    const unsigned int num = indices.size();
     std::vector<double> d(num, 0);
-    for(unsigned int i=0;i<num;++i){
+    for(unsigned int i=1;i<num;++i){
         d[i] = (segment[indices[i+1]] - segment[indices[i]]).norm();
     }
     std::vector<double> cumulative_sum_of_d(num, 0);
@@ -172,8 +172,8 @@ Eigen::MatrixXd RoadShapeEstimator::fit_spline(const std::vector<Eigen::Vector2d
     }
 
     // four control points
-    Eigen::MatrixXd p_mat = Eigen::MatrixXd::Zero(4, 2);
-    p_mat = (t_mat * m_mat_).completeOrthogonalDecomposition().pseudoInverse() * q_mat;
+    const Eigen::MatrixXd tm_mat = t_mat * m_mat_;
+    const Eigen::MatrixXd p_mat = tm_mat.fullPivLu().solve(q_mat);
     return p_mat;
 }
 
