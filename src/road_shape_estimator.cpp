@@ -89,6 +89,9 @@ std::vector<std::vector<Eigen::Vector2d>> RoadShapeEstimator::divide_cloud_into_
 
     const double d_theta = 2 * M_PI / static_cast<double>(beam_num_);
     for(unsigned int i=0;i<beam_num_;++i){
+        if(beam_list[i] >= max_beam_range_){
+            continue;
+        }
         const double direction = i * d_theta - M_PI;
         // check if the direction is between two peaks
         for(unsigned int j=0;j<peak_num;++j){
