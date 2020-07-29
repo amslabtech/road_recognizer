@@ -155,6 +155,7 @@ std::vector<unsigned int> RoadShapeEstimator::get_random_sample(const std::vecto
         sample_indices.emplace_back(dist(mt_));
     }
     sample_indices.emplace_back(segment.size() - 1);
+    std::sort(sample_indices.begin(), sample_indices.end());
     return sample_indices;
 }
 
