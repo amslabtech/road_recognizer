@@ -26,3 +26,14 @@ target_link_libraries(intersection_detection_test
     ${PCL_LIBRARIES}
     peak_detector
 )
+
+add_rostest_gtest(road_shape_estimator_test
+    test/road_shape_estimator.test
+    src/road_shape_estimator_test.cpp
+    ../src/road_shape_estimator.cpp
+)
+target_link_libraries(road_shape_estimator_test
+    ${catkin_LIBRARIES}
+    ${PCL_LIBRARIES}
+    peak_detector
+)
