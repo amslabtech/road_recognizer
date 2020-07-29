@@ -31,6 +31,8 @@ RoadShapeEstimator::RoadShapeEstimator(void)
               -3,  3,  0, 0,
                1,  0,  0, 0;
     
+    last_curves_num_ = 0;
+    
     std::cout << "convergence_threshold: " << convergence_threshold_ << std::endl;
     std::cout << "max_iteration: " << max_iteration_ << std::endl;
     std::cout << "sample_num: " << sample_num << std::endl;
@@ -254,7 +256,8 @@ Eigen::Vector4d RoadShapeEstimator::get_cubic(double x)
 void RoadShapeEstimator::publish_marker(const std::vector<Eigen::MatrixXd>& control_points_list, const std_msgs::Header& header)
 {
     visualization_msgs::MarkerArray curves;
-    for(unsigned int i=0;i<control_points_list.size();++i){
+    unsigned int i = 0;
+    for(;i<control_points_list.size();++i){
         const Eigen::MatrixXd& cp = control_points_list[i];
         visualization_msgs::Marker m;    
         m.header = header;
@@ -285,7 +288,17 @@ void RoadShapeEstimator::publish_marker(const std::vector<Eigen::MatrixXd>& cont
 
         curves.markers.push_back(m);
     }
+    const unsigned curves_num = curves.markers.size();
+    for(;i<last_curves_num_;++i){
+        visualization_msgs::Marker m;    
+        m.header = header;
+        m.action = visualization_msgs::Marker::DELETE;
+        m.ns = ros::this_node::getName();
+        m.id = i;
+        curves.markers.push_back(m);
+    }
     curves_pub_.publish(curves);
+    last_curves_num_ = curves_num;
 }
 
 std::vector<double> RoadShapeEstimator::get_beam_from_cloud(pcl::PointCloud<PointT>::Ptr cloud_ptr, double origin_x, double origin_y)

@@ -92,6 +92,7 @@ protected:
     Eigen::Matrix4d m_mat_;
     std::vector<std::vector<bool>> rasterized_image;
     GridParams grid_params_;
+    unsigned int last_curves_num_;
 };
 
 }
