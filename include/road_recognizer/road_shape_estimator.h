@@ -79,7 +79,6 @@ protected:
     unsigned int max_iteration_;
     /// Min number of samples for fitting 
     unsigned int sample_num_;
-    unsigned int fitting_decision_data_num_;
     double cells_per_meter_;
     unsigned int beam_num_;
     double max_beam_range_;

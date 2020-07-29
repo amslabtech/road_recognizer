@@ -12,14 +12,12 @@ RoadShapeEstimator::RoadShapeEstimator(void)
 : local_nh_("~")
 , mt_(rnd_())
 {
-    int max_iteration, sample_num, fitting_decision_data_num, beam_num;
+    int max_iteration, sample_num, beam_num;
     local_nh_.param<double>("convergence_threshold", convergence_threshold_, 0.01);
-    local_nh_.param<int>("max_iteration", max_iteration, 100);
+    local_nh_.param<int>("max_iteration", max_iteration, 1000);
     max_iteration_ = max_iteration;
     local_nh_.param<int>("sample_num", sample_num, 4);
     sample_num_ = sample_num;
-    local_nh_.param<int>("fitting_decision_data_num", fitting_decision_data_num, 10);
-    fitting_decision_data_num_ = fitting_decision_data_num;
     local_nh_.param<double>("resolution", cells_per_meter_, 5.0);
     local_nh_.param<int>("beam_num", beam_num, 120);
     beam_num_ = beam_num;
@@ -36,7 +34,6 @@ RoadShapeEstimator::RoadShapeEstimator(void)
     std::cout << "convergence_threshold: " << convergence_threshold_ << std::endl;
     std::cout << "max_iteration: " << max_iteration_ << std::endl;
     std::cout << "sample_num: " << sample_num << std::endl;
-    std::cout << "fitting_decision_data_num: " << fitting_decision_data_num_ << std::endl;
     std::cout << "cells_per_meter: " << cells_per_meter_ << std::endl;
     std::cout << "beam_num: " << beam_num_ << std::endl;
     std::cout << "max_beam_range: " << max_beam_range_ << std::endl;
@@ -117,6 +114,7 @@ std::vector<std::vector<Eigen::Vector2d>> RoadShapeEstimator::divide_cloud_into_
 Eigen::MatrixXd RoadShapeEstimator::fit_ransac_spline(const std::vector<Eigen::Vector2d>& segment)
 {
     double best_score = 0.0;
+    const double score_threshold = segment.size() * 0.5;
     Eigen::MatrixXd best_control_points = Eigen::MatrixXd::Zero(4, 2);
 
     for(unsigned int i=0;i<max_iteration_;++i){
@@ -127,6 +125,9 @@ Eigen::MatrixXd RoadShapeEstimator::fit_ransac_spline(const std::vector<Eigen::V
             best_score = score;
             best_control_points = control_points;
         }
+        if(best_score >= score_threshold){
+            break;
+    }
     }
     return best_control_points;
 }
