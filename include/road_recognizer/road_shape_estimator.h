@@ -55,7 +55,7 @@ public:
     /**
      * @brief Publish markers for visualizing curves
      */
-    void publish_marker(const std::vector<Eigen::MatrixXd>& control_points_list, const std_msgs::Header& header);
+    void publish_curve_marker(const std::vector<Eigen::MatrixXd>& control_points_list, const std_msgs::Header& header);
     /**
      * @brief Compute beam model from origin in given cloud
      */

@@ -66,8 +66,7 @@ void RoadShapeEstimator::cloud_callback(const sensor_msgs::PointCloud2ConstPtr& 
         }
         control_points_list.push_back(fit_ransac_spline(segment));
     }
-
-    publish_marker(control_points_list, msg->header);
+    publish_curve_marker(control_points_list, msg->header);
 }
 
 std::vector<std::vector<Eigen::Vector2d>> RoadShapeEstimator::divide_cloud_into_segments(const pcl::PointCloud<PointT>::Ptr cloud_ptr)
@@ -254,7 +253,7 @@ Eigen::Vector4d RoadShapeEstimator::get_cubic(double x)
     return v;
 }
 
-void RoadShapeEstimator::publish_marker(const std::vector<Eigen::MatrixXd>& control_points_list, const std_msgs::Header& header)
+void RoadShapeEstimator::publish_curve_marker(const std::vector<Eigen::MatrixXd>& control_points_list, const std_msgs::Header& header)
 {
     visualization_msgs::MarkerArray curves;
     unsigned int i = 0;
