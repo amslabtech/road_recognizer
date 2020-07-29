@@ -22,6 +22,10 @@ TEST(RoadShapeEstimatorTest, FitSpline)
     ASSERT_NEAR(points(0, 1), segments[0][indices[0]](1), allowable_error);
     ASSERT_NEAR(points(3, 0), segments[0][indices.back()](0), allowable_error);
     ASSERT_NEAR(points(3, 1), segments[0][indices.back()](1), allowable_error);
+
+    const double score = rse.compute_score(points);
+    std::cout << "score: " << score << std::endl;
+    ASSERT_GT(score, 0.0);
 }
 
 int main(int argc, char** argv)
