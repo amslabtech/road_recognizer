@@ -219,6 +219,11 @@ double RoadShapeEstimator::compute_score(const Eigen::MatrixXd& control_points)
         Eigen::Vector2d v = t_vec.transpose() * m_mat_ * control_points; 
         const unsigned int x_index = (v(0) - grid_params_.min_x) * cells_per_meter_;
         const unsigned int y_index = (v(1) - grid_params_.min_y) * cells_per_meter_;
+        if(x_index >= grid_params_.grid_height){
+            return 0;
+        }else if(y_index >= grid_params_.grid_width){
+            return 0;
+        }
         if(rasterized_image[x_index][y_index] > 0){
             score += 1.0;
         }
