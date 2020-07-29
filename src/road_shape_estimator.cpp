@@ -134,12 +134,14 @@ Eigen::MatrixXd RoadShapeEstimator::fit_ransac_spline(const std::vector<Eigen::V
 std::vector<unsigned int> RoadShapeEstimator::get_random_sample(const std::vector<Eigen::Vector2d>& segment)
 {
     // TODO: unique random sampling
-    std::uniform_int_distribution<> dist(0, segment.size() - 1);
+    std::uniform_int_distribution<> dist(1, segment.size() - 2);
     std::vector<unsigned int> sample_indices;
     sample_indices.reserve(sample_num_);
-    while(sample_indices.size() < sample_num_){
+    sample_indices.emplace_back(0);
+    while(sample_indices.size() < sample_num_ - 1){
         sample_indices.emplace_back(dist(mt_));
     }
+    sample_indices.emplace_back(segment.size() - 1);
     return sample_indices;
 }
 
