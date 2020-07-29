@@ -50,11 +50,18 @@ void RoadShapeEstimator::cloud_callback(const sensor_msgs::PointCloud2ConstPtr& 
     pcl::fromROSMsg(*msg, *cloud_ptr);
 
     std::vector<std::vector<Eigen::Vector2d>> segments = divide_cloud_into_segments(cloud_ptr);
+    if(segments.size() == 0){
+        std::cout << "segment is empty, following process is skipped " << std::endl;
+        return;
+    }
     rasterize(segments);
 
     std::vector<Eigen::MatrixXd> control_points_list;
     // RANSAC 
     for(const auto& segment : segments){
+        if(segment.size() == 0){
+            continue;
+        }
         control_points_list.push_back(fit_ransac_spline(segment));
     }
 
@@ -151,7 +158,7 @@ Eigen::MatrixXd RoadShapeEstimator::fit_spline(const std::vector<Eigen::Vector2d
     const unsigned int num = indices.size();
     std::vector<double> d(num, 0);
     for(unsigned int i=1;i<num;++i){
-        d[i] = (segment[indices[i+1]] - segment[indices[i]]).norm();
+        d[i] = (segment[indices[i]] - segment[indices[i-1]]).norm();
     }
     std::vector<double> cumulative_sum_of_d(num, 0);
     cumulative_sum_of_d[0] = d[0];
