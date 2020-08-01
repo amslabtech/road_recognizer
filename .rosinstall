@@ -1,0 +1,4 @@
+- git:
+    local-name: amsl_navigation_msgs
+    uri: https://github.com/amslabtech/amsl_navigation_managers.git
+    version: master
