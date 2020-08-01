@@ -76,6 +76,7 @@ std::vector<std::vector<Eigen::Vector2d>> RoadShapeEstimator::divide_cloud_into_
     const std::vector<double> beam_list = get_beam_from_cloud(cloud_ptr, 0, 0);
     PeakDetector peak_detector;
     const std::vector<Peak> peak_list = peak_detector.detect_peaks(beam_list);
+    publish_beam_marker(beam_list, peak_list, pcl_conversions::fromPCL(cloud_ptr->header));
     if(peak_list.size() < 2){
         std::cout << "num of peaks must be >= 2 to divide cloud" << std::endl;
         return segments;
@@ -316,6 +317,66 @@ std::vector<double> RoadShapeEstimator::get_beam_from_cloud(pcl::PointCloud<Poin
         beam_list[index] = std::min(beam_list[index], distance);
     }
     return beam_list;
+}
+
+void RoadShapeEstimator::publish_beam_marker(const std::vector<double>& beam_list, const std::vector<Peak>& peak_list, const std_msgs::Header& header)
+{
+    visualization_msgs::Marker beam_marker;    
+    beam_marker.header = header;
+    beam_marker.action = visualization_msgs::Marker::ADD;
+    beam_marker.ns = ros::this_node::getName();
+    beam_marker.id = 0;
+    beam_marker.type = visualization_msgs::Marker::LINE_LIST;
+    beam_marker.frame_locked = true;
+    beam_marker.pose.orientation.w = 1.0;
+    beam_marker.scale.x = 0.1;
+    beam_marker.lifetime = ros::Duration();
+    const unsigned int size = beam_list.size();
+    beam_marker.points.reserve(size * 2);
+    beam_marker.colors.reserve(size * 2);
+
+    auto is_peak = [&](unsigned int index)
+    {
+        for(const auto& peak : peak_list){
+            if(peak.index_ == static_cast<int>(index)){
+                return true;
+            }
+        }
+        return false;
+    };
+
+    const double d_theta = 2 * M_PI / static_cast<double>(beam_num_);
+    for(unsigned int i=0;i<size;++i){
+        geometry_msgs::Point p;
+        p.x = 0.0;
+        p.y = 0.0;
+        beam_marker.points.emplace_back(p);
+        const double theta = i * d_theta - M_PI;
+        p.x = beam_list[i] * cos(theta);
+        p.y = beam_list[i] * sin(theta);
+        beam_marker.points.emplace_back(p);
+        std_msgs::ColorRGBA c;
+        if(!is_peak(i)){
+            c.g = 1.0;
+        }else{
+            c.r = 1.0;
+        }
+        c.a = 0.8;
+        beam_marker.colors.emplace_back(c);
+        beam_marker.colors.emplace_back(c);
+    }
+
+    beam_pub_.publish(beam_marker);
+}
+
+double RoadShapeEstimator::compute_segment_length(const std::vector<Eigen::Vector2d>& segment)
+{
+    double length = 0.0;
+    const unsigned int size = segment.size();
+    for(unsigned int i=1;i<size;++i){
+        length += (segment[i] - segment[i - 1]).norm();
+    }
+    return length;
 }
 
 }

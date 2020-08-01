@@ -60,6 +60,7 @@ public:
      * @brief Compute beam model from origin in given cloud
      */
     std::vector<double> get_beam_from_cloud(pcl::PointCloud<PointT>::Ptr cloud_ptr, double origin_x, double origin_y);
+    void publish_beam_marker(const std::vector<double>& beam_list, const std::vector<Peak>& peak_list, const std_msgs::Header& header);
 
 protected:
     struct GridParams
