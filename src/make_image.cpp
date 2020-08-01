@@ -80,7 +80,7 @@ void MakeImage::make_image(void)
     // cv::GaussianBlur(image, image, cv::Size(7,7), 10, 10);// src_img, out_img，karnel_size，標準偏差x, y
 
     cvtColor(image, image_c3, CV_GRAY2RGB);
-    cv::circle(image_c3, cv::Point(image_w * 0.5,image_h * 0.5), 3, cv::Scalar(100,255,0), -1, CV_AA);
+    cv::circle(image_c3, cv::Point(image_w * 0.5,image_h * 0.5), 3, cv::Scalar(100,255,0), -1, cv::LINE_AA);
     image_raw = cv_bridge::CvImage(std_msgs::Header(), "rgb8", image_c3).toImageMsg();
     
 	
@@ -113,13 +113,13 @@ void MakeImage::make_image(void)
 
     cvtColor(image, image_c, CV_GRAY2RGB);
     // if(houghline_flag)hough_line_p(image, image_c);
-    cv::circle(image_c, cv::Point(image_w * 0.5,image_h * 0.5), 3, cv::Scalar(100,255,0), -1, CV_AA);
+    cv::circle(image_c, cv::Point(image_w * 0.5,image_h * 0.5), 3, cv::Scalar(100,255,0), -1, cv::LINE_AA);
     image_ros = cv_bridge::CvImage(std_msgs::Header(), "rgb8", image_c).toImageMsg();
    
 
     cvtColor(image_edge, image_c2, CV_GRAY2RGB);
     if(houghline_flag)hough_line_p(image_edge, image_c2);
-    cv::circle(image_c2, cv::Point(image_w * 0.5, image_h * 0.5), 3, cv::Scalar(100,255,0), -1, CV_AA);
+    cv::circle(image_c2, cv::Point(image_w * 0.5, image_h * 0.5), 3, cv::Scalar(100,255,0), -1, cv::LINE_AA);
     image_ros2 = cv_bridge::CvImage(std_msgs::Header(), "rgb8", image_c2).toImageMsg();
 }
 
@@ -303,8 +303,8 @@ void MakeImage::hough_line_p(cv::Mat& image,cv::Mat& image_c)
     for(; it!=lines.end(); ++it) {
         cv::Vec4i l = *it;
 		std::cout << "(x, y, theta): (" << (l[0]+l[2])*0.5 << ", " << (l[1]+l[3])*0.5 << ", " << atan2(l[1]-l[3],l[0]-l[2]) << ")" << std::endl;
-        cv::line(image_c, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(255,0,0), 2, CV_AA);
-    cv::circle(image_c, cv::Point(int((l[0]+l[2])*0.5),int((l[1]+l[3])*0.5)), 1, cv::Scalar(255,255,0), -1, CV_AA);
+        cv::line(image_c, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(255,0,0), 2, cv::LINE_AA);
+    cv::circle(image_c, cv::Point(int((l[0]+l[2])*0.5),int((l[1]+l[3])*0.5)), 1, cv::Scalar(255,255,0), -1, cv::LINE_AA);
     }
 }
 
