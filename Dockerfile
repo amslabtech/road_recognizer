@@ -1,34 +1,32 @@
 FROM ros:melodic-ros-base
 
-RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+SHELL ["/bin/bash", "-c"]
 
-RUN apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
-
-RUN apt update
-
-RUN apt install -y ros-melodic-tf* \
-                   ros-melodic-pcl-ros \
-				   ros-melodic-cv-bridge \ 
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /root
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
+    python-vcstool
 
 # ROS setting
-RUN /bin/bash -c "mkdir -p catkin_ws/src"
+RUN mkdir -p catkin_ws/src
 
-RUN cd catkin_ws/src && /bin/bash -c "source /opt/ros/melodic/setup.bash; catkin_init_workspace"
+RUN cd catkin_ws/src && \
+    source /opt/ros/melodic/setup.bash && \
+    catkin_init_workspace
 
-RUN cd catkin_ws && /bin/bash -c "source /opt/ros/melodic/setup.bash; catkin_make"
+COPY . /root/catkin_ws/src/repo
 
-RUN cd /root && echo source /root/catkin_ws/devel/setup.bash >> .bashrc
+RUN cd /root/catkin_ws/src && \
+    vcs import < repo/.rosinstall
 
-ENV ROS_PACKAGE_PATH=/root/catkin_ws:$ROS_PACKAGE_PATH
+RUN cd /root/catkin_ws && \
+    rosdep update && \
+    rosdep install -i -r -y --from-paths src && \
+    source /opt/ros/melodic/setup.bash && \
+    catkin_make -DCMAKE_BUILD_TYPE=Release
 
-ENV ROS_WORKSPACE=/root/catkin_ws
+RUN echo 'source /opt/ros/melodic/setup.bash && source /root/catkin_ws/devel/setup.bash && exec "$@"' \
+    > /root/ros_entrypoint.sh
 
-RUN ln -sf /usr/include/eigen3/Eigen /usr/include/Eigen
+WORKDIR /root/catkin_ws
 
-# clone repository
-WORKDIR /root
-
-RUN cd catkin_ws/src && git clone https://github.com/amslabtech/amsl_navigation_managers --depth=1
+ENTRYPOINT ["bash", "/root/ros_entrypoint.sh"]
