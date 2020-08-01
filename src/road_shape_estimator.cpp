@@ -22,6 +22,7 @@ RoadShapeEstimator::RoadShapeEstimator(void)
     local_nh_.param<int>("beam_num", beam_num, 120);
     beam_num_ = beam_num;
     local_nh_.param<double>("max_beam_range", max_beam_range_, 20.0);
+    local_nh_.param<double>("min_segment_length", min_segment_length_, 5.0);
 
     curves_pub_ = local_nh_.advertise<visualization_msgs::MarkerArray>("viz/curves", 1);
     beam_pub_ = local_nh_.advertise<visualization_msgs::Marker>("viz/beam", 1);
@@ -119,6 +120,13 @@ std::vector<std::vector<Eigen::Vector2d>> RoadShapeEstimator::divide_cloud_into_
                     break;
                 }
             }
+        }
+    }
+    for(auto it=segments.begin();it!=segments.end();){
+        if(compute_segment_length(*it) > min_segment_length_){
+            ++it;
+        }else{
+            it = segments.erase(it);
         }
     }
     return segments;
