@@ -87,6 +87,7 @@ protected:
     ros::NodeHandle nh_;
     ros::NodeHandle local_nh_;
     ros::Publisher curves_pub_;
+    ros::Publisher beam_pub_;
     ros::Subscriber cloud_sub_;
     std::random_device rnd_;
     std::mt19937 mt_;

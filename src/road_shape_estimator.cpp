@@ -24,6 +24,7 @@ RoadShapeEstimator::RoadShapeEstimator(void)
     local_nh_.param<double>("max_beam_range", max_beam_range_, 20.0);
 
     curves_pub_ = local_nh_.advertise<visualization_msgs::MarkerArray>("viz/curves", 1);
+    beam_pub_ = local_nh_.advertise<visualization_msgs::Marker>("viz/beam", 1);
     cloud_sub_ = nh_.subscribe("cloud", 1, &RoadShapeEstimator::cloud_callback, this);
 
     m_mat_ << -1,  3, -3, 1,
