@@ -7,4 +7,4 @@ before_install:
     -  docker build -t road_recognizer_docker -f Dockerfile .
 
 script:
-    - docker run --rm road_recognizer_docker bash -c "catkin_make run_tests_road_recognizer && catkin_test_results"
+    - docker run --rm road_recognizer_docker bash -c "catkin_make run_tests && catkin_test_results"
