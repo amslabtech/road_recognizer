@@ -1,16 +1,19 @@
-FROM ros:melodic-ros-base
+FROM ros:noetic-ros-base
 
 SHELL ["/bin/bash", "-c"]
 
+ENV DEBIAN_FRONTEND noninteractive
+
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
-    python-vcstool
+    git \
+    python3-vcstool
 
 # ROS setting
 RUN mkdir -p catkin_ws/src
 
 RUN cd catkin_ws/src && \
-    source /opt/ros/melodic/setup.bash && \
+    source /opt/ros/noetic/setup.bash && \
     catkin_init_workspace
 
 COPY . /root/catkin_ws/src/repo
@@ -21,12 +24,15 @@ RUN cd /root/catkin_ws/src && \
 RUN cd /root/catkin_ws && \
     rosdep update && \
     rosdep install -i -r -y --from-paths src && \
-    source /opt/ros/melodic/setup.bash && \
+    source /opt/ros/noetic/setup.bash && \
     catkin_make -DCMAKE_BUILD_TYPE=Release
 
-RUN echo 'source /opt/ros/melodic/setup.bash && source /root/catkin_ws/devel/setup.bash && exec "$@"' \
+RUN echo 'source /opt/ros/noetic/setup.bash && source /root/catkin_ws/devel/setup.bash && exec "$@"' \
     > /root/ros_entrypoint.sh
 
 WORKDIR /root/catkin_ws
+
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 ENTRYPOINT ["bash", "/root/ros_entrypoint.sh"]
