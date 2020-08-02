@@ -1,6 +1,6 @@
 <launch>
 
-    <test pkg="road_recognizer" type="intersection_detection_test" test-name="intersection_detection_test" time-limit="15.0">
+    <test pkg="road_recognizer" type="intersection_detection_test" test-name="intersection_detection_test" time-limit="30.0">
     </test>
 
     <node pkg="road_recognizer" type="intersection_detector" name="intersection_detector"/>
