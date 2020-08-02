@@ -2,8 +2,11 @@ FROM ros:noetic-ros-base
 
 SHELL ["/bin/bash", "-c"]
 
+ENV DEBIAN_FRONTEND noninteractive
+
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
+    git \
     python3-vcstool
 
 # ROS setting
@@ -28,5 +31,8 @@ RUN echo 'source /opt/ros/noetic/setup.bash && source /root/catkin_ws/devel/setu
     > /root/ros_entrypoint.sh
 
 WORKDIR /root/catkin_ws
+
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 ENTRYPOINT ["bash", "/root/ros_entrypoint.sh"]
