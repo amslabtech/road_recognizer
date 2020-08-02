@@ -3,8 +3,12 @@ sudo: required
 services:
     - docker
 
+env:
+    - ROS_DISTRO=melodic
+    - ROS_DISTRO=noetic
+
 before_install:
-    -  docker build -t road_recognizer_docker -f Dockerfile .
+    -  docker build -t test_docker -f Dockerfile.${ROS_DISTRO} .
 
 script:
-    - docker run --rm road_recognizer_docker bash -c "catkin_make run_tests && catkin_test_results"
+    - docker run --rm test_docker bash -c "catkin_make run_tests && catkin_test_results"
