@@ -32,7 +32,7 @@ RoadShapeEstimator::RoadShapeEstimator(void)
                3, -6,  3, 0,
               -3,  3,  0, 0,
                1,  0,  0, 0;
-    
+
     last_curves_num_ = 0;
     
     std::cout << "convergence_threshold: " << convergence_threshold_ << std::endl;
@@ -153,7 +153,7 @@ Eigen::MatrixXd RoadShapeEstimator::fit_ransac_spline(const std::vector<Eigen::V
         }
         if(best_score >= score_threshold){
             break;
-    }
+        }
     }
     return best_control_points;
 }
@@ -229,9 +229,9 @@ void RoadShapeEstimator::rasterize(const std::vector<std::vector<Eigen::Vector2d
         for(const auto& p : segment){
             const unsigned int x_index = (p(0) - grid_params_.min_x) * cells_per_meter_;
             const unsigned int y_index = (p(1) - grid_params_.min_y) * cells_per_meter_;
-        rasterized_image[x_index][y_index] = 1;
+            rasterized_image[x_index][y_index] = 1;
+        }
     }
-}
 }
 
 double RoadShapeEstimator::compute_score(const Eigen::MatrixXd& control_points)
