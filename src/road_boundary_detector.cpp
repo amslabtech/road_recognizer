@@ -27,6 +27,7 @@ RoadBoundaryDetector::RoadBoundaryDetector(void)
     int vertical_scan_num;
     local_nh_.param<int>("vertical_scan_num", vertical_scan_num, 10);
     vertical_scan_num_ = static_cast<unsigned int>(vertical_scan_num);
+    local_nh_.param<double>("bottom_threshold", bottom_threshold_, 0.05);
 
     vertical_resolution_ = std::floor((vertical_scan_angle_end_lidar - vertical_scan_angle_begin_) / static_cast<double>(layer_num - 1));
     // only downward laser
@@ -43,6 +44,10 @@ RoadBoundaryDetector::RoadBoundaryDetector(void)
         vertical_angles_[i] = atan2(b_[i], lidar_height_);
     }
 
+    height_diff_threshold_.resize(num_bins_-1, 0.0);
+    for(unsigned int i=0;i<num_bins_-1;++i){
+        height_diff_threshold_[i] = (b_[i+1] - b_[i]) * tan(M_PI * 0.5 - (vertical_scan_angle_begin_ + delta_v_res_ * i));
+    }
 }
 
 void RoadBoundaryDetector::cloud_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
@@ -73,16 +78,35 @@ void RoadBoundaryDetector::cloud_callback(const sensor_msgs::PointCloud2ConstPtr
         polar_grid[sector_index][bin_index].push_back(i);
     }
 
+    // extract ground points
+    std::vector<unsigned int> ground_point_indices;
+    ground_point_indices.reserve(size);
     auto is_lower = [&](unsigned int i0, unsigned int i1) -> bool
     {
         return cloud_ptr->points[i0].z < cloud_ptr->points[i1].z;
     };
     for(unsigned int i=0;i<num_sectors_;++i){
         for(unsigned int j=0;j<num_bins_;++j){
-            if(polar_grid[i][j].empty()){
+            const unsigned int n = polar_grid[i][j].size();
+            if(n == 0){
                 continue;
             }
             std::sort(polar_grid[i][j].begin(), polar_grid[i][j].end(), is_lower);
+            if(cloud_ptr->points[polar_grid[i][j][0]].z + lidar_height_ > bottom_threshold_){
+                // obviously obstacle points in this grid
+                continue;
+            }
+            unsigned int k = 0;
+            for(;k<n-1;++k){
+               if(cloud_ptr->points[polar_grid[i][j][k+1]].z - cloud_ptr->points[polar_grid[i][j][k]].z > height_diff_threshold_[j]){
+                   break;
+               }
+            }
+            if(cloud_ptr->points[polar_grid[i][j][k]].z + lidar_height_ < bottom_threshold_){
+               for(unsigned int l=0;l<=k;++l){
+                   ground_point_indices.emplace_back(polar_grid[i][j][l]);
+               }
+            }
         }
     }
 }

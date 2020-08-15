@@ -46,6 +46,8 @@ protected:
     unsigned int num_sectors_;
     // k
     unsigned int num_bins_;
+    // c_{th}
+    double bottom_threshold_;
 
     // effective mesurement ranges (horizontal)
     std::vector<double> b_;
@@ -55,6 +57,8 @@ protected:
     double vertical_resolution_;
     // \Delta \vartheta
     double delta_v_res_;
+    // v_{th}
+    std::vector<double> height_diff_threshold_;
 };
 
 }
