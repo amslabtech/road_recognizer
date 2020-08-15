@@ -39,9 +39,20 @@ protected:
     double horizontal_resolution_;
     double vertical_scan_angle_begin_;
     double vertical_scan_angle_end_;
+    unsigned int vertical_scan_num_;
     unsigned int lambda_;
     unsigned int num_sectors_;
+    // k
     unsigned int num_bins_;
+
+    // effective mesurement ranges (horizontal)
+    std::vector<double> b_;
+    // \vartheta
+    std::vector<double> vertical_angles_;
+    // vertical angle resolution of LiDAR
+    double vertical_resolution_;
+    // \Delta \vartheta
+    double delta_v_res_;
 };
 
 }

@@ -22,10 +22,27 @@ RoadBoundaryDetector::RoadBoundaryDetector(void)
     local_nh_.param<int>("lambda", lambda, 2);
     lambda_ = static_cast<unsigned int>(lambda);
     local_nh_.param<double>("vertical_scan_angle_begin", vertical_scan_angle_begin_, -30.67 * 2.0 * M_PI / 180.0);
-    local_nh_.param<double>("vertical_scan_angle_end", vertical_scan_angle_end_, 10.67 * 2.0 * M_PI / 180.0);
+    double vertical_scan_angle_end_lidar;
+    local_nh_.param<double>("vertical_scan_angle_end_lidar", vertical_scan_angle_end_lidar, 10.67 * 2.0 * M_PI / 180.0);
+    int vertical_scan_num;
+    local_nh_.param<int>("vertical_scan_num", vertical_scan_num, 10);
+    vertical_scan_num_ = static_cast<unsigned int>(vertical_scan_num);
+
+    vertical_resolution_ = std::floor((vertical_scan_angle_end_lidar - vertical_scan_angle_begin_) / static_cast<double>(layer_num - 1));
+    // only downward laser
+    vertical_scan_angle_end_ = vertical_scan_angle_begin_ + vertical_resolution_ * vertical_scan_num_;
 
     num_sectors_ = std::floor(2.0 * M_PI / (lambda_ * horizontal_resolution_));
-    num_bins_ = std::floor((vertical_scan_angle_end_ - vertical_scan_angle_begin_) / (lambda_ * horizontal_resolution_));
+    delta_v_res_ = lambda_ * horizontal_resolution_;
+    num_bins_ = std::floor((vertical_scan_angle_end_ - vertical_scan_angle_begin_) / delta_v_res_);
+
+    b_.resize(vertical_scan_num_, 0.0);
+    vertical_angles_.resize(vertical_scan_num_, 0.0);
+    for(unsigned int i=0;i<vertical_scan_num_;++i){
+        b_[i] = lidar_height_ * tan(vertical_scan_angle_begin_ + delta_v_res_ * i);
+        vertical_angles_[i] = atan2(b_[i], lidar_height_);
+    }
+
 }
 
 void RoadBoundaryDetector::cloud_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
