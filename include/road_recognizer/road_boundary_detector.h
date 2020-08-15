@@ -28,6 +28,8 @@ public:
     void process(void);
     unsigned int get_ring_index_from_firing_order(unsigned int order);
     unsigned int unit_step_function(double value);
+    double compute_distance(double x0, double y0, double x1, double y1);
+    unsigned int get_bin_index(double x, double y);
 
 protected:
     ros::NodeHandle nh_;

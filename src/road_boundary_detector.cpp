@@ -69,10 +69,7 @@ void RoadBoundaryDetector::cloud_callback(const sensor_msgs::PointCloud2ConstPtr
         //
         const double horizontal_distance = point.segment(0, 2).norm();
         const unsigned int sector_index = (acos(point(0) / horizontal_distance) + 2.0 + M_PI * unit_step_function(-point(1))) / lambda_h_res;
-        //
-        // search true bin_index
-        //
-        const unsigned int bin_index = lidar_height_ * tan(vertical_scan_angle_begin_ + ring_index * lambda_h_res);
+        const unsigned int bin_index = get_bin_index(point(0), point(1));
         polar_grid[sector_index][bin_index].push_back(i);
     }
 
@@ -110,6 +107,25 @@ unsigned int RoadBoundaryDetector::unit_step_function(double value)
         return 0;
     }
     return 1;
+}
+
+double RoadBoundaryDetector::compute_distance(double x0, double y0, double x1, double y1)
+{
+    const double dx = x1 - x0;
+    const double dy = y1 - y0;
+    return sqrt(dx * dx + dy * dy);
+}
+
+unsigned int RoadBoundaryDetector::get_bin_index(double x, double y)
+{
+    const double d = compute_distance(0, 0, x, y);
+    unsigned int index = 0;
+    for(;index<num_bins_;++index){
+        if(b_[index] < d && d <= b_[index+1]){
+            break;
+        }
+    }
+    return index;
 }
 
 }
