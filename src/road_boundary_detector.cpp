@@ -29,7 +29,7 @@ RoadBoundaryDetector::RoadBoundaryDetector(void)
     vertical_scan_num_ = static_cast<unsigned int>(vertical_scan_num);
     local_nh_.param<double>("bottom_threshold", bottom_threshold_, 0.05);
 
-    vertical_resolution_ = std::floor((vertical_scan_angle_end_lidar - vertical_scan_angle_begin_) / static_cast<double>(layer_num - 1));
+    vertical_resolution_ = (vertical_scan_angle_end_lidar - vertical_scan_angle_begin_) / static_cast<double>(layer_num_ - 1);
     // only downward laser
     vertical_scan_angle_end_ = vertical_scan_angle_begin_ + vertical_resolution_ * vertical_scan_num_;
 
