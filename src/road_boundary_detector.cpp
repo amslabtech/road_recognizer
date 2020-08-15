@@ -36,9 +36,9 @@ RoadBoundaryDetector::RoadBoundaryDetector(void)
     delta_v_res_ = lambda_ * horizontal_resolution_;
     num_bins_ = std::floor((vertical_scan_angle_end_ - vertical_scan_angle_begin_) / delta_v_res_);
 
-    b_.resize(vertical_scan_num_, 0.0);
-    vertical_angles_.resize(vertical_scan_num_, 0.0);
-    for(unsigned int i=0;i<vertical_scan_num_;++i){
+    b_.resize(num_bins_, 0.0);
+    vertical_angles_.resize(num_bins_, 0.0);
+    for(unsigned int i=0;i<num_bins_;++i){
         b_[i] = lidar_height_ * tan(vertical_scan_angle_begin_ + delta_v_res_ * i);
         vertical_angles_[i] = atan2(b_[i], lidar_height_);
     }
