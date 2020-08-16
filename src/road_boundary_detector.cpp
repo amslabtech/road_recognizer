@@ -30,19 +30,35 @@ RoadBoundaryDetector::RoadBoundaryDetector(void)
     vertical_scan_num_ = static_cast<unsigned int>(vertical_scan_num);
     local_nh_.param<double>("bottom_threshold", bottom_threshold_, 0.05);
 
+    ROS_INFO_STREAM("=== road_boundary_detector ===");
+    ROS_INFO_STREAM("layer_num: " << layer_num_);
+    ROS_INFO_STREAM("lidar_height: " << lidar_height_);
+    ROS_INFO_STREAM("horizontal_resolution: " << horizontal_resolution_ << "[rad]");
+    ROS_INFO_STREAM("lambda: " << lambda_);
+    ROS_INFO_STREAM("vertical_scan_angle_begin: " << vertical_scan_angle_begin_ << "[rad]");
+    ROS_INFO_STREAM("vertical_scan_angle_end_lidar: " << vertical_scan_angle_end_lidar << "[rad]");
+    ROS_INFO_STREAM("vertical_scan_num: " << vertical_scan_num_);
+    ROS_INFO_STREAM("bottom_threshold: " << bottom_threshold_ << "[m]");
+
     vertical_resolution_ = (vertical_scan_angle_end_lidar - vertical_scan_angle_begin_) / static_cast<double>(layer_num_ - 1);
     // only downward laser
     vertical_scan_angle_end_ = vertical_scan_angle_begin_ + vertical_resolution_ * vertical_scan_num_;
+    ROS_INFO_STREAM("vertical_resolution: " << vertical_resolution_ << "[rad]");
+    ROS_INFO_STREAM("vertical_scan_angle_end: " << vertical_scan_angle_end_ << "[rad]");
 
     num_sectors_ = std::floor(2.0 * M_PI / (lambda_ * horizontal_resolution_));
     delta_v_res_ = lambda_ * vertical_resolution_;
     num_bins_ = std::floor((vertical_scan_angle_end_ - vertical_scan_angle_begin_) / delta_v_res_);
+    ROS_INFO_STREAM("num_sectors: " << num_sectors_);
+    ROS_INFO_STREAM("delta_v_res: " << delta_v_res_ << "[rad]");
+    ROS_INFO_STREAM("num_bins: " << num_bins_);
 
     b_.resize(num_bins_, 0.0);
     vertical_angles_.resize(num_bins_, 0.0);
     for(unsigned int i=0;i<num_bins_;++i){
         b_[i] = lidar_height_ * tan(vertical_scan_angle_begin_ + delta_v_res_ * i);
         vertical_angles_[i] = atan2(b_[i], lidar_height_);
+        // ROS_INFO_STREAM("b[" << i << "]: " << b_[i] << "[m]");
     }
 
     height_diff_threshold_.resize(num_bins_-1, 0.0);
