@@ -35,7 +35,7 @@ RoadBoundaryDetector::RoadBoundaryDetector(void)
     vertical_scan_angle_end_ = vertical_scan_angle_begin_ + vertical_resolution_ * vertical_scan_num_;
 
     num_sectors_ = std::floor(2.0 * M_PI / (lambda_ * horizontal_resolution_));
-    delta_v_res_ = lambda_ * horizontal_resolution_;
+    delta_v_res_ = lambda_ * vertical_resolution_;
     num_bins_ = std::floor((vertical_scan_angle_end_ - vertical_scan_angle_begin_) / delta_v_res_);
 
     b_.resize(num_bins_, 0.0);
