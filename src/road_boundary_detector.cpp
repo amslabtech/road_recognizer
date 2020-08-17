@@ -120,17 +120,18 @@ void RoadBoundaryDetector::cloud_callback(const sensor_msgs::PointCloud2ConstPtr
             }
             unsigned int k = 0;
             for(;k<n-1;++k){
-               if(cloud_ptr->points[polar_grid[i][j][k+1]].z - cloud_ptr->points[polar_grid[i][j][k]].z > height_diff_threshold_[j]){
-                  break;
-               }
+                if(cloud_ptr->points[polar_grid[i][j][k+1]].z - cloud_ptr->points[polar_grid[i][j][k]].z > height_diff_threshold_[j]){
+                    break;
+                }
             }
             if(cloud_ptr->points[polar_grid[i][j][k]].z + lidar_height_ < bottom_threshold_){
                 unsigned int l = 0;
                 for(;l<=k;++l){
-                  ground_point_indices.emplace_back(polar_grid[i][j][l]);
-               }
+                    ground_point_indices.emplace_back(polar_grid[i][j][l]);
+                }
                 for(;l<n;++l){
                     obstacle_point_indices.emplace_back(polar_grid[i][j][l]);
+                }
             }
         }
     }
@@ -190,7 +191,7 @@ void RoadBoundaryDetector::publish_cloud(const pcl::PointCloud<PointT>::Ptr clou
     obstacle_cloud->points.reserve(op_size);
     for(unsigned int i=0;i<gp_size;++i){
         ground_cloud->points.emplace_back(cloud_ptr->points[ground_point_indices[i]]);
-        }
+    }
     for(unsigned int i=0;i<op_size;++i){
         obstacle_cloud->points.emplace_back(cloud_ptr->points[obstacle_point_indices[i]]);
     }
