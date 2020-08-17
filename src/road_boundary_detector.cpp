@@ -105,7 +105,7 @@ void RoadBoundaryDetector::cloud_callback(const sensor_msgs::PointCloud2ConstPtr
         return cloud_ptr->points[i0].z < cloud_ptr->points[i1].z;
     };
     for(unsigned int i=0;i<num_sectors_;++i){
-        for(unsigned int j=0;j<num_bins_;++j){
+        for(unsigned int j=0;j<num_bins_-1;++j){
             const unsigned int n = polar_grid[i][j].size();
             if(n == 0){
                 continue;
@@ -163,7 +163,7 @@ unsigned int RoadBoundaryDetector::get_bin_index(double x, double y)
 {
     const double d = compute_distance(0, 0, x, y);
     unsigned int index = 0;
-    for(;index<num_bins_;++index){
+    for(;index<num_bins_-1;++index){
         if(b_[index] < d && d <= b_[index+1]){
             break;
         }
