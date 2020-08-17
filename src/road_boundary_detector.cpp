@@ -87,7 +87,7 @@ void RoadBoundaryDetector::cloud_callback(const sensor_msgs::PointCloud2ConstPtr
             continue;
         }
 
-        const unsigned int ring_index = get_ring_index_from_firing_order(i % layer_num_);
+        // const unsigned int ring_index = get_ring_index_from_firing_order(i % layer_num_);
         //
         // limit ring_index 
         //
