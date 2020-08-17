@@ -92,7 +92,7 @@ void RoadBoundaryDetector::cloud_callback(const sensor_msgs::PointCloud2ConstPtr
         // limit ring_index 
         //
         const double horizontal_distance = point.segment(0, 2).norm();
-        const unsigned int sector_index = (acos(point(0) / horizontal_distance) + 2.0 + M_PI * unit_step_function(-point(1))) / lambda_h_res;
+        const unsigned int sector_index = (acos(point(0) / horizontal_distance) + M_PI * unit_step_function(-point(1))) / lambda_h_res;
         const unsigned int bin_index = get_bin_index(point(0), point(1));
         polar_grid[sector_index][bin_index].push_back(i);
     }
