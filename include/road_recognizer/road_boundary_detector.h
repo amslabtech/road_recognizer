@@ -30,7 +30,7 @@ public:
     unsigned int unit_step_function(double value);
     double compute_distance(double x0, double y0, double x1, double y1);
     unsigned int get_bin_index(double x, double y);
-    void publish_cloud(const pcl::PointCloud<PointT>::Ptr cloud_ptr, const std::vector<unsigned int>& ground_point_indices);
+    void publish_cloud(const pcl::PointCloud<PointT>::Ptr cloud_ptr, const std::vector<unsigned int>& ground_point_indices, const std::vector<unsigned int>& obstacle_point_indices);
 
 protected:
     ros::NodeHandle nh_;

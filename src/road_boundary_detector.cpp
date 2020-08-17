@@ -99,7 +99,9 @@ void RoadBoundaryDetector::cloud_callback(const sensor_msgs::PointCloud2ConstPtr
 
     // extract ground points
     std::vector<unsigned int> ground_point_indices;
+    std::vector<unsigned int> obstacle_point_indices;
     ground_point_indices.reserve(size);
+    obstacle_point_indices.reserve(size);
     auto is_lower = [&](unsigned int i0, unsigned int i1) -> bool
     {
         return cloud_ptr->points[i0].z < cloud_ptr->points[i1].z;
@@ -113,6 +115,7 @@ void RoadBoundaryDetector::cloud_callback(const sensor_msgs::PointCloud2ConstPtr
             std::sort(polar_grid[i][j].begin(), polar_grid[i][j].end(), is_lower);
             if(cloud_ptr->points[polar_grid[i][j][0]].z + lidar_height_ > bottom_threshold_){
                 // obviously obstacle points in this grid
+                obstacle_point_indices.emplace_back(polar_grid[i][j][0]);
                 continue;
             }
             unsigned int k = 0;
@@ -122,13 +125,16 @@ void RoadBoundaryDetector::cloud_callback(const sensor_msgs::PointCloud2ConstPtr
                }
             }
             if(cloud_ptr->points[polar_grid[i][j][k]].z + lidar_height_ < bottom_threshold_){
-               for(unsigned int l=0;l<=k;++l){
+                unsigned int l = 0;
+                for(;l<=k;++l){
                   ground_point_indices.emplace_back(polar_grid[i][j][l]);
                }
+                for(;l<n;++l){
+                    obstacle_point_indices.emplace_back(polar_grid[i][j][l]);
             }
         }
     }
-    publish_cloud(cloud_ptr, ground_point_indices);
+    publish_cloud(cloud_ptr, ground_point_indices, obstacle_point_indices);
 }
 
 void RoadBoundaryDetector::process(void)
@@ -172,22 +178,21 @@ unsigned int RoadBoundaryDetector::get_bin_index(double x, double y)
     return index;
 }
 
-void RoadBoundaryDetector::publish_cloud(const pcl::PointCloud<PointT>::Ptr cloud_ptr, const std::vector<unsigned int>& ground_point_indices)
+void RoadBoundaryDetector::publish_cloud(const pcl::PointCloud<PointT>::Ptr cloud_ptr, const std::vector<unsigned int>& ground_point_indices, const std::vector<unsigned int>& obstacle_point_indices)
 {
     pcl::PointCloud<PointT>::Ptr ground_cloud(new pcl::PointCloud<PointT>);
     pcl::PointCloud<PointT>::Ptr obstacle_cloud(new pcl::PointCloud<PointT>);
     ground_cloud->header = cloud_ptr->header;
     obstacle_cloud->header = cloud_ptr->header;
-    const unsigned int cloud_size = cloud_ptr->points.size();
     const unsigned int gp_size = ground_point_indices.size();
+    const unsigned int op_size = obstacle_point_indices.size();
     ground_cloud->points.reserve(gp_size);
-    obstacle_cloud->points.reserve(cloud_size - gp_size);
-    for(unsigned int i=0;i<cloud_size;++i){
-        if(std::find(ground_point_indices.begin(), ground_point_indices.end(), i) != ground_point_indices.end()){
-            ground_cloud->points.emplace_back(cloud_ptr->points[i]);
-        }else{
-            obstacle_cloud->points.emplace_back(cloud_ptr->points[i]);
+    obstacle_cloud->points.reserve(op_size);
+    for(unsigned int i=0;i<gp_size;++i){
+        ground_cloud->points.emplace_back(cloud_ptr->points[ground_point_indices[i]]);
         }
+    for(unsigned int i=0;i<op_size;++i){
+        obstacle_cloud->points.emplace_back(cloud_ptr->points[obstacle_point_indices[i]]);
     }
     ground_cloud_pub_.publish(*ground_cloud);
     obstacle_cloud_pub_.publish(*obstacle_cloud);
