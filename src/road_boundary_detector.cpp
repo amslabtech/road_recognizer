@@ -128,6 +128,7 @@ void RoadBoundaryDetector::cloud_callback(const sensor_msgs::PointCloud2ConstPtr
             }
         }
     }
+    publish_cloud(cloud_ptr, ground_point_indices);
 }
 
 void RoadBoundaryDetector::process(void)
@@ -179,13 +180,13 @@ void RoadBoundaryDetector::publish_cloud(const pcl::PointCloud<PointT>::Ptr clou
     obstacle_cloud->header = cloud_ptr->header;
     const unsigned int cloud_size = cloud_ptr->points.size();
     const unsigned int gp_size = ground_point_indices.size();
-    ground_cloud->points.resize(gp_size);
-    obstacle_cloud->points.resize(cloud_size - gp_size);
+    ground_cloud->points.reserve(gp_size);
+    obstacle_cloud->points.reserve(cloud_size - gp_size);
     for(unsigned int i=0;i<cloud_size;++i){
         if(std::find(ground_point_indices.begin(), ground_point_indices.end(), i) != ground_point_indices.end()){
-            ground_cloud->points[i] = cloud_ptr->points[i];
+            ground_cloud->points.emplace_back(cloud_ptr->points[i]);
         }else{
-            obstacle_cloud->points[i] = cloud_ptr->points[i];
+            obstacle_cloud->points.emplace_back(cloud_ptr->points[i]);
         }
     }
     ground_cloud_pub_.publish(*ground_cloud);
