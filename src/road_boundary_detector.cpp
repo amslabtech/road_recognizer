@@ -11,6 +11,7 @@ RoadBoundaryDetector::RoadBoundaryDetector(void)
 : local_nh_("~")
 {
     ground_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("cloud/ground", 1);
+    obstacle_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("cloud/obstacle", 1);
     cloud_sub_ = nh_.subscribe("velodyne_points", 1, &RoadBoundaryDetector::cloud_callback, this);
 
     int layer_num;
@@ -173,13 +174,22 @@ unsigned int RoadBoundaryDetector::get_bin_index(double x, double y)
 void RoadBoundaryDetector::publish_cloud(const pcl::PointCloud<PointT>::Ptr cloud_ptr, const std::vector<unsigned int>& ground_point_indices)
 {
     pcl::PointCloud<PointT>::Ptr ground_cloud(new pcl::PointCloud<PointT>);
+    pcl::PointCloud<PointT>::Ptr obstacle_cloud(new pcl::PointCloud<PointT>);
     ground_cloud->header = cloud_ptr->header;
+    obstacle_cloud->header = cloud_ptr->header;
+    const unsigned int cloud_size = cloud_ptr->points.size();
     const unsigned int gp_size = ground_point_indices.size();
     ground_cloud->points.resize(gp_size);
-    for(unsigned int i=0;i<gp_size;++i){
-        ground_cloud->points[i] = cloud_ptr->points[ground_point_indices[i]];
+    obstacle_cloud->points.resize(cloud_size - gp_size);
+    for(unsigned int i=0;i<cloud_size;++i){
+        if(std::find(ground_point_indices.begin(), ground_point_indices.end(), i) != ground_point_indices.end()){
+            ground_cloud->points[i] = cloud_ptr->points[i];
+        }else{
+            obstacle_cloud->points[i] = cloud_ptr->points[i];
+        }
     }
     ground_cloud_pub_.publish(*ground_cloud);
+    obstacle_cloud_pub_.publish(*obstacle_cloud);
 }
 
 }

@@ -35,6 +35,7 @@ public:
 protected:
     ros::NodeHandle nh_;
     ros::NodeHandle local_nh_;
+    ros::Publisher obstacle_cloud_pub_; 
     ros::Publisher ground_cloud_pub_; 
     ros::Subscriber cloud_sub_; 
 
