@@ -132,6 +132,10 @@ void RoadBoundaryDetector::cloud_callback(const sensor_msgs::PointCloud2ConstPtr
                 for(;l<n;++l){
                     obstacle_point_indices.emplace_back(polar_grid[i][j][l]);
                 }
+            }else{
+                for(unsigned int l=0;l<n;++l){
+                    obstacle_point_indices.emplace_back(polar_grid[i][j][l]);
+                }
             }
         }
     }
