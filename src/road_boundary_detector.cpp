@@ -10,6 +10,7 @@ namespace road_recognizer
 RoadBoundaryDetector::RoadBoundaryDetector(void)
 : local_nh_("~")
 {
+    ground_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("cloud/ground", 1);
     cloud_sub_ = nh_.subscribe("velodyne_points", 1, &RoadBoundaryDetector::cloud_callback, this);
 
     int layer_num;
@@ -167,6 +168,18 @@ unsigned int RoadBoundaryDetector::get_bin_index(double x, double y)
         }
     }
     return index;
+}
+
+void RoadBoundaryDetector::publish_cloud(const pcl::PointCloud<PointT>::Ptr cloud_ptr, const std::vector<unsigned int>& ground_point_indices)
+{
+    pcl::PointCloud<PointT>::Ptr ground_cloud(new pcl::PointCloud<PointT>);
+    ground_cloud->header = cloud_ptr->header;
+    const unsigned int gp_size = ground_point_indices.size();
+    ground_cloud->points.resize(gp_size);
+    for(unsigned int i=0;i<gp_size;++i){
+        ground_cloud->points[i] = cloud_ptr->points[ground_point_indices[i]];
+    }
+    ground_cloud_pub_.publish(*ground_cloud);
 }
 
 }

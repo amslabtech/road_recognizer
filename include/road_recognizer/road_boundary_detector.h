@@ -30,10 +30,12 @@ public:
     unsigned int unit_step_function(double value);
     double compute_distance(double x0, double y0, double x1, double y1);
     unsigned int get_bin_index(double x, double y);
+    void publish_cloud(const pcl::PointCloud<PointT>::Ptr cloud_ptr, const std::vector<unsigned int>& ground_point_indices);
 
 protected:
     ros::NodeHandle nh_;
     ros::NodeHandle local_nh_;
+    ros::Publisher ground_cloud_pub_; 
     ros::Subscriber cloud_sub_; 
 
     unsigned int layer_num_;
