@@ -24,9 +24,9 @@ RoadBoundaryDetector::RoadBoundaryDetector(void)
     local_nh_.param<int>("lambda", lambda, 2);
     lambda_ = static_cast<unsigned int>(lambda);
     // from -z axis 
-    local_nh_.param<double>("vertical_scan_angle_begin", vertical_scan_angle_begin_, -30.67 * 2.0 * M_PI / 180.0 + M_PI * 0.5);
+    local_nh_.param<double>("vertical_scan_angle_begin", vertical_scan_angle_begin_, -30.67 * M_PI / 180.0 + M_PI * 0.5);
     double vertical_scan_angle_end_lidar;
-    local_nh_.param<double>("vertical_scan_angle_end_lidar", vertical_scan_angle_end_lidar, 10.67 * 2.0 * M_PI / 180.0 + M_PI * 0.5);
+    local_nh_.param<double>("vertical_scan_angle_end_lidar", vertical_scan_angle_end_lidar, 10.67 * M_PI / 180.0 + M_PI * 0.5);
     int vertical_scan_num;
     local_nh_.param<int>("vertical_scan_num", vertical_scan_num, 22);
     vertical_scan_num_ = static_cast<unsigned int>(vertical_scan_num);
