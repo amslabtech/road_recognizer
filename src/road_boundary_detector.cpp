@@ -134,7 +134,11 @@ void RoadBoundaryDetector::cloud_callback(const sensor_msgs::PointCloud2ConstPtr
                 }
             }else{
                 for(unsigned int l=0;l<n;++l){
-                    obstacle_point_indices.emplace_back(polar_grid[i][j][l]);
+                    if(cloud_ptr->points[polar_grid[i][j][l]].z + lidar_height_ < bottom_threshold_){
+                        // ground_point_indices.emplace_back(polar_grid[i][j][l]);
+                    }else{
+                        obstacle_point_indices.emplace_back(polar_grid[i][j][l]);
+                    }
                 }
             }
         }
