@@ -17,7 +17,7 @@ RoadBoundaryDetector::RoadBoundaryDetector(void)
     int layer_num;
     local_nh_.param<int>("layer_num", layer_num, 32);
     layer_num_ = static_cast<unsigned int>(layer_num);
-    local_nh_.param<double>("lidar_height", lidar_height_, 1.2);
+    local_nh_.param<double>("lidar_height", lidar_height_, 1.3);
     // HDL-32E gets 2160 points per layer at 600rpm(10Hz)
     local_nh_.param<double>("horizontal_resolution", horizontal_resolution_, 2.0 * M_PI / 2160.0);
     int lambda;
