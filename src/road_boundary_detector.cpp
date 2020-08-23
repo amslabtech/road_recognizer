@@ -12,6 +12,7 @@ RoadBoundaryDetector::RoadBoundaryDetector(void)
 {
     ground_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("cloud/ground", 1);
     obstacle_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("cloud/obstacle", 1);
+    boundary_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("cloud/road_boundary", 1);
     cloud_sub_ = nh_.subscribe("velodyne_points", 1, &RoadBoundaryDetector::cloud_callback, this);
 
     int layer_num;
@@ -144,6 +145,7 @@ void RoadBoundaryDetector::cloud_callback(const sensor_msgs::PointCloud2ConstPtr
         }
     }
     publish_cloud(cloud_ptr, ground_point_indices, obstacle_point_indices);
+    detect_road_boundary(cloud_ptr, ground_point_indices);
 }
 
 void RoadBoundaryDetector::process(void)
@@ -205,6 +207,54 @@ void RoadBoundaryDetector::publish_cloud(const pcl::PointCloud<PointT>::Ptr clou
     }
     ground_cloud_pub_.publish(*ground_cloud);
     obstacle_cloud_pub_.publish(*obstacle_cloud);
+}
+
+void RoadBoundaryDetector::detect_road_boundary(const pcl::PointCloud<PointT>::Ptr cloud_ptr, const std::vector<unsigned int>& ground_point_indices)
+{
+    // distribute points by ring index
+    // low index -> right
+    const double alpha_th = 135 * M_PI / 180.0;
+    pcl::PointCloud<PointT>::Ptr boundary_cloud(new pcl::PointCloud<PointT>);
+    boundary_cloud->header = cloud_ptr->header;
+    boundary_cloud->points.reserve(ground_point_indices.size());
+
+    std::vector<std::vector<unsigned int>> rings(vertical_scan_num_);
+    for(auto& r : rings){
+        r.reserve(2.0  * M_PI / horizontal_resolution_);
+    }
+    for(const auto& i : ground_point_indices){
+        const unsigned int ring_index = get_ring_index_from_firing_order(i % layer_num_);
+        if(0 <= ring_index && ring_index < vertical_scan_num_){
+            rings[ring_index].emplace_back(i);
+        }
+    }
+    auto compare = [](const unsigned int& lhs, const unsigned int& rhs)-> bool{return lhs < rhs;};
+    for(auto& r : rings){
+        const unsigned int num = r.size();
+        if(num < 3){
+            continue;
+        }
+        std::sort(r.begin(), r.end(), compare);
+        const unsigned int j = 2;
+        for(unsigned int i=j;i<num-j;++i){
+            const Eigen::Vector3d p_0 = get_vector_from_point(cloud_ptr->points[r[i-j]]);
+            const Eigen::Vector3d p_1 = get_vector_from_point(cloud_ptr->points[r[i]]);
+            const Eigen::Vector3d p_2 = get_vector_from_point(cloud_ptr->points[r[i+j]]);
+            const Eigen::Vector3d p_10 = p_0 - p_1;
+            const Eigen::Vector3d p_12 = p_2 - p_1;
+            const double alpha = acos(p_10.dot(p_12) / (p_10.norm() * p_12.norm()));
+            if(alpha < alpha_th){
+                boundary_cloud->points.emplace_back(cloud_ptr->points[r[i]]);
+            }
+        }
+    }
+    boundary_cloud_pub_.publish(*boundary_cloud);
+}
+
+Eigen::Vector3d RoadBoundaryDetector::get_vector_from_point(const PointT& p)
+{
+    Eigen::Vector3d v(p.x, p.y, p.z);
+    return v;
 }
 
 }

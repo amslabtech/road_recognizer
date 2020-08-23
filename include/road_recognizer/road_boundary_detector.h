@@ -31,12 +31,15 @@ public:
     double compute_distance(double x0, double y0, double x1, double y1);
     unsigned int get_bin_index(double x, double y);
     void publish_cloud(const pcl::PointCloud<PointT>::Ptr cloud_ptr, const std::vector<unsigned int>& ground_point_indices, const std::vector<unsigned int>& obstacle_point_indices);
+    void detect_road_boundary(const pcl::PointCloud<PointT>::Ptr cloud_ptr, const std::vector<unsigned int>& ground_point_indices);
+    Eigen::Vector3d get_vector_from_point(const PointT& p);
 
 protected:
     ros::NodeHandle nh_;
     ros::NodeHandle local_nh_;
     ros::Publisher obstacle_cloud_pub_; 
     ros::Publisher ground_cloud_pub_; 
+    ros::Publisher boundary_cloud_pub_; 
     ros::Subscriber cloud_sub_; 
 
     unsigned int layer_num_;
