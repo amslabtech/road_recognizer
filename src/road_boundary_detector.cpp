@@ -229,7 +229,8 @@ void RoadBoundaryDetector::detect_road_boundary(const pcl::PointCloud<PointT>::P
         }
     }
     auto compare = [](const unsigned int& lhs, const unsigned int& rhs)-> bool{return lhs < rhs;};
-    for(auto& r : rings){
+    for(unsigned int r_i=0;r_i<vertical_scan_num_;++r_i){
+        auto& r = rings[r_i];
         const unsigned int num = r.size();
         if(num < 3){
             continue;
