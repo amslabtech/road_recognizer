@@ -22,7 +22,7 @@ namespace road_recognizer
 class RoadBoundaryDetector
 {
 public:
-    typedef pcl::PointXYZI PointT;
+    typedef pcl::PointXYZINormal PointT;
     RoadBoundaryDetector(void);
     void cloud_callback(const sensor_msgs::PointCloud2ConstPtr& msg);
     void process(void);
