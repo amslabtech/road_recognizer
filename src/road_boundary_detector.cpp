@@ -244,15 +244,26 @@ void RoadBoundaryDetector::detect_road_boundary(const pcl::PointCloud<PointT>::P
             continue;
         }
         std::sort(r.begin(), r.end(), compare);
-        const unsigned int j = 2;
-        for(unsigned int i=j;i<num-j;++i){
-            const Eigen::Vector3d p_0 = get_vector_from_point(cloud_ptr->points[r[i-j]]);
-            const Eigen::Vector3d p_1 = get_vector_from_point(cloud_ptr->points[r[i]]);
-            const Eigen::Vector3d p_2 = get_vector_from_point(cloud_ptr->points[r[i+j]]);
-            const Eigen::Vector3d p_10 = p_0 - p_1;
-            const Eigen::Vector3d p_12 = p_2 - p_1;
-            const double alpha = acos(p_10.dot(p_12) / (p_10.norm() * p_12.norm()));
-            if(alpha < alpha_th){
+        const unsigned int g = consecutive_search_range_[r_i];
+        if(g == 0){
+            continue;
+        }
+        for(unsigned int i=0;i<num;++i){
+            double confidence = 0.0;
+            for(unsigned int j=0;j<=g;++j){
+                unsigned int i0 = i - j;
+                if(i < j){
+                    i0 = num + i - j;
+                }
+                unsigned int i2 = i + j;
+                if(i2 >= num){
+                    i2 -= num;
+                }
+                const double alpha = compute_interior_angle(cloud_ptr->points[r[i0]], cloud_ptr->points[r[i]], cloud_ptr->points[r[i2]]);
+                confidence += (alpha < alpha_th ? 1 : 0);
+            }
+            confidence /= static_cast<double>(g);
+            if(confidence > 0.9){
                 boundary_cloud->points.emplace_back(cloud_ptr->points[r[i]]);
             }
         }
@@ -264,6 +275,16 @@ Eigen::Vector3d RoadBoundaryDetector::get_vector_from_point(const PointT& p)
 {
     Eigen::Vector3d v(p.x, p.y, p.z);
     return v;
+}
+
+double RoadBoundaryDetector::compute_interior_angle(const PointT& p0, const PointT& p1, const PointT& p2)
+{
+    const Eigen::Vector3d v0 = get_vector_from_point(p0); 
+    const Eigen::Vector3d v1 = get_vector_from_point(p1); 
+    const Eigen::Vector3d v2 = get_vector_from_point(p2); 
+    const Eigen::Vector3d v10 = v0 - v1; 
+    const Eigen::Vector3d v12 = v2 - v1; 
+    return acos(v10.dot(v12) / (v10.norm() * v12.norm()));
 }
 
 }
