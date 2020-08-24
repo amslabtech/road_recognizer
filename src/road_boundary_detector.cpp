@@ -68,6 +68,14 @@ RoadBoundaryDetector::RoadBoundaryDetector(void)
     for(unsigned int i=0;i<num_bins_-1;++i){
         height_diff_threshold_[i] = (b_[i+1] - b_[i]) * tan(M_PI * 0.5 - (vertical_scan_angle_begin_ + delta_v_res_ * i));
     }
+
+    d_consecutive_.resize(vertical_scan_num_, 0.0);
+    consecutive_search_range_.resize(vertical_scan_num_, 0);
+    for(unsigned int i=0;i<vertical_scan_num_;++i){
+        const double laser_pitch = std::abs(vertical_scan_angle_begin_ + vertical_resolution_ * i - M_PI / 2.0);
+        d_consecutive_[i] = lidar_height_ / (tan(laser_pitch)) * horizontal_resolution_;
+        consecutive_search_range_[i] = std::floor(bottom_threshold_ / d_consecutive_[i]);
+}
 }
 
 void RoadBoundaryDetector::cloud_callback(const sensor_msgs::PointCloud2ConstPtr& msg)

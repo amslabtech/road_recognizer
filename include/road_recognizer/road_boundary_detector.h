@@ -65,6 +65,10 @@ protected:
     double delta_v_res_;
     // v_{th}
     std::vector<double> height_diff_threshold_;
+    // d_l
+    std::vector<double> d_consecutive_;
+    // g_l
+    std::vector<unsigned int> consecutive_search_range_;
 };
 
 }
