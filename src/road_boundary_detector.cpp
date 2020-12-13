@@ -61,31 +61,41 @@ RoadBoundaryDetector::RoadBoundaryDetector(void)
     for(unsigned int i=0;i<num_bins_;++i){
         b_[i] = lidar_height_ * tan(vertical_scan_angle_begin_ + delta_v_res_ * i);
         vertical_angles_[i] = atan2(b_[i], lidar_height_);
-        // ROS_INFO_STREAM("b[" << i << "]: " << b_[i] << "[m]");
+        ROS_INFO_STREAM("b[" << i << "]: " << b_[i] << "[m]");
     }
 
     height_diff_threshold_.resize(num_bins_-1, 0.0);
     for(unsigned int i=0;i<num_bins_-1;++i){
         height_diff_threshold_[i] = (b_[i+1] - b_[i]) * tan(M_PI * 0.5 - (vertical_scan_angle_begin_ + delta_v_res_ * i));
+        ROS_INFO_STREAM("v_th[" << i << "]: " << height_diff_threshold_[i] << "[m]");
     }
 
     d_consecutive_.resize(vertical_scan_num_, 0.0);
     consecutive_search_range_.resize(vertical_scan_num_, 0);
     for(unsigned int i=0;i<vertical_scan_num_;++i){
         const double laser_pitch = std::abs(vertical_scan_angle_begin_ + vertical_resolution_ * i - M_PI / 2.0);
+        ROS_INFO_STREAM("phi[" << i << "]: " << laser_pitch);
         d_consecutive_[i] = lidar_height_ / (tan(laser_pitch)) * horizontal_resolution_;
         consecutive_search_range_[i] = std::floor(bottom_threshold_ / d_consecutive_[i]);
-}
+        ROS_INFO_STREAM("d_l[" << i << "]: " << d_consecutive_[i]);
+        ROS_INFO_STREAM("g_l[" << i << "]: " << consecutive_search_range_[i]);
+    }
 }
 
 void RoadBoundaryDetector::cloud_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
+    ROS_INFO_STREAM("cloud_callback");
+    auto start = std::chrono::system_clock::now();
     pcl::PointCloud<PointT>::Ptr cloud_ptr(new pcl::PointCloud<PointT>);
     pcl::fromROSMsg(*msg, *cloud_ptr);
+    cloud_ptr->points.erase(cloud_ptr->points.begin() + cloud_ptr->points.size() / 2, cloud_ptr->points.end());
 
     const unsigned int size = cloud_ptr->points.size();
+    ROS_INFO_STREAM("size: " << size);
     const double lambda_h_res = lambda_ * horizontal_resolution_;
+    ROS_INFO_STREAM("lambda_h_res: " << lambda_h_res << "[rad]");
 
+    ROS_INFO_STREAM("construct polar grid");
     // contains point indices
     std::vector<std::vector<std::vector<unsigned int>>> polar_grid(num_sectors_, std::vector<std::vector<unsigned int>>(num_bins_));
 
@@ -101,11 +111,14 @@ void RoadBoundaryDetector::cloud_callback(const sensor_msgs::PointCloud2ConstPtr
         // limit ring_index 
         //
         const double horizontal_distance = point.segment(0, 2).norm();
+        // ROS_INFO_STREAM("i: " << i);
         const unsigned int sector_index = (acos(point(0) / horizontal_distance) + M_PI * unit_step_function(-point(1))) / lambda_h_res;
+        // ROS_INFO_STREAM("s: " << sector_index);
         const unsigned int bin_index = get_bin_index(point(0), point(1));
+        // ROS_INFO_STREAM("b: " << bin_index);
         polar_grid[sector_index][bin_index].push_back(i);
     }
-
+    ROS_INFO_STREAM("extract ground points");
     // extract ground points
     std::vector<unsigned int> ground_point_indices;
     std::vector<unsigned int> obstacle_point_indices;
@@ -152,8 +165,14 @@ void RoadBoundaryDetector::cloud_callback(const sensor_msgs::PointCloud2ConstPtr
             }
         }
     }
+    ROS_INFO("publish cloud");
     publish_cloud(cloud_ptr, ground_point_indices, obstacle_point_indices);
-    detect_road_boundary(cloud_ptr, ground_point_indices);
+    auto end = std::chrono::system_clock::now();
+    ROS_INFO_STREAM("time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "[ms]");
+    // detect_road_boundary(cloud_ptr, ground_point_indices);
+    detect_road_boundary_curvature(cloud_ptr, ground_point_indices);
+    end = std::chrono::system_clock::now();
+    ROS_INFO_STREAM("time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "[ms]");
 }
 
 void RoadBoundaryDetector::process(void)
@@ -213,6 +232,8 @@ void RoadBoundaryDetector::publish_cloud(const pcl::PointCloud<PointT>::Ptr clou
     for(unsigned int i=0;i<op_size;++i){
         obstacle_cloud->points.emplace_back(cloud_ptr->points[obstacle_point_indices[i]]);
     }
+    ROS_INFO_STREAM("ground cloud size: " << ground_cloud->points.size());
+    ROS_INFO_STREAM("obstacle cloud size: " << obstacle_cloud->points.size());
     ground_cloud_pub_.publish(*ground_cloud);
     obstacle_cloud_pub_.publish(*obstacle_cloud);
 }
@@ -265,6 +286,7 @@ void RoadBoundaryDetector::detect_road_boundary(const pcl::PointCloud<PointT>::P
             confidence /= static_cast<double>(g);
             if(confidence > 0.9){
                 boundary_cloud->points.emplace_back(cloud_ptr->points[r[i]]);
+                boundary_cloud->points.back().intensity = confidence;
             }
         }
     }
@@ -285,6 +307,20 @@ double RoadBoundaryDetector::compute_interior_angle(const PointT& p0, const Poin
     const Eigen::Vector3d v10 = v0 - v1; 
     const Eigen::Vector3d v12 = v2 - v1; 
     return acos(v10.dot(v12) / (v10.norm() * v12.norm()));
+}
+
+void RoadBoundaryDetector::detect_road_boundary_curvature(const pcl::PointCloud<PointT>::Ptr cloud_ptr, const std::vector<unsigned int>& ground_point_indices)
+{
+    pcl::PointCloud<PointT>::Ptr boundary_cloud(new pcl::PointCloud<PointT>);
+    boundary_cloud->header = cloud_ptr->header;
+    boundary_cloud->points.reserve(ground_point_indices.size());
+    for(const auto& idx : ground_point_indices){
+        const auto& p = cloud_ptr->points[idx];
+        if(p.curvature > 0.01){
+            boundary_cloud->points.emplace_back(p);
+        }
+    }
+    boundary_cloud_pub_.publish(*boundary_cloud);
 }
 
 }

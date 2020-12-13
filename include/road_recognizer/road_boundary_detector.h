@@ -34,6 +34,7 @@ public:
     void detect_road_boundary(const pcl::PointCloud<PointT>::Ptr cloud_ptr, const std::vector<unsigned int>& ground_point_indices);
     Eigen::Vector3d get_vector_from_point(const PointT& p);
     double compute_interior_angle(const PointT& p0, const PointT& p1, const PointT& p2);
+    void detect_road_boundary_curvature(const pcl::PointCloud<PointT>::Ptr cloud_ptr, const std::vector<unsigned int>& ground_point_indices);
 
 protected:
     ros::NodeHandle nh_;
