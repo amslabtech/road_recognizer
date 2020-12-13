@@ -24,6 +24,7 @@ RoadCloudPublisher::RoadCloudPublisher(void)
     local_nh.param("VAR_BETWEEN_THRESHOLD", VAR_BETWEEN_THRESHOLD, {100.0});
     local_nh.param("CHEAT_INTENSITY_WIDTH", CHEAT_INTENSITY_WIDTH, {5.0});
     local_nh.param("IGNORE_INTENSITY_DEFAULT", IGNORE_INTENSITY_DEFAULT, {false});
+    local_nh.param("USE_NORMAL_Z_AS_CURVATURE", USE_NORMAL_Z_AS_CURVATURE, {false});
 
     curvature_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/curvature", 1);
     intensity_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/intensity", 1);
@@ -56,6 +57,7 @@ RoadCloudPublisher::RoadCloudPublisher(void)
     std::cout << "RANDOM_SAMPLE_RATIO: " << RANDOM_SAMPLE_RATIO << std::endl;
     std::cout << "IS_OTSU: " << IS_OTSU << std::endl;
     std::cout << "IGNORE_INTENSITY_DEFAULT: " << IGNORE_INTENSITY_DEFAULT<< std::endl;
+    std::cout << "USE_NORMAL_Z_AS_CURVATURE: " << USE_NORMAL_Z_AS_CURVATURE << std::endl;
 }
 
 void RoadCloudPublisher::obstacles_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
@@ -202,11 +204,14 @@ void RoadCloudPublisher::filter_curvature(void)
 {
     pcl::PassThrough<PointXYZIN> pass;
     pass.setInputCloud(ground_cloud);
-    //pass.setFilterFieldName("curvature");
-    //pass.setFilterLimits(0, CURVATURE_THRESHOLD);
-    //pass.setFilterLimitsNegative(true);
-    pass.setFilterFieldName("normal_z");
-    pass.setFilterLimits(-CURVATURE_THRESHOLD, CURVATURE_THRESHOLD);
+    if(!USE_NORMAL_Z_AS_CURVATURE){
+        pass.setFilterFieldName("curvature");
+        pass.setFilterLimits(0, CURVATURE_THRESHOLD);
+        pass.setFilterLimitsNegative(true);
+    }else{
+        pass.setFilterFieldName("normal_z");
+        pass.setFilterLimits(-CURVATURE_THRESHOLD, CURVATURE_THRESHOLD);
+    }
     curvature_cloud->header = ground_cloud->header;
     curvature_cloud->points.clear();
     pass.filter(*curvature_cloud);

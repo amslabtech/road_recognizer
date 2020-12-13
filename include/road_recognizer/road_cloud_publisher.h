@@ -67,6 +67,7 @@ private:
     double RANDOM_SAMPLE_RATIO;
 	bool IS_OTSU;
     bool IGNORE_INTENSITY_DEFAULT;
+    bool USE_NORMAL_Z_AS_CURVATURE;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;
