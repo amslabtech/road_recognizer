@@ -30,6 +30,7 @@ RoadCloudPublisher::RoadCloudPublisher(void)
     intensity_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/intensity", 1);
     downsampled_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/downsampled", 1);
     road_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("cloud/road", 1);
+    road_obstacle_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("cloud/road_obstacle", 1);
     obstacles_sub = nh.subscribe("/velodyne_obstacles", 1, &RoadCloudPublisher::obstacles_callback, this);
     ground_sub = nh.subscribe("/velodyne_clear", 1, &RoadCloudPublisher::ground_callback, this);
     ignore_intensity_sub = nh.subscribe("/task/ignore_intensity", 1, &RoadCloudPublisher::ignore_intensity_callback, this);
@@ -39,6 +40,7 @@ RoadCloudPublisher::RoadCloudPublisher(void)
     curvature_cloud = CloudXYZINPtr(new CloudXYZIN);
     intensity_cloud = CloudXYZINPtr(new CloudXYZIN);
     road_cloud = CloudXYZINPtr(new CloudXYZIN);
+    road_obstacle_cloud = CloudXYZINPtr(new CloudXYZIN);
 
     obstacles_cloud_updated = false;
     ground_cloud_updated = false;
@@ -143,6 +145,15 @@ void RoadCloudPublisher::publish_clouds(void)
     sensor_msgs::PointCloud2 cloud4;
     pcl::toROSMsg(*road_cloud, cloud4);
     road_cloud_pub.publish(cloud4);
+
+    if(road_obstacle_cloud_pub.getNumSubscribers() > 0){
+        std::cout << "publish road obstacle cloud" << std::endl;
+        sensor_msgs::PointCloud2 cloud5;
+        *road_obstacle_cloud = *road_cloud + *obstacles_cloud;
+        pcl::toROSMsg(*road_obstacle_cloud, cloud5);
+        road_obstacle_cloud_pub.publish(cloud5);
+        road_obstacle_cloud->points.clear();
+    }
     road_cloud->points.clear();
 }
 

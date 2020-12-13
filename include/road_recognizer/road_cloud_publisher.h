@@ -76,6 +76,7 @@ private:
     ros::Publisher downsampled_cloud_pub;
     ros::Publisher intensity_cloud_pub;
     ros::Publisher road_cloud_pub;
+    ros::Publisher road_obstacle_cloud_pub;
     ros::Subscriber obstacles_sub;
     ros::Subscriber ground_sub;
     ros::Subscriber ignore_intensity_sub;
@@ -87,6 +88,7 @@ private:
     CloudXYZINPtr curvature_cloud;
     CloudXYZINPtr intensity_cloud;
     CloudXYZINPtr road_cloud;
+    CloudXYZINPtr road_obstacle_cloud;
     bool obstacles_cloud_updated;
     bool ground_cloud_updated;
 	bool ignore_intensity_flag;
