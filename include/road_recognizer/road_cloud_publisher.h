@@ -66,6 +66,7 @@ private:
     int MAX_RANDOM_SAMPLE_SIZE;
     double RANDOM_SAMPLE_RATIO;
 	bool IS_OTSU;
+    bool IGNORE_INTENSITY_DEFAULT;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;

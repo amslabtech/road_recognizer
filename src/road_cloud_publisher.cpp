@@ -23,6 +23,7 @@ RoadCloudPublisher::RoadCloudPublisher(void)
     local_nh.param("OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD", OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD, {999.9});
     local_nh.param("VAR_BETWEEN_THRESHOLD", VAR_BETWEEN_THRESHOLD, {100.0});
     local_nh.param("CHEAT_INTENSITY_WIDTH", CHEAT_INTENSITY_WIDTH, {5.0});
+    local_nh.param("IGNORE_INTENSITY_DEFAULT", IGNORE_INTENSITY_DEFAULT, {false});
 
     curvature_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/curvature", 1);
     intensity_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/intensity", 1);
@@ -40,7 +41,7 @@ RoadCloudPublisher::RoadCloudPublisher(void)
 
     obstacles_cloud_updated = false;
     ground_cloud_updated = false;
-	ignore_intensity_flag = false;
+	ignore_intensity_flag = IGNORE_INTENSITY_DEFAULT;
 
     std::cout << "HZ: " << HZ << std::endl;
     std::cout << "NORMAL_ESTIMATION_RADIUS: " << NORMAL_ESTIMATION_RADIUS << std::endl;;
@@ -54,6 +55,7 @@ RoadCloudPublisher::RoadCloudPublisher(void)
     std::cout << "MAX_RANDOM_SAMPLE_SIZE: " << MAX_RANDOM_SAMPLE_SIZE << std::endl;
     std::cout << "RANDOM_SAMPLE_RATIO: " << RANDOM_SAMPLE_RATIO << std::endl;
     std::cout << "IS_OTSU: " << IS_OTSU << std::endl;
+    std::cout << "IGNORE_INTENSITY_DEFAULT: " << IGNORE_INTENSITY_DEFAULT<< std::endl;
 }
 
 void RoadCloudPublisher::obstacles_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
@@ -92,12 +94,12 @@ void RoadCloudPublisher::process(void)
             std::cout << "--- passthrough filter ---" << std::endl;
             filter_curvature();
             std::cout << "curvature cloud size: " << curvature_cloud->points.size() << std::endl;
-            filter_intensity();
-            std::cout << "intensity cloud size: " << intensity_cloud->points.size() << std::endl;
 			*road_cloud = *curvature_cloud;
-			if(!ignore_intensity_flag){
-				*road_cloud += *intensity_cloud;
-			}
+            if(!ignore_intensity_flag){
+                filter_intensity();
+                std::cout << "intensity cloud size: " << intensity_cloud->points.size() << std::endl;
+                *road_cloud += *intensity_cloud;
+            }
             // *road_cloud = *intensity_cloud;
 
             filter_height();
