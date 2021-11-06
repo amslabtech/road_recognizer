@@ -1,6 +1,6 @@
 <launch>
 	<param name="use_sim_time" value="true"/>
-	
+
 	<node pkg="complement" type="complement" name="complement"/>
 
 
@@ -14,11 +14,11 @@
 
 	<!-- <include file="$(find cats)/launch/robot_state.launch"/> -->
 	<!-- <include file="$(find rwrc19)/launch/playing_bag.launch"/> -->
-	
-	<include file="$(find velodyne_pointcloud)/launch/32e_points.launch"/>
-	<include file="$(find velodyne_height_map)/launch/amsl_velodyne_heightmap.launch"/>
+
+	/* <include file="$(find velodyne_pointcloud)/launch/32e_points.launch"/> */
+	/* <include file="$(find velodyne_height_map)/launch/amsl_velodyne_heightmap.launch"/> */
 	<!-- <include file="$(find road_recognizer)/launch/road_recognizer.launch"/> -->
-	
+
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/left_start.bag"/> -->
 	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/left_start.bag"/> -->
 	<node pkg="rosbag" name="player" type="play" args="--clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag"/>

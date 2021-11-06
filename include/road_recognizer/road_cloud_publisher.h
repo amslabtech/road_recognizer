@@ -51,6 +51,8 @@ public:
     void estimate_normal(void);
     void filter_curvature(void);
     void filter_intensity(void);
+    void filter_concrete(void);
+    void filter_grass_removed(void);
     void filter_height(void);
 
 private:
@@ -62,9 +64,12 @@ private:
     double CURVATURE_THRESHOLD;
     double INTENSITY_UPPER_THRESHOLD;
     double INTENSITY_LOWER_THRESHOLD;
+    double INTENSITY_CONCRETE_UPPER_THRESHOLD;
+    double INTENSITY_CONCRETE_LOWER_THRESHOLD;
     double HEIGHT_THRESHOLD;
     int MAX_RANDOM_SAMPLE_SIZE;
     double RANDOM_SAMPLE_RATIO;
+    double KDTREE_SEARCH_RANGE;
 	bool IS_OTSU;
     bool IGNORE_INTENSITY_DEFAULT;
     bool USE_NORMAL_Z_AS_CURVATURE;
@@ -75,8 +80,10 @@ private:
     ros::Publisher curvature_cloud_pub;
     ros::Publisher downsampled_cloud_pub;
     ros::Publisher intensity_cloud_pub;
+    ros::Publisher concrete_cloud_pub;
     ros::Publisher road_cloud_pub;
     ros::Publisher road_obstacle_cloud_pub;
+    ros::Publisher road_grass_removed_cloud_pub;
     ros::Subscriber obstacles_sub;
     ros::Subscriber ground_sub;
     ros::Subscriber ignore_intensity_sub;
@@ -87,8 +94,10 @@ private:
     CloudXYZINPtr ground_cloud;
     CloudXYZINPtr curvature_cloud;
     CloudXYZINPtr intensity_cloud;
+    CloudXYZINPtr concrete_cloud;
     CloudXYZINPtr road_cloud;
     CloudXYZINPtr road_obstacle_cloud;
+    CloudXYZINPtr road_grass_removed_cloud;
     bool obstacles_cloud_updated;
     bool ground_cloud_updated;
 	bool ignore_intensity_flag;

@@ -4,17 +4,22 @@
 	<arg name="hz" default="10"/>
 	<arg name="normal_estimation_radius" default="0.60"/>
 	<arg name="leaf_size" default="0.30"/>
-	<!--arg name="curvature_threshold" default="0.005"/-->
-	<arg name="curvature_threshold" default="0.90"/>
+	<arg name="curvature_threshold" default="10"/>
+    <!-- kusa no parameter -->
+    <!-- 11:00 13~255  15:00 20~255 -->
 	<arg name="intensity_upper_threshold" default="255"/>
-	<arg name="intensity_lower_threshold" default="20"/>
+	<arg name="intensity_lower_threshold" default="13"/>
+    <!-- tairu no parameter -->
+	<arg name="intensity_concrete_upper_threshold" default="9"/>
+	<arg name="intensity_concrete_lower_threshold" default="1"/>
 	<arg name="height_threshold" default="-1.0"/>
-	<arg name="max_random_sample_size" default="8000"/>
+	<arg name="max_random_sample_size" default="12000"/>
 	<arg name="range_max" default="20"/>
 	<arg name="range_division_num" default="20"/>
 	<arg name="theta_division_num" default="120"/>
 	<arg name="otsu_binary_separation_threshold" default="0.7"/>
 	<arg name="random_sample_ratio" default="1.0"/>
+	<arg name="kdtree_search_range" default="0.3"/>
 	<arg name="is_otsu" default="false"/>
 	<arg name="cheat_intensity_width" default="2.0"/>
 	<arg name="var_between_threshold" default="250.0"/>
@@ -42,16 +47,19 @@
     <arg name="peak_only" default="false"/>
 
     <group ns="recognition/road_recognizer">
-        <node pkg="road_recognizer" type="road_cloud_publisher" name="road_cloud_publisher">
+        <node pkg="road_recognizer" type="road_cloud_publisher" name="road_cloud_publisher" output="screen">
             <param name="HZ" value="$(arg hz)"/>
             <param name="NORMAL_ESTIMATION_RADIUS" value="$(arg normal_estimation_radius)"/>
             <param name="LEAF_SIZE" value="$(arg leaf_size)"/>
             <param name="CURVATURE_THRESHOLD" value="$(arg curvature_threshold)"/>
             <param name="INTENSITY_UPPER_THRESHOLD" value="$(arg intensity_upper_threshold)"/>
             <param name="INTENSITY_LOWER_THRESHOLD" value="$(arg intensity_lower_threshold)"/>
+            <param name="INTENSITY_CONCRETE_UPPER_THRESHOLD" value="$(arg intensity_concrete_upper_threshold)"/>
+            <param name="INTENSITY_CONCRETE_LOWER_THRESHOLD" value="$(arg intensity_concrete_lower_threshold)"/>
             <param name="HEIGHT_THRESHOLD" value="$(arg height_threshold)"/>
             <param name="MAX_RANDOM_SAMPLE_SIZE" value="$(arg max_random_sample_size)"/>
             <param name="RANDOM_SAMPLE_RATIO" value="$(arg random_sample_ratio)"/>
+            <param name="KDTREE_SEARCH_RANGE" value="$(arg kdtree_search_range)"/>
             <param name="RANGE_MAX" value="$(arg range_max)"/>
             <param name="RANGE_DIVISION_NUM" value="$(arg range_division_num)"/>
             <param name="THETA_DIVISION_NUM" value="$(arg theta_division_num)"/>
@@ -88,13 +96,15 @@
             <param name="BEAM_MEDIAN_N" value="$(arg beam_median_n)"/>
             <param name="LINE_NORMAL_MEAN_INNER_PRODUCT_THRESHOLD" value="$(arg line_normal_mean_inner_product_threshold)"/>
             <param name="RADIUS_FOR_2D_NORMAL" value="$(arg radius_for_2d_normal)"/>
-            <remap from="/velodyne_obstacles" to="/cloud/static"/>
+            <!-- <remap from="/velodyne_obstacles" to="/cloud/static"/> -->
         </node>
 
-        <node pkg="road_recognizer" type="intersection_detector" name="intersection_detector">
+        <!-- <node pkg="road_recognizer" type="intersection_detector" name="intersection_detector">
             <param name="PEAK_ONLY" value="$(arg peak_only)"/>
-        </node>
+        </node> -->
 
+	<node pkg="rviz" name="rviz" type="rviz" args="-d /home/amsl/catkin_ws/src/road_recognizer/config/road_recognizer_mori.rviz"/>
+	<node pkg="rviz" name="rviz2" type="rviz" args="-d /home/amsl/catkin_ws/src/road_recognizer/config/compare.rviz"/>
     </group>
 
 </launch>
