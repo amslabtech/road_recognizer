@@ -114,11 +114,13 @@ void RoadCloudPublisher::process(void)
                 std::cout << "intensity cloud size: " << intensity_cloud->points.size() << std::endl;
                 // *road_cloud += *intensity_cloud;
             }
-            filter_concrete();
+            if(intensity_cloud->points.size() > 0){
+                filter_concrete();
+                filter_grass_removed();
+                *road_cloud += *road_grass_removed_cloud;
+            }
             std::cout << "concrete cloud size: " << concrete_cloud->points.size() << std::endl;
-            filter_grass_removed();
             std::cout << "grass removed cloud size: " << road_grass_removed_cloud->points.size() << std::endl;
-            *road_cloud += *road_grass_removed_cloud;
 
             filter_height();
             std::cout << "after passthrough filter cloud size: " << road_cloud->points.size() << std::endl;
@@ -155,28 +157,17 @@ void RoadCloudPublisher::publish_clouds(void)
     intensity_cloud_pub.publish(cloud3);
     intensity_cloud->points.clear();
 
-    std::cout << "publish concrete cloud" << std::endl;
-    sensor_msgs::PointCloud2 cloud4;
-    pcl::toROSMsg(*concrete_cloud, cloud4);
-    concrete_cloud_pub.publish(cloud4);
-    concrete_cloud->points.clear();
-
     std::cout << "publish road cloud" << std::endl;
-    sensor_msgs::PointCloud2 cloud5;
-    pcl::toROSMsg(*road_cloud, cloud5);
-    road_cloud_pub.publish(cloud5);
-
-    std::cout << "publish road grass removed cloud" << std::endl;
-    sensor_msgs::PointCloud2 cloud6;
-    pcl::toROSMsg(*road_grass_removed_cloud, cloud6);
-    road_grass_removed_cloud_pub.publish(cloud6);
+    sensor_msgs::PointCloud2 cloud4;
+    pcl::toROSMsg(*road_cloud, cloud4);
+    road_cloud_pub.publish(cloud4);
 
     if(road_obstacle_cloud_pub.getNumSubscribers() > 0){
         std::cout << "publish road obstacle cloud" << std::endl;
-        sensor_msgs::PointCloud2 cloud7;
+        sensor_msgs::PointCloud2 cloud5;
         *road_obstacle_cloud = *road_cloud + *obstacles_cloud;
-        pcl::toROSMsg(*road_obstacle_cloud, cloud7);
-        road_obstacle_cloud_pub.publish(cloud7);
+        pcl::toROSMsg(*road_obstacle_cloud, cloud5);
+        road_obstacle_cloud_pub.publish(cloud5);
         road_obstacle_cloud->points.clear();
     }
     road_cloud->points.clear();
@@ -272,34 +263,18 @@ void RoadCloudPublisher::filter_intensity(void)
 
 void RoadCloudPublisher::filter_concrete(void)
 {
-    if(IS_OTSU){
-        IntensityPartition concrete_partition(RANGE_DIVISION_NUM, THETA_DIVISION_NUM, RANGE_MAX, VAR_BETWEEN_THRESHOLD, OTSU_BINARY_SEPARATION_THRESHOLD, OTSU_BINARY_DIFF_FROM_AVR_THRESHOLD, OTSU_BINARY_SUM_OF_DIFF_FROM_AVR_THRESHOLD, INTENSITY_CONCRETE_LOWER_THRESHOLD, CHEAT_INTENSITY_WIDTH);
-        concrete_cloud = concrete_partition.execution(ground_cloud);
-        concrete_cloud->header = ground_cloud->header;
-    }else{
-        pcl::PassThrough<PointXYZIN> concrete_pass;
-        concrete_pass.setInputCloud(ground_cloud);
-        concrete_pass.setFilterFieldName("intensity");
-        concrete_pass.setFilterLimits(INTENSITY_CONCRETE_LOWER_THRESHOLD, INTENSITY_CONCRETE_UPPER_THRESHOLD);
-        concrete_cloud->header = ground_cloud->header;
-        concrete_pass.filter(*concrete_cloud);
-        concrete_cloud->width = concrete_cloud->points.size();
-
-        // pcl::PassThrough<PointXYZIN> range_pass;
-        // range_pass.setInputCloud(concrete_cloud);
-        // range_pass.setFilterFieldName("x");
-        // range_pass.setFilterLimits(-5, 5);
-        // range_pass.filter(*concrete_cloud);
-        // range_pass.setInputCloud(concrete_cloud);
-        // range_pass.setFilterFieldName("y");
-        // range_pass.setFilterLimits(-2, 2);
-        // range_pass.filter(*concrete_cloud);
-        // concrete_cloud->width = concrete_cloud->points.size();
-    }
+    pcl::PassThrough<PointXYZIN> concrete_pass;
+    concrete_pass.setInputCloud(ground_cloud);
+    concrete_pass.setFilterFieldName("intensity");
+    concrete_pass.setFilterLimits(INTENSITY_CONCRETE_LOWER_THRESHOLD, INTENSITY_CONCRETE_UPPER_THRESHOLD);
+    concrete_cloud->header = ground_cloud->header;
+    concrete_pass.filter(*concrete_cloud);
+    concrete_cloud->width = concrete_cloud->points.size();
 }
 
 void RoadCloudPublisher::filter_grass_removed(void)
 {
+    // 左右のコンクリート点群を除外
     // pcl::PassThrough<PointXYZIN> concrete_pass;
     // concrete_pass.setInputCloud(concrete_cloud);
     // concrete_pass.setFilterFieldName("y");
@@ -307,54 +282,54 @@ void RoadCloudPublisher::filter_grass_removed(void)
     // concrete_pass.filter(*concrete_cloud);
     // concrete_cloud->width = concrete_cloud->points.size();
 
-    std::random_device rnd;
-    std::mt19937 mt(rnd());
-    std::uniform_real_distribution<double> dist(0.0, 1.0);
-    int concrete_cloud_size = concrete_cloud->points.size();
-    int random_concrete_sample_size = std::min(concrete_cloud_size * RANDOM_SAMPLE_RATIO, (double)MAX_RANDOM_SAMPLE_SIZE);
+    // std::random_device rnd;
+    // std::mt19937 mt(rnd());
+    // std::uniform_real_distribution<double> dist(0.0, 1.0);
+    // int concrete_cloud_size = concrete_cloud->points.size();
+    // int random_concrete_sample_size = std::min(concrete_cloud_size * RANDOM_SAMPLE_RATIO, (double)MAX_RANDOM_SAMPLE_SIZE);
 
-    CloudXYZINPtr downsampled_concrete_cloud(new CloudXYZIN);
-    downsampled_concrete_cloud->points.resize(random_concrete_sample_size);
-    downsampled_concrete_cloud->header = concrete_cloud->header;
-    for(int i=0;i<random_concrete_sample_size;i++){
-        int index =  concrete_cloud_size * dist(mt);
-        downsampled_concrete_cloud->points[i] = concrete_cloud->points[index];
+    // CloudXYZINPtr downsampled_concrete_cloud(new CloudXYZIN);
+    // downsampled_concrete_cloud->points.resize(random_concrete_sample_size);
+    // downsampled_concrete_cloud->header = concrete_cloud->header;
+    // for(int i=0;i<random_concrete_sample_size;i++){
+    //     int index =  (concrete_cloud_size-1) * dist(mt);
+    //     downsampled_concrete_cloud->points[i] = concrete_cloud->points[index];
+    // }
+
+    //intensityをコピー
+    CloudXYZINPtr intensity_copy(new CloudXYZIN);
+    for(int i=0; i<intensity_cloud->points.size(); i++){
+        intensity_copy->points.push_back(intensity_cloud->points[i]);
     }
+    intensity_copy->header = intensity_cloud->header;
 
-    //intensityをroad_grass_removed_cloudにコピー
-    road_grass_removed_cloud->points.clear();
-    int index_intensity = 0;
-    for(auto intensity_point : intensity_cloud->points){
-        road_grass_removed_cloud->push_back(intensity_cloud->points[index_intensity]);
-        index_intensity ++;
-    }
+    if(intensity_copy->points.size() > 0){
+        pcl::KdTreeFLANN<PointXYZIN> kdtree;
+        PointXYZIN concrete_point; 
+        std::vector<int> pointIdxRadiusSearch;
+        std::vector<float> pointRadiusSquaredDistance;
+        double radius = KDTREE_SEARCH_RANGE; // 探索範囲の距離
+        kdtree.setInputCloud(intensity_copy); // 探索点群
+        for(int i=0; i<concrete_cloud->points.size(); i++){
+            concrete_point.x = concrete_cloud->points[i].x;
+            concrete_point.y = concrete_cloud->points[i].y;
+            concrete_point.z = concrete_cloud->points[i].z;
+            concrete_point.intensity = concrete_cloud->points[i].intensity;
+            int count_kd = kdtree.radiusSearch(concrete_point, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance); 
 
-    pcl::KdTreeFLANN<PointXYZIN> kdtree;
-    PointXYZIN concrete_point; 
-    std::vector<int> pointIdxRadiusSearch;
-    std::vector<float> pointRadiusSquaredDistance;
-    double radius = KDTREE_SEARCH_RANGE; // 探索範囲の距離
-    int thre = 0;
-    kdtree.setInputCloud(road_grass_removed_cloud); // 探索点群
-    for(int i=0; i<downsampled_concrete_cloud->points.size(); i++){
-        concrete_point.x = downsampled_concrete_cloud->points[i].x;
-        concrete_point.y = downsampled_concrete_cloud->points[i].y;
-        concrete_point.z = downsampled_concrete_cloud->points[i].z;
-        int count_kd = kdtree.radiusSearch(concrete_point, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance); 
-
-        for(auto index : pointIdxRadiusSearch){
-            road_grass_removed_cloud->points[index].intensity = -1.0;
+            for(int j=0; j<count_kd; j++){
+                intensity_copy->points[pointIdxRadiusSearch[j]].intensity = -1.0;
+            }
         }
-    }
 
-    pcl::PassThrough<PointXYZIN> intensity_pass;
-    intensity_pass.setInputCloud(road_grass_removed_cloud);
-    intensity_pass.setFilterFieldName("intensity");
-    intensity_pass.setFilterLimits(INTENSITY_LOWER_THRESHOLD, INTENSITY_UPPER_THRESHOLD);
-    road_grass_removed_cloud->header = intensity_cloud->header;
-    intensity_pass.filter(*road_grass_removed_cloud);
-    road_grass_removed_cloud->header = road_cloud->header;
-    road_grass_removed_cloud->width = road_grass_removed_cloud->points.size();
+        pcl::PassThrough<PointXYZIN> intensity_pass;
+        intensity_pass.setInputCloud(intensity_copy);
+        intensity_pass.setFilterFieldName("intensity");
+        intensity_pass.setFilterLimits(INTENSITY_LOWER_THRESHOLD, INTENSITY_UPPER_THRESHOLD);
+        intensity_pass.filter(*road_grass_removed_cloud);
+        road_grass_removed_cloud->header = intensity_cloud->header;
+        road_grass_removed_cloud->width = road_grass_removed_cloud->points.size();
+    }
 }
 
 void RoadCloudPublisher::filter_height(void)
