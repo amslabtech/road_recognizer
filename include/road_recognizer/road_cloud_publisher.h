@@ -25,8 +25,8 @@
 #include <std_msgs/Bool.h>
 // OMP
 #include <omp.h>
-// #include <dynamic_reconfigure/server.h>
-// #include "road_recognizer/change_intensityConfig.h"
+#include <dynamic_reconfigure/server.h>
+#include <road_recognizer/change_intensityConfig.h>
 
 
 class RoadCloudPublisher
@@ -57,7 +57,8 @@ public:
     void filter_concrete(void);
     void filter_grass_removed(void);
     void filter_height(void);
-    // void callback(road_recognizer::change_intensityConfig&, uint32_t);
+    void filter_stored(void);
+    void callback(road_recognizer::change_intensityConfig&, uint32_t);
 
 private:
     double HZ;

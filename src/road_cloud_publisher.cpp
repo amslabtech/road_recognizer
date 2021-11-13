@@ -103,6 +103,12 @@ void RoadCloudPublisher::ignore_intensity_callback(const std_msgs::BoolConstPtr&
 
 void RoadCloudPublisher::process(void)
 {
+    // dynamic_reconfigure
+    dynamic_reconfigure::Server<road_recognizer::change_intensityConfig> server;
+    dynamic_reconfigure::Server<road_recognizer::change_intensityConfig>::CallbackType f;
+    f = boost::bind(&RoadCloudPublisher::callback, this, _1, _2);
+    server.setCallback(f);
+
     ros::Rate loop_rate(HZ);
 
     while(ros::ok()){
@@ -137,6 +143,9 @@ void RoadCloudPublisher::process(void)
             filter_height();
             std::cout << "after passthrough filter cloud size: " << road_cloud->points.size() << std::endl;
 
+            // filter_stored();
+            // std::cout << "filter stored" << stored_cloud->points.size() << std::endl;
+
             publish_clouds();
 
             obstacles_cloud_updated = false;
@@ -144,11 +153,6 @@ void RoadCloudPublisher::process(void)
 
             std::cout << "time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
         }
-        // dynamic_reconfigure
-        // dynamic_reconfigure::Server<road_recognizer::change_intensityConfig> server;
-        // dynamic_reconfigure::Server<road_recognizer::change_intensityConfig>::CallbackType f;
-        // f = boost::bind(&RoadCloudPublisher::callback, _1, _2);
-        // server.setCallback(f);
 
         ros::spinOnce();
         loop_rate.sleep();
@@ -156,60 +160,60 @@ void RoadCloudPublisher::process(void)
 }
 
 // dynamic_reconfigure
-// void RoadCloudPublisher::callback(road_recognizer::change_intensityConfig &config, uint32_t level) {
-//     // ROS_INFO("Reconfigure Request: %d %f %s %s %d", 
-//     //         config.int_param, config.double_param, 
-//     //         config.str_param.c_str(), 
-//     //         config.bool_param?"True":"False", 
-//     //         config.size);
-//     ROS_WARN("Rconfig : %d", config.int_param);
-// }
+void RoadCloudPublisher::callback(road_recognizer::change_intensityConfig &config, uint32_t level) {
+    // ROS_WARN("Rconfig : %d", config.grass_intensity_upper);
+    INTENSITY_UPPER_THRESHOLD = config.grass_intensity_upper;
+    INTENSITY_LOWER_THRESHOLD = config.grass_intensity_lower;
+    INTENSITY_CONCRETE_UPPER_THRESHOLD = config.concrete_intensity_upper;
+    INTENSITY_CONCRETE_LOWER_THRESHOLD = config.concrete_intensity_lower;
+}
 
 void RoadCloudPublisher::publish_clouds(void)
 {
     std::cout << "publish downsampled ground cloud" << std::endl;
-    sensor_msgs::PointCloud2 cloud1;
-    pcl::toROSMsg(*ground_cloud, cloud1);
-    downsampled_cloud_pub.publish(cloud1);
+    // sensor_msgs::PointCloud2 cloud1;
+    // pcl::toROSMsg(*ground_cloud, cloud1);
+    downsampled_cloud_pub.publish(ground_cloud);
     ground_cloud->points.clear();
 
     std::cout << "publish curvature cloud" << std::endl;
-    sensor_msgs::PointCloud2 cloud2;
-    pcl::toROSMsg(*curvature_cloud, cloud2);
-    curvature_cloud_pub.publish(cloud2);
+    // sensor_msgs::PointCloud2 cloud2;
+    // pcl::toROSMsg(*curvature_cloud, cloud2);
+    curvature_cloud_pub.publish(curvature_cloud);
     curvature_cloud->points.clear();
 
     std::cout << "publish intensity cloud" << std::endl;
     sensor_msgs::PointCloud2 cloud3;
-    pcl::toROSMsg(*intensity_cloud, cloud3);
-    intensity_cloud_pub.publish(cloud3);
+    // pcl::toROSMsg(*intensity_cloud, cloud3);
+    // intensity_cloud_pub.publish(cloud3);
+    intensity_cloud_pub.publish(intensity_cloud);
     intensity_cloud->points.clear();
 
     std::cout << "publish road cloud" << std::endl;
-    sensor_msgs::PointCloud2 cloud4;
-    pcl::toROSMsg(*road_cloud, cloud4);
-    road_cloud_pub.publish(cloud4);
+    // sensor_msgs::PointCloud2 cloud4;
+    // pcl::toROSMsg(*road_cloud, cloud4);
+    road_cloud_pub.publish(road_cloud);
 
     std::cout << "publish concrete cloud" << std::endl;
-    sensor_msgs::PointCloud2 cloud6;
-    // *road_and_stored_cloud = *stored_cloud + *obstacles_cloud;
-    pcl::toROSMsg(*concrete_cloud, cloud6);
-    concrete_cloud_pub.publish(cloud6);
+    // sensor_msgs::PointCloud2 cloud6;
+    // pcl::toROSMsg(*concrete_cloud, cloud6);
+    concrete_cloud_pub.publish(concrete_cloud);
+    concrete_cloud->points.clear();
 
     std::cout << "obs and stored cloud" << std::endl;
-    sensor_msgs::PointCloud2 cloud7;
+    // sensor_msgs::PointCloud2 cloud7;
     *obs_and_stored_cloud = *stored_cloud + *obstacles_cloud + *road_cloud;
     obs_and_stored_cloud->header = road_cloud->header;
-    pcl::toROSMsg(*obs_and_stored_cloud, cloud7);
-    obs_and_stored_cloud_pub.publish(cloud7);
+    // pcl::toROSMsg(*obs_and_stored_cloud, cloud7);
+    obs_and_stored_cloud_pub.publish(obs_and_stored_cloud);
     obs_and_stored_cloud->points.clear();
 
     if(road_obstacle_cloud_pub.getNumSubscribers() > 0){
         std::cout << "publish road obstacle cloud" << std::endl;
-        sensor_msgs::PointCloud2 cloud5;
+        // sensor_msgs::PointCloud2 cloud5;
         *road_obstacle_cloud = *road_cloud + *obstacles_cloud;
-        pcl::toROSMsg(*road_obstacle_cloud, cloud5);
-        road_obstacle_cloud_pub.publish(cloud5);
+        // pcl::toROSMsg(*road_obstacle_cloud, cloud5);
+        road_obstacle_cloud_pub.publish(road_obstacle_cloud);
         road_obstacle_cloud->points.clear();
     }
     road_cloud->points.clear();
@@ -311,18 +315,20 @@ void RoadCloudPublisher::filter_concrete(void)
     concrete_pass.setFilterLimits(INTENSITY_CONCRETE_LOWER_THRESHOLD, INTENSITY_CONCRETE_UPPER_THRESHOLD);
     concrete_cloud->header = ground_cloud->header;
     concrete_pass.filter(*concrete_cloud);
+    // 左右のコンクリート点群を除外
+    concrete_pass.setInputCloud(concrete_cloud);
+    concrete_pass.setFilterFieldName("x");
+    concrete_pass.setFilterLimits(-5, 5);
+    concrete_pass.filter(*concrete_cloud);
+    concrete_pass.setInputCloud(concrete_cloud);
+    concrete_pass.setFilterFieldName("y");
+    concrete_pass.setFilterLimits(-5, 5);
+    concrete_pass.filter(*concrete_cloud);
     concrete_cloud->width = concrete_cloud->points.size();
 }
 
 void RoadCloudPublisher::filter_grass_removed(void)
 {
-    // 左右のコンクリート点群を除外
-    // pcl::PassThrough<PointXYZIN> concrete_pass;
-    // concrete_pass.setInputCloud(concrete_cloud);
-    // concrete_pass.setFilterFieldName("y");
-    // concrete_pass.setFilterLimits(-2, 2);
-    // concrete_pass.filter(*concrete_cloud);
-    // concrete_cloud->width = concrete_cloud->points.size();
 
     // std::random_device rnd;
     // std::mt19937 mt(rnd());
@@ -393,4 +399,41 @@ void RoadCloudPublisher::filter_height(void)
     height_pass.setFilterLimitsNegative(true);
     road_cloud->header = ground_cloud->header;
     height_pass.filter(*road_cloud);
+}
+
+void RoadCloudPublisher::filter_stored(void) {
+    //storedをコピー
+    CloudXYZINPtr stored_copy(new CloudXYZIN);
+    for(int i=0; i<stored_cloud->points.size() ; i++){
+        stored_copy->points.push_back(stored_cloud->points[i]);
+    }
+    stored_copy->header = stored_cloud->header;
+
+    if(stored_copy->points.size() > 0){
+        pcl::KdTreeFLANN<PointXYZIN> kdtree;
+        PointXYZIN concrete_point; 
+        std::vector<int> pointIdxRadiusSearch;
+        std::vector<float> pointRadiusSquaredDistance;
+        double radius = KDTREE_SEARCH_RANGE; // 探索範囲の距離
+        kdtree.setInputCloud(stored_copy); // 探索点群
+        for(int i=0; i<concrete_cloud->points.size(); i++){
+            concrete_point.x = concrete_cloud->points[i].x;
+            concrete_point.y = concrete_cloud->points[i].y;
+            concrete_point.z = concrete_cloud->points[i].z;
+            concrete_point.intensity = concrete_cloud->points[i].intensity;
+            int count_kd = kdtree.radiusSearch(concrete_point, radius, pointIdxRadiusSearch, pointRadiusSquaredDistance); 
+
+            for(int j=0; j<count_kd; j++){
+                stored_copy->points[pointIdxRadiusSearch[j]].intensity = -1.0;
+            }
+        }
+
+        pcl::PassThrough<PointXYZIN> intensity_pass;
+        intensity_pass.setInputCloud(stored_copy);
+        intensity_pass.setFilterFieldName("intensity");
+        intensity_pass.setFilterLimits(INTENSITY_LOWER_THRESHOLD, INTENSITY_UPPER_THRESHOLD);
+        intensity_pass.filter(*stored_cloud);
+        stored_cloud->header = ground_cloud->header;
+        stored_cloud->width = stored_cloud->points.size();
+    }
 }
