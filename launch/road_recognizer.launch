@@ -7,12 +7,12 @@
 	<arg name="curvature_threshold" default="10"/>
     <!-- kusa no parameter -->
     <!-- 11:00 13~255  15:00 20~255 -->
-	<arg name="intensity_upper_threshold" default="30"/>
-	<arg name="intensity_lower_threshold" default="25"/>
+	<arg name="intensity_upper_threshold" default="255"/>
+	<arg name="intensity_lower_threshold" default="22"/>
 	<!-- <arg name="intensity_upper_threshold" default="255"/> -->
 	<!-- <arg name="intensity_lower_threshold" default="100"/> -->
     <!-- tairu no parameter -->
-	<arg name="intensity_concrete_upper_threshold" default="18"/>
+	<arg name="intensity_concrete_upper_threshold" default="17"/>
 	<arg name="intensity_concrete_lower_threshold" default="1"/>
 	<arg name="height_threshold" default="-1.0"/>
 	<arg name="max_random_sample_size" default="8000"/>
@@ -26,6 +26,7 @@
 	<arg name="cheat_intensity_width" default="2.0"/>
 	<arg name="var_between_threshold" default="250.0"/>
 	<arg name="use_normal_z_as_curvature" default="false"/>
+	<arg name="use_reconfigure_default" default="false"/>
 
 	<arg name="store_num" default="50"/>
 	<arg name="position_difference_threshold" default="0.1"/>
@@ -71,6 +72,7 @@
             <param name="CHEAT_INTENSITY_WIDTH" value="$(arg cheat_intensity_width)"/>
             <param name="VAR_BETWEEN_THRESHOLD" value="$(arg var_between_threshold)"/>
             <param name="USE_NORMAL_Z_AS_CURVATURE" value="$(arg use_normal_z_as_curvature)"/>
+            <param name="USE_RECONFIGURE_DEFAULT" value="$(arg use_reconfigure_default)"/>
         </node>
 
         <node pkg="road_recognizer" type="road_point_cloud_storer" name="road_point_cloud_storer">

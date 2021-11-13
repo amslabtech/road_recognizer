@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+
+<launch>
+	<param name="use_sim_time" value="true"/>
+
+	<!-- bag options -->
+    <arg name="bagfile" default="/home/amsl/bagfiles/full-2021-11-07-13-13tsukuba.bag"/>
+    <arg name="start" default="0.0"/>
+    <arg name="duration" default="10000.0"/>
+    <arg name="delay" default="30.0"/>
+    <arg name="play_speed_ratio" default="2.0"/>
+
+    <!-- play rosbag -->
+    <node pkg="rosbag" type="play" name="rosbag_play" output="screen" args="
+        $(arg bagfile)
+        -l
+		-q
+        -r $(arg play_speed_ratio)
+		--clock
+        ">
+    </node>
+
+	<node pkg="complement" type="complement" name="complement"/>
+
+	<include file="$(find road_recognizer)/launch/road_recognizer.launch"/>
+    <!-- <include file="$(find localmap_creator)/launch/localmap_creator.launch"/> -->
+
+	<!-- <node pkg="road_recognizer" type="intensity_partition" name="intensity_partition"/> -->
+	<!-- <node pkg="road_recognizer" type="intensity_partition" name="intensity_partition" output="screen"/> -->
+	<!-- <node pkg="road_recognizer" type="intensity_partition_node" name="intensity_partition_node" output="screen"/> -->
+	<!-- <node pkg="road_recognizer" type="old_intensity_partition" name="old_intensity_partition"/> -->
+	<!-- <node pkg="pcl_samples" type="pc_store" name="pc_store"/> -->
+	<!-- <node pkg="road_recognizer" type="intensity_histogram_viewer" name="intensity_histogram_viewer"/> -->
+	<!-- <node pkg="road_recognizer" type="intensity_partition_time_std_deviation" name="intensity_partition_time_std_deviation" output="screen"/> -->
+
+	<!-- <include file="$(find cats)/launch/robot_state.launch"/> -->
+	<!-- <include file="$(find rwrc19)/launch/playing_bag.launch"/> -->
+
+	<include file="$(find velodyne_pointcloud)/launch/32e_points.launch"/>
+	<include file="$(find velodyne_height_map)/launch/amsl_velodyne_heightmap.launch"/>
+	<!-- <include file="$(find road_recognizer)/launch/road_recognizer.launch"/> -->
+
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/left_start.bag"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/left_start.bag"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 2200"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 2400"/> -->
+	<!-- <node pkg="rosbag" name="player" type="play" args="&#45;&#45;clock /home/amsl/bagfiles/cats/2019/tsukuba_full_left_start.bag &#45;s 2270"/> -->
+    <!-- <node pkg="rviz" name="rviz" type="rviz" args="-d $(find road_recognizer)/config/road_recognizer_mori.rviz"/> -->
+</launch>

@@ -30,6 +30,7 @@ RoadCloudPublisher::RoadCloudPublisher(void)
     local_nh.param("CHEAT_INTENSITY_WIDTH", CHEAT_INTENSITY_WIDTH, {5.0});
     local_nh.param("IGNORE_INTENSITY_DEFAULT", IGNORE_INTENSITY_DEFAULT, {false});
     local_nh.param("USE_NORMAL_Z_AS_CURVATURE", USE_NORMAL_Z_AS_CURVATURE, {false});
+    local_nh.param("USE_RECONFIGURE_DEFAULT", USE_RECONFIGURE_DEFAULT, {false});
 
     curvature_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/curvature", 1);
     intensity_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/intensity", 1);
@@ -162,10 +163,13 @@ void RoadCloudPublisher::process(void)
 // dynamic_reconfigure
 void RoadCloudPublisher::callback(road_recognizer::change_intensityConfig &config, uint32_t level) {
     // ROS_WARN("Rconfig : %d", config.grass_intensity_upper);
-    INTENSITY_UPPER_THRESHOLD = config.grass_intensity_upper;
-    INTENSITY_LOWER_THRESHOLD = config.grass_intensity_lower;
-    INTENSITY_CONCRETE_UPPER_THRESHOLD = config.concrete_intensity_upper;
-    INTENSITY_CONCRETE_LOWER_THRESHOLD = config.concrete_intensity_lower;
+    if(USE_RECONFIGURE_DEFAULT){
+        INTENSITY_UPPER_THRESHOLD = config.grass_intensity_upper;
+        INTENSITY_LOWER_THRESHOLD = config.grass_intensity_lower;
+        INTENSITY_CONCRETE_UPPER_THRESHOLD = config.concrete_intensity_upper;
+        INTENSITY_CONCRETE_LOWER_THRESHOLD = config.concrete_intensity_lower;
+    }
+    USE_RECONFIGURE_DEFAULT = true;
 }
 
 void RoadCloudPublisher::publish_clouds(void)
