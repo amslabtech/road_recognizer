@@ -25,6 +25,8 @@
 #include <std_msgs/Bool.h>
 // OMP
 #include <omp.h>
+// #include <dynamic_reconfigure/server.h>
+// #include "road_recognizer/change_intensityConfig.h"
 
 
 class RoadCloudPublisher
@@ -45,6 +47,7 @@ public:
     void process(void);
     void obstacles_callback(const sensor_msgs::PointCloud2ConstPtr&);
     void ground_callback(const sensor_msgs::PointCloud2ConstPtr&);
+    void stored_callback(const sensor_msgs::PointCloud2ConstPtr&);
     void ignore_intensity_callback(const std_msgs::BoolConstPtr&);
     void publish_clouds(void);
     void downsample(void);
@@ -54,6 +57,7 @@ public:
     void filter_concrete(void);
     void filter_grass_removed(void);
     void filter_height(void);
+    // void callback(road_recognizer::change_intensityConfig&, uint32_t);
 
 private:
     double HZ;
@@ -80,22 +84,25 @@ private:
     ros::Publisher curvature_cloud_pub;
     ros::Publisher downsampled_cloud_pub;
     ros::Publisher intensity_cloud_pub;
-    ros::Publisher concrete_cloud_pub;
     ros::Publisher road_cloud_pub;
     ros::Publisher road_obstacle_cloud_pub;
-    ros::Publisher road_grass_removed_cloud_pub;
+    ros::Publisher concrete_cloud_pub;
+    ros::Publisher obs_and_stored_cloud_pub;
     ros::Subscriber obstacles_sub;
     ros::Subscriber ground_sub;
+    ros::Subscriber stored_sub;
     ros::Subscriber ignore_intensity_sub;
 
 	//IntensityPartition intensity_partition;
 
     CloudXYZINPtr obstacles_cloud;
     CloudXYZINPtr ground_cloud;
+    CloudXYZINPtr stored_cloud;
     CloudXYZINPtr curvature_cloud;
     CloudXYZINPtr intensity_cloud;
     CloudXYZINPtr concrete_cloud;
     CloudXYZINPtr road_cloud;
+    CloudXYZINPtr obs_and_stored_cloud;
     CloudXYZINPtr road_obstacle_cloud;
     CloudXYZINPtr road_grass_removed_cloud;
     bool obstacles_cloud_updated;

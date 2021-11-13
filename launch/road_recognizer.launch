@@ -8,9 +8,11 @@
     <!-- kusa no parameter -->
     <!-- 11:00 13~255  15:00 20~255 -->
 	<arg name="intensity_upper_threshold" default="30"/>
-	<arg name="intensity_lower_threshold" default="20"/>
+	<arg name="intensity_lower_threshold" default="25"/>
+	<!-- <arg name="intensity_upper_threshold" default="255"/> -->
+	<!-- <arg name="intensity_lower_threshold" default="100"/> -->
     <!-- tairu no parameter -->
-	<arg name="intensity_concrete_upper_threshold" default="13"/>
+	<arg name="intensity_concrete_upper_threshold" default="18"/>
 	<arg name="intensity_concrete_lower_threshold" default="1"/>
 	<arg name="height_threshold" default="-1.0"/>
 	<arg name="max_random_sample_size" default="8000"/>
@@ -19,7 +21,7 @@
 	<arg name="theta_division_num" default="120"/>
 	<arg name="otsu_binary_separation_threshold" default="0.7"/>
 	<arg name="random_sample_ratio" default="1.0"/>
-	<arg name="kdtree_search_range" default="0.25"/>
+	<arg name="kdtree_search_range" default="0.3"/>
 	<arg name="is_otsu" default="false"/>
 	<arg name="cheat_intensity_width" default="2.0"/>
 	<arg name="var_between_threshold" default="250.0"/>
@@ -76,6 +78,7 @@
             <param name="STORE_NUM" value="$(arg store_num)"/>
             <param name="POSITION_DIFFERENCE_THRESHOLD" value="$(arg position_difference_threshold)"/>
             <param name="YAW_DIFFERENCE_THRESHOLD" value="$(arg yaw_difference_threshold)"/>
+            <remap from="cloud/road" to="/recognition/road_recognizer/cloud/road"/>
         </node>
 
         <node pkg="road_recognizer" type="road_recognizer" name="road_recognizer">
@@ -105,8 +108,9 @@
             <param name="PEAK_ONLY" value="$(arg peak_only)"/>
         </node> -->
 
-        <node pkg="rviz" name="rviz" type="rviz" args="-d /home/amsl/catkin_ws/src/road_recognizer/config/road_recognizer_mori.rviz"/>
-        <node pkg="rviz" name="rviz2" type="rviz" args="-d /home/amsl/catkin_ws/src/road_recognizer/config/compare.rviz"/>
+        <!-- <node pkg="rviz" name="rviz" type="rviz" args="-d /home/amsl/catkin_ws/src/road_recognizer/config/road_recognizer_mori.rviz"/> -->
+        <!-- <node pkg="rviz" name="rviz2" type="rviz" args="-d /home/amsl/catkin_ws/src/road_recognizer/config/compare.rviz"/> -->
+        <!-- <node pkg="rqt_reconfigure" name="rqt_reconfigure" type="rqt_reconfigure" /> -->
     </group>
 
 </launch>

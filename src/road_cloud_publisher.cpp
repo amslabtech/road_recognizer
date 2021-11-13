@@ -1,4 +1,6 @@
 #include "road_recognizer/road_cloud_publisher.h"
+// #include <dynamic_reconfigure/server.h>
+// #include "road_recognizer/change_intensityConfig.h"
 
 RoadCloudPublisher::RoadCloudPublisher(void)
 :local_nh("~")
@@ -31,21 +33,24 @@ RoadCloudPublisher::RoadCloudPublisher(void)
 
     curvature_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/curvature", 1);
     intensity_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/intensity", 1);
-    concrete_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/concrete", 1);
     downsampled_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/downsampled", 1);
     road_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("cloud/road", 1);
     road_obstacle_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("cloud/road_obstacle", 1);
-    road_grass_removed_cloud_pub = local_nh.advertise<sensor_msgs::PointCloud2>("cloud/road_grass_removed", 1);
+    concrete_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("cloud/concrete_cloud", 1);
+    obs_and_stored_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("cloud/obs_and_stored", 1);
     obstacles_sub = nh.subscribe("/velodyne_obstacles", 1, &RoadCloudPublisher::obstacles_callback, this);
     ground_sub = nh.subscribe("/velodyne_clear", 1, &RoadCloudPublisher::ground_callback, this);
+    stored_sub = nh.subscribe("/recognition/road_recognizer/cloud/road/stored", 1, &RoadCloudPublisher::stored_callback, this);
     ignore_intensity_sub = nh.subscribe("/task/ignore_intensity", 1, &RoadCloudPublisher::ignore_intensity_callback, this);
 
     obstacles_cloud = CloudXYZINPtr(new CloudXYZIN);
     ground_cloud = CloudXYZINPtr(new CloudXYZIN);
+    stored_cloud = CloudXYZINPtr(new CloudXYZIN);
     curvature_cloud = CloudXYZINPtr(new CloudXYZIN);
     intensity_cloud = CloudXYZINPtr(new CloudXYZIN);
     concrete_cloud = CloudXYZINPtr(new CloudXYZIN);
     road_cloud = CloudXYZINPtr(new CloudXYZIN);
+    obs_and_stored_cloud = CloudXYZINPtr(new CloudXYZIN);
     road_obstacle_cloud = CloudXYZINPtr(new CloudXYZIN);
     road_grass_removed_cloud = CloudXYZINPtr(new CloudXYZIN);
 
@@ -85,6 +90,12 @@ void RoadCloudPublisher::ground_callback(const sensor_msgs::PointCloud2ConstPtr&
     ground_cloud_updated = true;
 }
 
+void RoadCloudPublisher::stored_callback(const sensor_msgs::PointCloud2ConstPtr& msg)
+{
+    pcl::fromROSMsg(*msg, *stored_cloud);
+    stored_cloud->header = ground_cloud->header;
+}
+
 void RoadCloudPublisher::ignore_intensity_callback(const std_msgs::BoolConstPtr& msg)
 {
 	ignore_intensity_flag = msg->data;
@@ -118,6 +129,7 @@ void RoadCloudPublisher::process(void)
                 filter_concrete();
                 filter_grass_removed();
                 *road_cloud += *road_grass_removed_cloud;
+                road_grass_removed_cloud->points.clear();
             }
             std::cout << "concrete cloud size: " << concrete_cloud->points.size() << std::endl;
             std::cout << "grass removed cloud size: " << road_grass_removed_cloud->points.size() << std::endl;
@@ -132,10 +144,26 @@ void RoadCloudPublisher::process(void)
 
             std::cout << "time: " << ros::Time::now().toSec() - start << "[s]" << std::endl;
         }
+        // dynamic_reconfigure
+        // dynamic_reconfigure::Server<road_recognizer::change_intensityConfig> server;
+        // dynamic_reconfigure::Server<road_recognizer::change_intensityConfig>::CallbackType f;
+        // f = boost::bind(&RoadCloudPublisher::callback, _1, _2);
+        // server.setCallback(f);
+
         ros::spinOnce();
         loop_rate.sleep();
     }
 }
+
+// dynamic_reconfigure
+// void RoadCloudPublisher::callback(road_recognizer::change_intensityConfig &config, uint32_t level) {
+//     // ROS_INFO("Reconfigure Request: %d %f %s %s %d", 
+//     //         config.int_param, config.double_param, 
+//     //         config.str_param.c_str(), 
+//     //         config.bool_param?"True":"False", 
+//     //         config.size);
+//     ROS_WARN("Rconfig : %d", config.int_param);
+// }
 
 void RoadCloudPublisher::publish_clouds(void)
 {
@@ -161,6 +189,20 @@ void RoadCloudPublisher::publish_clouds(void)
     sensor_msgs::PointCloud2 cloud4;
     pcl::toROSMsg(*road_cloud, cloud4);
     road_cloud_pub.publish(cloud4);
+
+    std::cout << "publish concrete cloud" << std::endl;
+    sensor_msgs::PointCloud2 cloud6;
+    // *road_and_stored_cloud = *stored_cloud + *obstacles_cloud;
+    pcl::toROSMsg(*concrete_cloud, cloud6);
+    concrete_cloud_pub.publish(cloud6);
+
+    std::cout << "obs and stored cloud" << std::endl;
+    sensor_msgs::PointCloud2 cloud7;
+    *obs_and_stored_cloud = *stored_cloud + *obstacles_cloud + *road_cloud;
+    obs_and_stored_cloud->header = road_cloud->header;
+    pcl::toROSMsg(*obs_and_stored_cloud, cloud7);
+    obs_and_stored_cloud_pub.publish(cloud7);
+    obs_and_stored_cloud->points.clear();
 
     if(road_obstacle_cloud_pub.getNumSubscribers() > 0){
         std::cout << "publish road obstacle cloud" << std::endl;
@@ -329,6 +371,16 @@ void RoadCloudPublisher::filter_grass_removed(void)
         intensity_pass.filter(*road_grass_removed_cloud);
         road_grass_removed_cloud->header = intensity_cloud->header;
         road_grass_removed_cloud->width = road_grass_removed_cloud->points.size();
+
+        pcl::PassThrough<PointXYZIN> pass;
+        pass.setInputCloud(road_grass_removed_cloud);
+        pass.setFilterFieldName("x");
+        pass.setFilterLimits(-5, 5);
+        pass.filter(*road_grass_removed_cloud);
+        pass.setInputCloud(road_grass_removed_cloud);
+        pass.setFilterFieldName("y");
+        pass.setFilterLimits(-5, 5);
+        pass.filter(*road_grass_removed_cloud);
     }
 }
 

@@ -323,8 +323,11 @@ void RoadRecognizer::get_linear_clouds(const CloudXYZINPtr input_cloud, std::vec
         std::cout << "remaining cloud size: " << input_cloud->points.size() << std::endl;
         pcl::SampleConsensusModelLine<PointXYZIN>::Ptr model_l(new pcl::SampleConsensusModelLine<PointXYZIN>(input_cloud));
         pcl::RandomSampleConsensus<PointXYZIN> ransac(model_l);
-        ransac.setDistanceThreshold(RANSAC_DISTANCE_THRESHOLD);
-        bool computed = ransac.computeModel();
+        bool computed = false;
+        if(input_cloud->points.size() > 1){
+            ransac.setDistanceThreshold(RANSAC_DISTANCE_THRESHOLD);
+            computed = ransac.computeModel();
+        }
         if(computed){
             std::vector<int> inliers;
             ransac.getInliers(inliers);
@@ -438,21 +441,26 @@ void RoadRecognizer::get_clustered_lines(const std::vector<LineInformation>& lin
     line_points->height = 1;
     line_points->width = line_points->points.size();
     pcl::search::KdTree<PointXYZ>::Ptr tree(new pcl::search::KdTree<PointXYZ>);
-    tree->setInputCloud(line_points);
-    pcl::EuclideanClusterExtraction<PointXYZ> ec;
-    ec.setClusterTolerance(EUCLIDEAN_CLUSTERING_TOLERANCE);
-    ec.setMinClusterSize(1);
-    ec.setMaxClusterSize(line_points->points.size());
-    ec.setSearchMethod(tree);
-    ec.setInputCloud(line_points);
-    ec.extract(cluster_indices);
-    int count = 0;
-    for(const auto& indices : cluster_indices){
-        std::cout << "cluster" << count << std::endl;
-        for(const auto& i : indices.indices){
-            std::cout << line_points->points[i] << std::endl;
+    // std::cout << "before morishita" << std::endl;
+    std::cout << "line_points size: " << line_points->points.size() << std::endl;
+    if(line_points->points.size() != 0){
+        tree->setInputCloud(line_points);
+        // std::cout << "after morishita" << std::endl;
+        pcl::EuclideanClusterExtraction<PointXYZ> ec;
+        ec.setClusterTolerance(EUCLIDEAN_CLUSTERING_TOLERANCE);
+        ec.setMinClusterSize(1);
+        ec.setMaxClusterSize(line_points->points.size());
+        ec.setSearchMethod(tree);
+        ec.setInputCloud(line_points);
+        ec.extract(cluster_indices);
+        int count = 0;
+        for(const auto& indices : cluster_indices){
+            std::cout << "cluster" << count << std::endl;
+            for(const auto& i : indices.indices){
+                std::cout << line_points->points[i] << std::endl;
+            }
+            count++;
         }
-        count++;
     }
 }
 

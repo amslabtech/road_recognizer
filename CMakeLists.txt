@@ -12,6 +12,11 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   cv_bridge
   amsl_navigation_msgs
+  dynamic_reconfigure
+)
+
+generate_dynamic_reconfigure_options(
+  cfg/change_intensity.cfg
 )
 
 find_package(OpenMP)
