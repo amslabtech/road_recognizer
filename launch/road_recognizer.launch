@@ -7,13 +7,13 @@
 	<arg name="curvature_threshold" default="10"/>
     <!-- kusa no parameter -->
     <!-- 11:00 13~255  15:00 20~255 -->
-	<arg name="intensity_upper_threshold" default="255"/>
-	<arg name="intensity_lower_threshold" default="22"/>
+	<arg name="intensity_upper_threshold" default="100"/>
+	<arg name="intensity_lower_threshold" default="36"/>
 	<!-- <arg name="intensity_upper_threshold" default="255"/> -->
 	<!-- <arg name="intensity_lower_threshold" default="100"/> -->
     <!-- tairu no parameter -->
-	<arg name="intensity_concrete_upper_threshold" default="17"/>
-	<arg name="intensity_concrete_lower_threshold" default="1"/>
+	<arg name="intensity_concrete_upper_threshold" default="24"/>
+	<arg name="intensity_concrete_lower_threshold" default="10"/>
 	<arg name="height_threshold" default="-1.0"/>
 	<arg name="max_random_sample_size" default="8000"/>
 	<arg name="range_max" default="20"/>
@@ -27,10 +27,12 @@
 	<arg name="var_between_threshold" default="250.0"/>
 	<arg name="use_normal_z_as_curvature" default="false"/>
 	<arg name="use_reconfigure_default" default="false"/>
+	<arg name="use_stored_filter" default="true"/>
 
 	<arg name="store_num" default="50"/>
 	<arg name="position_difference_threshold" default="0.1"/>
 	<arg name="yaw_difference_threshold" default="0.1"/>
+	<arg name="use_concrete_filter" default="true"/>
 
 	<arg name="outlier_removal_k" default="30"/>
 	<arg name="outlier_removal_threshold" default="1.0"/>
@@ -73,6 +75,7 @@
             <param name="VAR_BETWEEN_THRESHOLD" value="$(arg var_between_threshold)"/>
             <param name="USE_NORMAL_Z_AS_CURVATURE" value="$(arg use_normal_z_as_curvature)"/>
             <param name="USE_RECONFIGURE_DEFAULT" value="$(arg use_reconfigure_default)"/>
+            <param name="USE_STORED_FILTER" value="$(arg use_stored_filter)"/>
         </node>
 
         <node pkg="road_recognizer" type="road_point_cloud_storer" name="road_point_cloud_storer">
@@ -80,6 +83,7 @@
             <param name="STORE_NUM" value="$(arg store_num)"/>
             <param name="POSITION_DIFFERENCE_THRESHOLD" value="$(arg position_difference_threshold)"/>
             <param name="YAW_DIFFERENCE_THRESHOLD" value="$(arg yaw_difference_threshold)"/>
+            <param name="USE_CONCRETE_FILTER" value="$(arg use_stored_filter)"/>
             <remap from="cloud/road" to="/recognition/road_recognizer/cloud/road"/>
         </node>
 
@@ -110,7 +114,7 @@
             <param name="PEAK_ONLY" value="$(arg peak_only)"/>
         </node> -->
 
-        <node pkg="rviz" name="rviz" type="rviz" args="-d /home/amsl/catkin_ws/src/road_recognizer/config/road_recognizer_mori.rviz"/>
+        <!-- <node pkg="rviz" name="rviz" type="rviz" args="-d /home/amsl/catkin_ws/src/road_recognizer/config/road_recognizer_mori.rviz"/> -->
         <!-- <node pkg="rviz" name="rviz2" type="rviz" args="-d /home/amsl/catkin_ws/src/road_recognizer/config/compare.rviz"/> -->
         <node pkg="rqt_reconfigure" name="rqt_reconfigure" type="rqt_reconfigure" />
     </group>

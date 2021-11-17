@@ -44,24 +44,31 @@ public:
 
     void process(void);
     void callback(const sensor_msgs::PointCloud2ConstPtr&, const nav_msgs::OdometryConstPtr&);
+    void concrete_cloud_callback(const sensor_msgs::PointCloud2ConstPtr&);
+    void filter_concrete(void);
 
 private:
     double HZ;
     int STORE_NUM;
     double POSITION_DIFFERENCE_THRESHOLD;
     double YAW_DIFFERENCE_THRESHOLD;
+    bool USE_CONCRETE_FILTER;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;
 
     ros::Publisher road_stored_cloud_pub;
+    ros::Subscriber concrete_sub;
     typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::PointCloud2, nav_msgs::Odometry> sync_subs;
     message_filters::Subscriber<sensor_msgs::PointCloud2> road_cloud_sub;
     message_filters::Subscriber<nav_msgs::Odometry> odom_sub;
+    // message_filters::Subscriber<sensor_msgs::PointCloud2> concrete_sub;
     message_filters::Synchronizer<sync_subs> sync;
 
     CloudXYZINPtr road_cloud;
+    CloudXYZINPtr concrete_cloud;
     bool first_flag;
+    bool concrete_cloud_updated;
     Eigen::Affine3d affine_transform;
     std::list<int> cloud_size_list;
 };

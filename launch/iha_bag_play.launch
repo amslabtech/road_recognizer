@@ -16,13 +16,20 @@
         -l
 		-q
         -r $(arg play_speed_ratio)
+		-s $(arg start)
+		-u $(arg duration)
 		--clock
         ">
     </node>
 
 	<node pkg="complement" type="complement" name="complement"/>
 
-	<include file="$(find road_recognizer)/launch/road_recognizer.launch"/>
+	<include file="$(find road_recognizer)/launch/road_recognizer.launch">
+		<arg name="intensity_upper_threshold" default="100"/>
+		<arg name="intensity_lower_threshold" default="36"/>
+		<arg name="intensity_concrete_upper_threshold" default="24"/>
+		<arg name="intensity_concrete_lower_threshold" default="10"/>
+	</include>
     <!-- <include file="$(find localmap_creator)/launch/localmap_creator.launch"/> -->
 
 	<!-- <node pkg="road_recognizer" type="intensity_partition" name="intensity_partition"/> -->

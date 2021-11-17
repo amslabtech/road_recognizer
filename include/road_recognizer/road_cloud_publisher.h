@@ -79,6 +79,7 @@ private:
     bool IGNORE_INTENSITY_DEFAULT;
     bool USE_NORMAL_Z_AS_CURVATURE;
     bool USE_RECONFIGURE_DEFAULT;
+    bool USE_STORED_FILTER;
 
     ros::NodeHandle nh;
     ros::NodeHandle local_nh;
@@ -110,6 +111,7 @@ private:
     bool obstacles_cloud_updated;
     bool ground_cloud_updated;
 	bool ignore_intensity_flag;
+    bool use_stored_filter;
 
 
 	int RANGE_DIVISION_NUM;//= 20
