@@ -4,35 +4,35 @@
 	<arg name="hz" default="10"/>
 	<arg name="normal_estimation_radius" default="0.60"/>
 	<arg name="leaf_size" default="0.30"/>
-	<arg name="curvature_threshold" default="10"/>
+	<arg name="curvature_threshold" default="0.10"/>
     <!-- kusa no parameter -->
     <!-- 11:00 13~255  15:00 20~255 -->
 	<arg name="intensity_upper_threshold" default="100"/>
-	<arg name="intensity_lower_threshold" default="36"/>
+	<arg name="intensity_lower_threshold" default="30"/>
 	<!-- <arg name="intensity_upper_threshold" default="255"/> -->
 	<!-- <arg name="intensity_lower_threshold" default="100"/> -->
     <!-- tairu no parameter -->
-	<arg name="intensity_concrete_upper_threshold" default="24"/>
-	<arg name="intensity_concrete_lower_threshold" default="10"/>
+	<arg name="intensity_concrete_upper_threshold" default="15"/>
+	<arg name="intensity_concrete_lower_threshold" default="0"/>
 	<arg name="height_threshold" default="-1.0"/>
 	<arg name="max_random_sample_size" default="8000"/>
 	<arg name="range_max" default="20"/>
 	<arg name="range_division_num" default="20"/>
 	<arg name="theta_division_num" default="120"/>
 	<arg name="otsu_binary_separation_threshold" default="0.7"/>
-	<arg name="random_sample_ratio" default="1.0"/>
+	<arg name="random_sample_ratio" default="0.5"/>
 	<arg name="kdtree_search_range" default="0.3"/>
 	<arg name="is_otsu" default="false"/>
 	<arg name="cheat_intensity_width" default="2.0"/>
 	<arg name="var_between_threshold" default="250.0"/>
-	<arg name="use_normal_z_as_curvature" default="false"/>
+	<arg name="use_normal_z_as_curvature" default="true"/>
 	<arg name="use_reconfigure_default" default="false"/>
 	<arg name="use_stored_filter" default="true"/>
 
 	<arg name="store_num" default="50"/>
 	<arg name="position_difference_threshold" default="0.1"/>
 	<arg name="yaw_difference_threshold" default="0.1"/>
-	<arg name="use_concrete_filter" default="true"/>
+	<arg name="use_concrete_filter" default="false"/>
 
 	<arg name="outlier_removal_k" default="30"/>
 	<arg name="outlier_removal_threshold" default="1.0"/>
@@ -85,9 +85,26 @@
             <param name="YAW_DIFFERENCE_THRESHOLD" value="$(arg yaw_difference_threshold)"/>
             <param name="USE_CONCRETE_FILTER" value="$(arg use_stored_filter)"/>
             <remap from="cloud/road" to="/recognition/road_recognizer/cloud/road"/>
+            <remap from="/odom/complement" to="/whill/odom"/>
         </node>
 
-        <node pkg="road_recognizer" type="road_recognizer" name="road_recognizer">
+        <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan_node" >
+            <param name="min_height" value="-3.0"/>
+            <param name="max_height" value="1.0"/>
+            <param name="range_min" value="0.0"/>
+            <param name="range_max" value="30.0"/>
+            <param name="angle_min" value="-3.141592653589793"/>
+            <param name="angle_max" value="3.141592653589793"/>
+            <!-- <param name="angle_min" value="-1.5707963267948966"/> -->
+            <!-- <param name="angle_max" value="1.5707963267948966"/> -->
+            <param name="angle_increment" value="0.00436332309619"/>
+            <param name="target_frame" value="velodyne"/>
+            <param name="use_inf" value="false" />
+            <remap from="/recognition/road_recognizer/cloud_in" to="/recognition/road_recognizer/cloud/obs_and_stored"/>
+            <remap from="/recognition/road_recognizer/scan" to="/recognition/road_recognizer/scan"/>
+        </node>
+
+        <!-- <node pkg="road_recognizer" type="road_recognizer" name="road_recognizer">
             <param name="HZ" value="$(arg hz)"/>
             <param name="LEAF_SIZE" value="$(arg leaf_size)"/>
             <param name="MAX_RANDOM_SAMPLE_SIZE" value="$(arg max_random_sample_size)"/>
@@ -107,15 +124,20 @@
             <param name="BEAM_MEDIAN_N" value="$(arg beam_median_n)"/>
             <param name="LINE_NORMAL_MEAN_INNER_PRODUCT_THRESHOLD" value="$(arg line_normal_mean_inner_product_threshold)"/>
             <param name="RADIUS_FOR_2D_NORMAL" value="$(arg radius_for_2d_normal)"/>
-            <!-- <remap from="/velodyne_obstacles" to="/cloud/static"/> -->
-        </node>
+            <remap from="/velodyne_obstacles" to="/cloud/static"/>
+        </node> -->
+
+        <!-- <node pkg="road_recognizer" type="local_map_creator" name="local_map_creator" >
+            <remap from="/road_pcl" to="/recognition/road_recognizer/cloud/obs_and_stored"/>
+            <param name="downsample_ratio" value="0.1"/>
+        </node> -->
 
         <!-- <node pkg="road_recognizer" type="intersection_detector" name="intersection_detector">
             <param name="PEAK_ONLY" value="$(arg peak_only)"/>
         </node> -->
 
         <!-- <node pkg="rviz" name="rviz" type="rviz" args="-d /home/amsl/catkin_ws/src/road_recognizer/config/road_recognizer_mori.rviz"/> -->
-        <!-- <node pkg="rviz" name="rviz2" type="rviz" args="-d /home/amsl/catkin_ws/src/road_recognizer/config/compare.rviz"/> -->
+        <node pkg="rviz" name="rviz2" type="rviz" args="-d /home/amsl/catkin_ws/src/road_recognizer/config/compare.rviz"/>
         <node pkg="rqt_reconfigure" name="rqt_reconfigure" type="rqt_reconfigure" />
     </group>
 

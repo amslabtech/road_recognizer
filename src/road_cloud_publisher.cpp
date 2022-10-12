@@ -126,7 +126,7 @@ void RoadCloudPublisher::process(void)
             std::cout << "--- passthrough filter ---" << std::endl;
             filter_curvature();
             std::cout << "curvature cloud size: " << curvature_cloud->points.size() << std::endl;
-			*road_cloud = *curvature_cloud;
+			// *road_cloud = *curvature_cloud;
             if(!ignore_intensity_flag){
                 filter_intensity();
                 std::cout << "intensity cloud size: " << intensity_cloud->points.size() << std::endl;

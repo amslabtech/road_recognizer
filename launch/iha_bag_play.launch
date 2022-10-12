@@ -4,11 +4,11 @@
 	<param name="use_sim_time" value="true"/>
 
 	<!-- bag options -->
-    <arg name="bagfile" default="/home/amsl/bagfiles/full-2021-11-07-13-13tsukuba.bag"/>
-    <arg name="start" default="0.0"/>
-    <arg name="duration" default="10000.0"/>
+    <arg name="bagfile" default="/home/amsl/bagfiles/rwrc22/tsukuba/2021/full-2021-11-07-13-13tsukuba.bag"/>
+    <arg name="start" default="150.0"/>
+    <arg name="duration" default="130.0"/>
     <arg name="delay" default="30.0"/>
-    <arg name="play_speed_ratio" default="2.0"/>
+    <arg name="play_speed_ratio" default="1.0"/>
 
     <!-- play rosbag -->
     <node pkg="rosbag" type="play" name="rosbag_play" output="screen" args="
@@ -43,7 +43,8 @@
 	<!-- <include file="$(find cats)/launch/robot_state.launch"/> -->
 	<!-- <include file="$(find rwrc19)/launch/playing_bag.launch"/> -->
 
-	<include file="$(find velodyne_pointcloud)/launch/32e_points.launch"/>
+	<!-- <include file="$(find velodyne_pointcloud)/launch/32e_points.launch"/> -->
+	<include file="$(find velodyne_pointcloud)/launch/VLP-32C_points.launch"/>
 	<include file="$(find velodyne_height_map)/launch/amsl_velodyne_heightmap.launch"/>
 	<!-- <include file="$(find road_recognizer)/launch/road_recognizer.launch"/> -->
 

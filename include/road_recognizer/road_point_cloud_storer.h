@@ -29,6 +29,7 @@
 // OMP
 #include <omp.h>
 
+#include <random>
 
 class RoadPointCloudStorer
 {
